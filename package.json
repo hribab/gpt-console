@@ -1,0 +1,34 @@
+{
+  "name": "gpt-console",
+  "version": "1.0.0",
+  "description": "Command line tool using ChatGPT",
+  "bin": {
+    "gpt-console": "./cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hribab/gpt-cli.git"
+  },
+  "keywords": [
+    "gpt",
+    "chatgpt",
+    "command",
+    "line",
+    "tool",
+    "cli",
+    "developer",
+    "cli",
+    "tool"
+  ],
+  "author": "Hari",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hribab/gpt-cli/issues"
+  },
+  "homepage": "https://github.com/hribab/gpt-cli#readme",
+  "dependencies": {
+    "cli-spinners": "^2.8.0",
+    "openai": "^3.2.1",
+    "repl": "^0.1.3"
+  }
+}
