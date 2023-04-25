@@ -1,7 +1,15 @@
 # gpt-console
 
-- export OPENAI_API_KEY=yourapikey
+### Installation
 
-- npm install gpt-console -g
+Install gpt-console
+`npm install gpt-console -g`
 
-- gpt-console
+Set open ai credentials
+`export OPENAI_API_KEY=yourapikey`
+
+Run CLI
+`gpt-console`
+
+Use editor mode inside of gpt-console to write multi line prompts
+`.editor`
