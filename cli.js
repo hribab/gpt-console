@@ -7,13 +7,16 @@ const fs = require('fs');
 const path = require('path');
 const functionRegex = /function\s+(\w+)\s*\(/gm;
 const arrowFunctionRegex = /const\s+(\w+)\s*=\s*\((?:\w+(?:,\s*\w+)*)?\)\s*=>/gm;
-
+const { ESLint } = require('eslint');
+const parser = require('@babel/parser');
+const traverse = require('babel-traverse').default;
 
 const { Configuration, OpenAIApi } = require("openai");
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY 
 });
 const openai = new OpenAIApi(configuration);
+
 
 async function generateResponse(prompt, codeRelated = false) {
   if (!prompt) {
@@ -34,17 +37,65 @@ async function generateResponse(prompt, codeRelated = false) {
 }
 
 
+
 async function optimizeFunction(code) {
   const prompt = `Please optimize the following function:\n\n${code}\n\nOptimization:`;
   const message = await generateResponse(prompt);
   return message;
 }
 
+
 async function getFunctionDocumentation(code) {
   const prompt = `Please provide the documentation for the following function:\n\n${code}\n\nDocumentation:`;
   const message = await generateResponse(prompt);
   return message;
 }
+
+
+async function listFunctions(file) {
+  const eslint = new ESLint({});
+  const results = await eslint.lintFiles([file]);
+  
+  for (const result of results) {
+    const sourceCode = result.sourceCode.text;
+    const ast = parser.parse(sourceCode, {
+      sourceType: 'module',
+      plugins: ['jsx', 'typescript'] // Add any additional plugins required for your code
+    });
+
+    for (const message of result.messages) {
+      if (message.ruleId === 'no-inner-declarations') {
+        const functionNode = findFunctionNode(ast, message.line);
+        if (functionNode) {
+          console.log(`Function "${message.message}" declared at line ${message.line}:`);
+          console.log(getFunctionCodeBlock(sourceCode, functionNode));
+        }
+      }
+    }
+  }
+}
+
+
+function findFunctionNode(ast, line) {
+  let functionNode;
+  traverse(ast, {
+    FunctionDeclaration(path) {
+      if (path.node.loc.start.line === line) {
+        functionNode = path.node;
+        path.stop();
+      }
+    }
+  });
+  return functionNode;
+}
+
+
+function getFunctionCodeBlock(sourceCode, functionNode) {
+  const startLine = functionNode.loc.start.line - 1;
+  const endLine = functionNode.loc.end.line - 1;
+  return sourceCode.split('\n').slice(startLine, endLine).join('\n');
+}
+
 
 function getFunctionNames(code) {
   const functionNames = new Set();
@@ -61,75 +112,8 @@ function getFunctionNames(code) {
   return Array.from(functionNames).filter((name) => /^[a-z]/.test(name));
 }
 
-async function readFunctionsFromFile(filePath) {
-  let fileContent = fs.readFileSync(filePath, 'utf8');
-  const functionNames = getFunctionNames(fileContent);
-  for (const functionName of functionNames) {
-    
-  
-    const functionRegex = new RegExp(`function\\s+${functionName}\\s*\\(`);
-    const startIndex = fileContent.search(functionRegex);
-    if (startIndex === -1) {
-      console.error(`Function ${functionName} not found`);
-      return;
-    }
-  
-    let openBracesCount = 0;
-    let endIndex;
-    for (let i = startIndex; i < fileContent.length; i++) {
-      if (fileContent[i] === '{') {
-        openBracesCount++;
-      } else if (fileContent[i] === '}') {
-        openBracesCount--;
-        if (openBracesCount === 0) {
-          endIndex = i;
-          break;
-        }
-      }
-    }
-  
-    if (typeof endIndex === 'undefined') {
-      console.error(`Function ${functionName} is not properly formatted`);
-      return;
-    }
-  
-    const functionBlock = fileContent.slice(startIndex, endIndex + 1);
-    console.log(functionBlock);
-
-
-
-    // let match;
-    // while ((match = functionRegex.exec(fileContent))) {
-    //   const functionName2 = match[1] || match[2];
-    //   console.log("function name is", functionName2);
-    //   const functionCode = `${functionName2} = ${match[0]}`;
-    //   console.log("function code is", functionCode);
-
-    //   const documentation = "ddd" //await getFunctionDocumentation(functionCode);
-    //   const optimization = "ooo" //await optimizeFunction(functionCode);
-    //   const functionHeader = `/**\n * ${documentation}\n * Optimization: ${optimization}\n */`;
-    //   fileContent = fileContent.replace(new RegExp(`(function\\s+${functionName2}\\s*\\()|(const\\s+${functionName2}\\s*=\\s*\\()`, 'g'), `${functionHeader}$1$2`);
-    // }
-    
-    
-    // const regex = new RegExp(`(${functionName}\\s*=\\s*${arrowFunctionRegex.source})|(${functionRegex.source}\\s*${functionName}\\s*${arrowFunctionRegex.source})`);
-    // console.log('regex:', regex);
-    // const match = fileContent.match(regex);
-    // console.log('match:', match);
-    // const functionCode = `${functionName} = ${fileContent.match(new RegExp(`(${functionName}\\s*=\\s*${arrowFunctionRegex.source})|(${functionRegex.source}\\s*${functionName}\\s*${arrowFunctionRegex.source})`))[0]}`;
-    // console.log("callling fucntion with code ====", functionName, "code is===", functionCode);
-
-    // const documentation = await getFunctionDocumentation(functionCode);
-    // const optimization = await optimizeFunction(functionCode);
-    // const functionHeader = `/**\n * ${documentation}\n * Optimization: ${optimization}\n */`;
-    // console.log("result is", functionHeader);
-    // fileContent = fileContent.replace(new RegExp(`(function\\s+${functionName}\\s*\\()|(const\\s+${functionName}\\s*=\\s*\\()`, 'g'), `${functionHeader}$1$2`);
-}
-  return functionNames
-}
-
-
-const updateFile = async (functionName, code) => {
+// not using this function
+const createNewFile = async (functionName, code) => {
   const functionRegex = new RegExp(`(?:function|async)\\s+${functionName}\\s*\\(|const\\s+${functionName}\\s*=\\s*(?:\\((?:.|\\s)+?\\)|${arrowFunctionRegex.source})\\s*=>`);
   const startIndex = code.search(functionRegex);
   if (startIndex === -1) {
@@ -164,7 +148,7 @@ const updateFile = async (functionName, code) => {
     const updatedCodeWithFunctionBlock = updatedCode.slice(0, startIndex + commentedLine.length) + functionBlock + updatedCode.slice(endIndex + 1);
   
     console.log("-------updatedCodeWithFunctionBlock-------", updatedCodeWithFunctionBlock);
-    fs.writeFile("updatefiled-result.js", updatedCodeWithFunctionBlock, (err) => {
+    fs.writeFile("codereview-result.js", updatedCodeWithFunctionBlock, (err) => {
       if (err) throw err;
       console.log(`Function ${functionName} updated successfully`);
     });
@@ -204,7 +188,13 @@ async function readFunctionsFromFile(filePath) {
     }
 
     const functionBlock = fileContent.slice(startIndex, endIndex + 1);
-    fileContent = fileContent.slice(0, startIndex) + "COMMENTED_LINE COMMENTED_LINE COMMENTED_LINE COMMENTED_LINE" + '\n' + functionBlock + fileContent.slice(endIndex + 1);
+    console.log("------Updating the function-------", functionName);
+
+    const documentation = await getFunctionDocumentation(functionBlock);
+    const optimization = await optimizeFunction(functionBlock);
+    const functionHeader = `/**\n * ${documentation}\n * Optimization: ${optimization}\n */`;
+    
+    fileContent = fileContent.slice(0, startIndex) + functionHeader + '\n' + functionBlock + fileContent.slice(endIndex + 1);
   }
 
   fs.writeFile(filePath, fileContent, (err) => {
@@ -217,12 +207,14 @@ async function readFunctionsFromFile(filePath) {
   return functionNames
 }
 
+
 async function readFunctionsFromFolder(folderPath) {
   const files = fs.readdirSync(folderPath);
   const jsFiles = files.filter(file => ['.js', '.ts'].includes(path.extname(file)));
   const functions = jsFiles.flatMap(jsFile => readFunctionsFromFile(path.join(folderPath, jsFile)));
   return functions;
 }
+
 
 function welcomeMessage() {
   console.log(
@@ -279,10 +271,8 @@ gptCli.eval = async (input, context, filename, callback) => {
         }
       });
       break;
-    case "functions":
+    case "codereview":
       const functions = await readFunctionsFromFolder(process.cwd());
-      console.log(functions);
-      // process.stdout.write(functions);
       break;
     case "og":
       const sytemcommand = input.split(" ").slice(1).join(" ");
