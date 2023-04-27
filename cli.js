@@ -7,9 +7,6 @@ const fs = require('fs');
 const path = require('path');
 const functionRegex = /function\s+(\w+)\s*\(/gm;
 const arrowFunctionRegex = /const\s+(\w+)\s*=\s*\((?:\w+(?:,\s*\w+)*)?\)\s*=>/gm;
-const { ESLint } = require('eslint');
-const parser = require('@babel/parser');
-const traverse = require('babel-traverse').default;
 const { completer } = require('readline');
 
 const { Configuration, OpenAIApi } = require("openai");
@@ -38,7 +35,7 @@ async function generateResponse(prompt, codeRelated = false) {
 }
 
 async function getFunctionTestCases(code) {
-  const prompt = `Please write test cases for the following function:\n\n${code}\n\tesetcases:`;
+  const prompt = `Please write test cases and test case code using Jest framework  for the following function:\n\n${code}\n\tesetcases:`;
   const message = await generateResponse(prompt);
   return message;
 }
@@ -56,43 +53,6 @@ async function getFunctionDocumentation(code) {
   return message;
 }
 
-
-async function listFunctions(file) {
-  const eslint = new ESLint({});
-  const results = await eslint.lintFiles([file]);
-  
-  for (const result of results) {
-    const sourceCode = result.sourceCode.text;
-    const ast = parser.parse(sourceCode, {
-      sourceType: 'module',
-      plugins: ['jsx', 'typescript'] // Add any additional plugins required for your code
-    });
-
-    for (const message of result.messages) {
-      if (message.ruleId === 'no-inner-declarations') {
-        const functionNode = findFunctionNode(ast, message.line);
-        if (functionNode) {
-          console.log(`Function "${message.message}" declared at line ${message.line}:`);
-          console.log(getFunctionCodeBlock(sourceCode, functionNode));
-        }
-      }
-    }
-  }
-}
-
-
-function findFunctionNode(ast, line) {
-  let functionNode;
-  traverse(ast, {
-    FunctionDeclaration(path) {
-      if (path.node.loc.start.line === line) {
-        functionNode = path.node;
-        path.stop();
-      }
-    }
-  });
-  return functionNode;
-}
 
 
 function getFunctionCodeBlock(sourceCode, functionNode) {
@@ -152,7 +112,6 @@ const createNewFile = async (functionName, code) => {
     const functionBlock = code.slice(startIndex, endIndex + 1);
     const updatedCodeWithFunctionBlock = updatedCode.slice(0, startIndex + commentedLine.length) + functionBlock + updatedCode.slice(endIndex + 1);
   
-    console.log("-------updatedCodeWithFunctionBlock-------", updatedCodeWithFunctionBlock);
     fs.writeFile("codereview-result.js", updatedCodeWithFunctionBlock, (err) => {
       if (err) throw err;
       console.log(`Function ${functionName} updated successfully`);
@@ -196,8 +155,8 @@ async function readAllFunctionsFromFile(filePath) {
     console.log("------Updating the function-------", functionName);
 
     const documentation = await getFunctionDocumentation(functionBlock);
-    const optimization = await optimizeFunction(functionBlock);
-    const functionHeader = `/**\n * ${documentation}\n * Optimization: ${optimization}\n */`;
+    // const optimization = await optimizeFunction(functionBlock);
+    const functionHeader = `/**\n * ${documentation}\n */`;
     
     fileContent = fileContent.slice(0, startIndex) + functionHeader + '\n' + functionBlock + fileContent.slice(endIndex + 1);
   }
@@ -241,25 +200,27 @@ async function readFunctionsFromFile(filePath, functionNames, isDocumentation) {
     }
 
     const functionBlock = fileContent.slice(startIndex, endIndex + 1);
-    console.log("------Updating the function-------", functionName);
+    console.log(`------Generating ${isDocumentation ? "Description" : "Test code "} for the function-------`, functionName);
 
     if (isDocumentation) {
       const documentation = await getFunctionDocumentation(functionBlock);
-      const optimization = await optimizeFunction(functionBlock);
-      const functionHeader = `/**\n * ${documentation}\n * Optimization: ${optimization}\n */`;
+      // const optimization = await optimizeFunction(functionBlock);
+      const functionHeader = `/**\n ${documentation}\n\n */`;
     
       fileContent = fileContent.slice(0, startIndex) + functionHeader + '\n' + functionBlock + fileContent.slice(endIndex + 1);
     } else {
       const testCases = await getFunctionTestCases(functionBlock);
-      const functionHeader = `/**\nTestcases: ${testCases}\n */`;
-    
+      const functionHeader = `/**\n${testCases}\n\n */`;
+      
+      console.log(`------Updating ${isDocumentation ? "Description" : "Test code "} to file-------`, filePath);
+
       fileContent = fileContent.slice(0, startIndex) + functionHeader + '\n' + functionBlock + fileContent.slice(endIndex + 1);
     }
   }
   
   fs.writeFile(filePath, fileContent, (err) => {
     if (err) throw err;
-    console.log(`All functions updated successfully in ${filePath}`);
+    // console.log(`All functions updated successfully in ${filePath}`);
   });
 
   return functionNames
@@ -354,12 +315,31 @@ gptCli.eval = async (input, context, filename, callback) => {
     case "generate-testcases":
       const unittestFileName = input.split(" ")[1]
       const testcasesFunctions = input.split(" ").slice(2).map(func => func.trim());
+      const testCaseSpinner = spinners.dots;
+      const testCaseInterval = setInterval(() => {
+        process.stdout.write(`\r${testCaseSpinner.frames[testCaseSpinner.interval % testCaseSpinner.frames.length]}`);
+        testCaseSpinner.interval++;
+      }, testCaseSpinner.frameLength);
+
       await generateTestCases(unittestFileName, testcasesFunctions);
+      clearInterval(testCaseInterval);
+      process.stdout.write('\r');
+      process.stdout.write('\033[0G');
       break;
     case "generate-doc":
       const codereviewFileName = input.split(" ")[1]
       const codereviewFunctions = input.split(" ").slice(2).map(func => func.trim());
+      const spinner = spinners.dots;
+      const interval = setInterval(() => {
+        process.stdout.write(`\r${spinner.frames[spinner.interval % spinner.frames.length]}`);
+        spinner.interval++;
+      }, spinner.frameLength);
+
       await generateDocumentation(codereviewFileName, codereviewFunctions);
+      clearInterval(interval);
+      process.stdout.write('\r');
+      process.stdout.write('\033[0G');
+      callback(null, "Done");
       break;
     case "og":
       const sytemcommand = input.split(" ").slice(1).join(" ");
