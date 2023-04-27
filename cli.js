@@ -10,6 +10,7 @@ const arrowFunctionRegex = /const\s+(\w+)\s*=\s*\((?:\w+(?:,\s*\w+)*)?\)\s*=>/gm
 const { ESLint } = require('eslint');
 const parser = require('@babel/parser');
 const traverse = require('babel-traverse').default;
+const { completer } = require('readline');
 
 const { Configuration, OpenAIApi } = require("openai");
 const configuration = new Configuration({
@@ -36,7 +37,11 @@ async function generateResponse(prompt, codeRelated = false) {
   return `${response}`
 }
 
-
+async function getFunctionTestCases(code) {
+  const prompt = `Please write test cases for the following function:\n\n${code}\n\tesetcases:`;
+  const message = await generateResponse(prompt);
+  return message;
+}
 
 async function optimizeFunction(code) {
   const prompt = `Please optimize the following function:\n\n${code}\n\nOptimization:`;
@@ -156,7 +161,7 @@ const createNewFile = async (functionName, code) => {
 }
 
 
-async function readFunctionsFromFile(filePath) {
+async function readAllFunctionsFromFile(filePath) {
   let fileContent = fs.readFileSync(filePath, 'utf8');
   const functionNames = getFunctionNames(fileContent);
   for (const functionName of functionNames) {
@@ -202,19 +207,78 @@ async function readFunctionsFromFile(filePath) {
     console.log(`All functions updated successfully in ${filePath}`);
   });
 
+  return functionNames
+}
+
+async function readFunctionsFromFile(filePath, functionNames, isDocumentation) {
+  let fileContent = fs.readFileSync(filePath, 'utf8');
+  for (const functionName of functionNames) {
+    const functionRegex = new RegExp(`async\\s+function\\s+${functionName}\\s*\\(|function\\s+${functionName}\\s*\\(|const\\s+${functionName}\\s*=\\s*(?:\\((?:.|\\s)+?\\)|${arrowFunctionRegex.source})\\s*=>`);
+
+    const startIndex = fileContent.search(functionRegex);
+    if (startIndex === -1) {
+      console.error(`Function ${functionName} not found`);
+      continue;
+    }
+
+    let openBracesCount = 0;
+    let endIndex;
+    for (let i = startIndex; i < fileContent.length; i++) {
+      if (fileContent[i] === '{') {
+        openBracesCount++;
+      } else if (fileContent[i] === '}') {
+        openBracesCount--;
+        if (openBracesCount === 0) {
+          endIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (typeof endIndex === 'undefined') {
+      console.error(`Function ${functionName} is not properly formatted`);
+      continue;
+    }
+
+    const functionBlock = fileContent.slice(startIndex, endIndex + 1);
+    console.log("------Updating the function-------", functionName);
+
+    if (isDocumentation) {
+      const documentation = await getFunctionDocumentation(functionBlock);
+      const optimization = await optimizeFunction(functionBlock);
+      const functionHeader = `/**\n * ${documentation}\n * Optimization: ${optimization}\n */`;
+    
+      fileContent = fileContent.slice(0, startIndex) + functionHeader + '\n' + functionBlock + fileContent.slice(endIndex + 1);
+    } else {
+      const testCases = await getFunctionTestCases(functionBlock);
+      const functionHeader = `/**\nTestcases: ${testCases}\n */`;
+    
+      fileContent = fileContent.slice(0, startIndex) + functionHeader + '\n' + functionBlock + fileContent.slice(endIndex + 1);
+    }
+  }
   
+  fs.writeFile(filePath, fileContent, (err) => {
+    if (err) throw err;
+    console.log(`All functions updated successfully in ${filePath}`);
+  });
 
   return functionNames
 }
 
-
 async function readFunctionsFromFolder(folderPath) {
   const files = fs.readdirSync(folderPath);
   const jsFiles = files.filter(file => ['.js', '.ts'].includes(path.extname(file)));
-  const functions = jsFiles.flatMap(jsFile => readFunctionsFromFile(path.join(folderPath, jsFile)));
+  const functions = jsFiles.flatMap(jsFile => readAllFunctionsFromFile(path.join(folderPath, jsFile)));
   return functions;
 }
 
+async function generateTestCases(filename, functionNames) {
+   await readFunctionsFromFile(filename, functionNames, false)
+}
+
+async function generateDocumentation(filename, functionNames) {
+  await readFunctionsFromFile(filename, functionNames, true)
+}
 
 function welcomeMessage() {
   console.log(
@@ -225,12 +289,25 @@ function welcomeMessage() {
 }
 welcomeMessage();
 
+const completerFunc = (linePartial, callback) => {
+  const dir = path.dirname(linePartial);
+  const prefix = path.basename(linePartial);
+  fs.readdir(dir, (err, files) => {
+    if (err) {
+      callback([]);
+    } else {
+      const matches = files.filter(f => f.startsWith(prefix));
+      callback(null, matches.map(f => path.join(dir, f)));
+    }
+  });
+};
+
 // Create REPL instance
 const gptCli = repl.start({
   prompt: "gpt-console> ",
+  useColors: true,
+  completer: completerFunc
 });
-
-
   
 // Override default evaluator function
 gptCli.eval = async (input, context, filename, callback) => {
@@ -271,8 +348,18 @@ gptCli.eval = async (input, context, filename, callback) => {
         }
       });
       break;
-    case "codereview":
+    case "codereview-allfiles":
       const functions = await readFunctionsFromFolder(process.cwd());
+      break;
+    case "generate-testcases":
+      const unittestFileName = input.split(" ")[1]
+      const testcasesFunctions = input.split(" ").slice(2).map(func => func.trim());
+      await generateTestCases(unittestFileName, testcasesFunctions);
+      break;
+    case "generate-doc":
+      const codereviewFileName = input.split(" ")[1]
+      const codereviewFunctions = input.split(" ").slice(2).map(func => func.trim());
+      await generateDocumentation(codereviewFileName, codereviewFunctions);
       break;
     case "og":
       const sytemcommand = input.split(" ").slice(1).join(" ");
