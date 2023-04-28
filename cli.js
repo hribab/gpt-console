@@ -257,8 +257,8 @@ const completerFunc = (linePartial, callback) => {
     if (err) {
       callback([]);
     } else {
-      const matches = files.filter(f => f.startsWith(prefix));
-      callback(null, matches.map(f => path.join(dir, f)));
+      // const matches = files.filter(f => f.startsWith(prefix));
+      callback(null, '');
     }
   });
 };
