@@ -172,7 +172,7 @@ async function readAllFunctionsFromFile(filePath) {
 async function readFunctionsFromFile(filePath, functionNames, isDocumentation) {
   let fileContent = fs.readFileSync(filePath, 'utf8');
   for (const functionName of functionNames) {
-    const functionRegex = new RegExp(`async\\s+function\\s+${functionName}\\s*\\(|function\\s+${functionName}\\s*\\(|const\\s+${functionName}\\s*=\\s*(?:\\((?:.|\\s)+?\\)|${arrowFunctionRegex.source})\\s*=>`);
+    const functionRegex = new RegExp(`(?:export\\s+)?async\\s+function\\s+${functionName}\\s*\\(|(?:export\\s+)?function\\s+${functionName}\\s*\\(|(?:export\\s+)?const\\s+${functionName}\\s*=\\s*(?:\\((?:.|\\s)+?\\)|${arrowFunctionRegex.source})\\s*=>`);
 
     const startIndex = fileContent.search(functionRegex);
     if (startIndex === -1) {
