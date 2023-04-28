@@ -1,6 +1,6 @@
 {
   "name": "gpt-console",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "description": "Command line tool using ChatGPT",
   "bin": {
     "gpt-console": "./cli.js"
