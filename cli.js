@@ -8,6 +8,8 @@ const path = require('path');
 const functionRegex = /function\s+(\w+)\s*\(/gm;
 const arrowFunctionRegex = /const\s+(\w+)\s*=\s*\((?:\w+(?:,\s*\w+)*)?\)\s*=>/gm;
 const { completer } = require('readline');
+const chalk = require('chalk');
+const prettier = require('prettier');
 
 const { Configuration, OpenAIApi } = require("openai");
 const configuration = new Configuration({
@@ -53,6 +55,19 @@ async function getFunctionDocumentation(code) {
   return message;
 }
 
+
+async function generateCoreReview(filePath) {
+  let fileContent = fs.readFileSync(filePath, 'utf8');
+  const prompt = `Please provide the code review for the following code:\n\n${fileContent}\n\n`;
+  const message = await generateResponse(prompt);
+  
+  fs.writeFileSync(`Codereview-${filePath}`, message, (err) => {
+    if (err) throw err;
+    // console.log(`All functions updated successfully in ${filePath}`);
+  });
+
+  return message;
+}
 
 
 function getFunctionCodeBlock(sourceCode, functionNode) {
@@ -241,6 +256,7 @@ async function generateDocumentation(filename, functionNames) {
   await readFunctionsFromFile(filename, functionNames, true)
 }
 
+
 function welcomeMessage() {
   console.log(
     "Type .editor and press enter. This will put the console in 'editor mode'.\n" +
@@ -270,6 +286,45 @@ const gptCli = repl.start({
   completer: completerFunc
 });
   
+
+function getContentType(response) {
+  if (response) {
+    const dataString = response.toString().trim();
+    if (dataString.startsWith('{') && dataString.endsWith('}')) {
+      return 'json';
+    }
+    return 'text';
+  }
+  return null;
+}
+
+function containsCodeBlock(text) {
+  return /```[\s\S]+```/.test(text);
+}
+
+function formatCodeBlock(text) {
+  const codeBlockRegex = /```([\s\S]+)```/;
+  const match = text.match(codeBlockRegex);
+  if (match) {
+    const codeBlock = match[1];
+
+    if (codeBlock) {
+      const language = codeBlock.trim().split(/\s+/)[0];
+
+      let parser = 'babel';
+      if (language && language.length > 1) {
+        parser = language.includes("javascript") ? 'babel' : `prettier/parser-${language}`;
+      }
+      //TODO: const formattedCodeBlock = prettier.format(codeBlock, { parser: parser });
+      return text.replace(codeBlockRegex, chalk.green(codeBlock));
+    } else {
+      return text;
+    }
+  }
+  return text;
+}
+
+
 // Override default evaluator function
 gptCli.eval = async (input, context, filename, callback) => {
   if (!input || (input && input.trim() === "")) {
@@ -312,7 +367,41 @@ gptCli.eval = async (input, context, filename, callback) => {
     case "codereview-allfiles":
       const functions = await readFunctionsFromFolder(process.cwd());
       break;
+    case "codereview":
+      const inputArgs = input.split(" ")
+      if (inputArgs.length != 2) { 
+        callback(new Error(`Wrong Input. Usage: codereview <filename.extension>`));
+        return;
+      }
+    
+      const codereviewSpinner = spinners.dots;
+      const codereviewSpinnerInterval = setInterval(() => {
+        process.stdout.write(`\r${codereviewSpinner.frames[codereviewSpinner.interval % codereviewSpinner.frames.length]}`);
+        codereviewSpinner.interval++;
+      }, codereviewSpinner.frameLength);
+      const response = await generateCoreReview(inputArgs[1].trim());
+
+      let formattedResponse;
+      if (response) {
+        if (containsCodeBlock(response)) {
+          formattedResponse = formatCodeBlock(response);
+        } else {
+          formattedResponse = response;
+        }
+      }
+      formattedResponse = chalk.blue.bold('\nResponse:\n') + formattedResponse + '\n\n' + chalk.blue.bold(`\nOutput also written to file Codereview-${inputArgs[1].trim()}:\n`);
+  
+      clearInterval(codereviewSpinnerInterval);
+      process.stdout.write('\r');
+      process.stdout.write('\033[0G');
+      console.log(formattedResponse);
+      callback(null, "");
+      break;
     case "generate-testcases":
+      if (input.split(" ").length < 3) { 
+        callback(new Error(`Wrong Input. Usage: generate-testcases <filename.extension> functionname1 functionname2`));
+        return;
+      }
       const unittestFileName = input.split(" ")[1]
       const testcasesFunctions = input.split(" ").slice(2).map(func => func.trim());
       const testCaseSpinner = spinners.dots;
@@ -327,6 +416,10 @@ gptCli.eval = async (input, context, filename, callback) => {
       process.stdout.write('\033[0G');
       break;
     case "generate-doc":
+      if (input.split(" ").length < 3) { 
+        callback(new Error(`Wrong Input. Usage: generate-doc <filename.extension> functionname1 functionname2`));
+        return;
+      }
       const codereviewFileName = input.split(" ")[1]
       const codereviewFunctions = input.split(" ").slice(2).map(func => func.trim());
       const spinner = spinners.dots;
@@ -367,15 +460,37 @@ gptCli.eval = async (input, context, filename, callback) => {
           process.stdout.write(`\r${spinner.frames[spinner.interval % spinner.frames.length]}`);
           spinner.interval++;
         }, spinner.frameLength);
-        const response = await generateResponse(input);
-
+        const response = await generateResponse(input);        
         clearInterval(interval);
         process.stdout.write('\r');
         
-        // process.stdout.write("\n"); // flush stdout buffer
-        // clearInterval(loader); // clear loader
-        process.stdout.write('\033[0G'); // move cursor to beginning of line
-        callback(null, response);
+
+        let formattedResponse;
+        if (response) {
+          const contentType = getContentType(response);
+      
+          switch (contentType) {
+            case 'json':
+              formattedResponse = prettier.format(response, { parser: 'json' });
+              break;
+            case 'text':
+              if (containsCodeBlock(response)) {
+                formattedResponse = formatCodeBlock(response);
+              } else {
+                formattedResponse = response;
+              }
+              break;
+            default:
+              formattedResponse = response;
+          }
+      
+          formattedResponse = chalk.blue.bold('\nResponse:\n') + formattedResponse;
+        } else {
+          formattedResponse = chalk.yellow('No response');
+        }
+      
+        console.log(formattedResponse);
+        callback(null, "");
       })();
       break;
   }
