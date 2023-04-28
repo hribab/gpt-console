@@ -258,11 +258,20 @@ async function generateDocumentation(filename, functionNames) {
 
 
 function welcomeMessage() {
-  console.log(
-    "Type .editor and press enter. This will put the console in 'editor mode'.\n" +
-    "Type or paste your multiline code or text into the console.\n" +
-    "When you're done entering your code, press Ctrl + D to exit editor mode"
-  );
+  console.log(`
+  ${chalk.red.bold('Commands:')}
+  ${chalk.blue.bold('- generate-testcases <filename.extension> functionname1 functionname2')}
+  ${chalk.blue.bold('- generate-doc <filename.extension> functionname1 functionname2')}
+  ${chalk.blue.bold('- codereview <filename.extension>')}
+  
+  ${chalk.red.bold('Multi line Commands:')}
+  ${chalk.blue.bold('- Type .editor and press enter to enter \'editor mode\'')}
+  ${chalk.blue.bold('- Type or paste your multiline code or text into the editor')}
+  ${chalk.blue.bold('- When you\'re done, press Ctrl + D to exit editor mode, and the ChatGPT response will be printed in the console')}
+ 
+  ${chalk.green.bold('For all other commands or texts, the ChatGPT response will be printed in the console.')}
+  ${chalk.green.bold('Try: What are some tips to keep myself motivated for coding today?')}
+  `);
 }
 welcomeMessage();
 
