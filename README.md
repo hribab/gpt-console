@@ -71,8 +71,8 @@ What do you think?
 
 ## Roadmap
 
-We are working on below, if you need more send us email
+We are constantly working to improve ChatGPT Console and make it more useful for developers. Some of the upcoming features we're working on include:
 
-- create a long running agent that does complex tasks
-- use combination of system commands and current repository to get some actual work done
-- automatse some soul sucking daily works that boss wanted us to do, for example write a shitty document that is useless
+- Creating a long-running agent that can perform complex tasks.
+- Using a combination of system commands and the current repository to streamline workflows.
+- Automating tedious and repetitive tasks, such as writing useless documents, that are typically assigned by bosses.
