@@ -288,6 +288,10 @@ const completerFunc = (linePartial, callback) => {
   });
 };
 
+if (!process.env.OPENAI_API_KEY) {
+  return console.error(`---------> You need to set an authorization token with OPENAI_API_KEY env`);
+}
+
 // Create REPL instance
 const gptCli = repl.start({
   prompt: "gpt-console> ",
