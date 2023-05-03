@@ -71,6 +71,13 @@ What do you think?
 
 ## Roadmap
 
-We are constantly working to improve ChatGPT Console and make it more useful for developers. Some of the upcoming features we're working on include:
+We are constantly working to improve ChatGPT Console and make it more useful for developers. Some of the upcoming features we're working :
 
 - Creating a long-running autonomous agent that can perform complex tasks
+
+
+## Contribute
+
+- Clone and create a PR
+
+
