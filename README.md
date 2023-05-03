@@ -73,6 +73,4 @@ What do you think?
 
 We are constantly working to improve ChatGPT Console and make it more useful for developers. Some of the upcoming features we're working on include:
 
-- Creating a long-running agent that can perform complex tasks.
-- Using a combination of system commands and the current repository to streamline workflows.
-- Automating tedious and repetitive tasks, such as writing useless documents, that are typically assigned by bosses.
+- Creating a long-running autonomous agent that can perform complex tasks
