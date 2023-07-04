@@ -15,6 +15,7 @@ const { scanForBugs } = require('./commands/scanForBugs')
 const { executeSystemCommand } = require('./commands/systemCommands')
 const { scanForSecurity } = require('./commands/securityAudit')
 const { handleDefaultCase } = require('./commands/defaultCommand')
+const { startPixie } = require('./commands/startPixie')
 const { completerFunc, welcomeMessage } = require('./utils/helper/cliHelpers')
 
 
@@ -81,6 +82,10 @@ gptCli.eval = async (input, context, filename, callback) => {
       welcomeMessage();
       callback(null, );
       break;
+    case "pixie":
+        await startPixie();
+        callback(null, );
+        break;
     case "exit":
     case "quit":
     case "q":
