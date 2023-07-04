@@ -1,4 +1,5 @@
 const { generateResponse, generateResponseWithFunctions } = require("../utils/api/apiCall");
+const fs = require('fs');
 const { getRemoteFile } = require("../utils/getRemoteFile");
 const { createSkeleton } = require("../utils/pixie/createSkeleton");
 const { findElementFromObj } = require("../utils/common");
@@ -84,16 +85,32 @@ async function startPixie() {
     if (reorderedSections.hasOwnProperty(key) && reorderedSections[key] === true) {
       const pickSectionPrompt = `i want you to pick one ${key} from given list based on suitability for the requiremnt "${userRequirement}"
       list is:  ${JSON.stringify(selectedDesignConfig[key])}
-      return one item key as string from the list and don't include explanation in the response.
+      return one item key as string without quotes from the list and don't include explanation in the response.
     `
       // console.log("pickSectionPrompt ", pickSectionPrompt)
-      const selectedSection = await generateResponse(pickSectionPrompt);
+      let selectedSection = await generateResponse(pickSectionPrompt);
       console.log("selectedSection is ", selectedSection);
 
 
       // get the file and include it in the skeleton
+      // console.log("selectedDesignConfig ", selectedDesignConfig)
       const selectedSectionConfig = findElementFromObj(selectedDesignConfig, selectedSection);
-      
+      // const rootKey = selectedSection.slice(0, - 1) + 's';
+      // console.log("rootKey is ", rootKey)
+      // console.log("selectedSection is ", selectedSection)
+      // // console.log("key is ", key)
+      // const sectionCode = await getRemoteFile(selectedDesignConfig[rootKey][selectedSection]["codefile"]);
+      const sectionCode = await getRemoteFile(selectedSectionConfig["codefile"]);
+      // write this file into dir
+      // TODO: make this dynamic
+      const fileName = selectedSection.charAt(0).toUpperCase() + selectedSection.substring(1, selectedSection.length - 1) + '.js';
+      fs.writeFile(`/paperskeleton/src/components/${fileName}`, sectionCode, (error) => {
+        if (error) {
+          console.error('Error writing file:', error);
+        } else {
+          console.log(`File "${fileName}" created successfully.`);
+        }
+      });
     }
   }
 };

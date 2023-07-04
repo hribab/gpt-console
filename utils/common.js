@@ -1,14 +1,18 @@
 function findElementFromObj(obj, key) {
-  const found = Object.entries(obj).find(([prop, value]) => {
-    if (prop === key) {
-      return true;
-    } else if (typeof value === 'object') {
-      return findNestedElement(value, key);
+  for (const prop in obj) {
+    if (obj.hasOwnProperty(prop)) {
+      if (prop === key) {
+        return obj[prop];
+      } else if (typeof obj[prop] === 'object') {
+        const result = findElementFromObj(obj[prop], key);
+        if (result) {
+          return result;
+        }
+      }
     }
-  });
-  return found ? found[1] : undefined;
+  }
+  return undefined;
 }
-
 
 module.exports = {
   findElementFromObj
