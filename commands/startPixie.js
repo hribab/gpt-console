@@ -2,6 +2,7 @@ const { generateResponse, generateResponseWithFunctions } = require("../utils/ap
 const fs = require('fs');
 const { getRemoteFile } = require("../utils/getRemoteFile");
 const { createSkeleton } = require("../utils/pixie/createSkeleton");
+const { updateSectionCode } = require("../utils/pixie/updateSectionCode");
 const { findElementFromObj } = require("../utils/common");
 
 async function startPixie() {
@@ -101,10 +102,15 @@ async function startPixie() {
       // // console.log("key is ", key)
       // const sectionCode = await getRemoteFile(selectedDesignConfig[rootKey][selectedSection]["codefile"]);
       const sectionCode = await getRemoteFile(selectedSectionConfig["codefile"]);
-      // write this file into dir
+
       // TODO: make this dynamic
       const fileName = selectedSection.charAt(0).toUpperCase() + selectedSection.substring(1, selectedSection.length - 1) + '.js';
-      fs.writeFile(`/paperskeleton/src/components/${fileName}`, sectionCode, (error) => {
+
+      // update the section Code messaging and image
+
+      const updatedCode = JSON.parse(await updateSectionCode(userRequirement, key, 'landing', sectionCode));
+
+      fs.writeFile(`paperskeleton/src/components/${fileName}`, updatedCode, (error) => {
         if (error) {
           console.error('Error writing file:', error);
         } else {
