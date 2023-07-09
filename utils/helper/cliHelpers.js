@@ -66,10 +66,10 @@ function birdHelpMessage() {
 
 function pixieHelpMessage() {
     console.log(`     
-        ${consoleFormat('Your Personal Autonomous Agents:', 'red')}
-        ${consoleFormat('- Bird: Seamlessly manages your Twitter, engaging in Tweets and Replies', 'blue')}
-        ${consoleFormat('- Pixie: Crafts sophisticated landing pages using ReactJS tailored to your needs', 'blue')}
-        ${consoleFormat('- Chip: Capable of answering any code-related questions in your stack', 'blue')}
+        ${consoleFormat('How to use Pixie?:', 'red')}
+        ${consoleFormat('pixie start "your business description here"', 'blue')}
+        ${consoleFormat('pixie stop', 'blue')}
+        ${consoleFormat('pixie status', 'blue')}
     `);
 }
 
@@ -78,7 +78,7 @@ function chipHelpMessage() {
         ${consoleFormat('Your Personal Autonomous Agents:', 'red')}
         ${consoleFormat('- Bird: Seamlessly manages your Twitter, engaging in Tweets and Replies', 'blue')}
         ${consoleFormat('- Pixie: Crafts sophisticated landing pages using ReactJS tailored to your needs', 'blue')}
-        ${consoleFormat('- Chip: Capable of answering any code-related questions in your stack', 'blue')}
+        ${consoleFormat('- Chip: Capable of answering any code-related questions in your stack:', 'blue')}${consoleFormat('Coming soon..', 'yellow')}
     `);
 }
 

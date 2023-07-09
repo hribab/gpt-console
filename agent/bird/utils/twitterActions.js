@@ -249,6 +249,90 @@ async function setTwitterAction() {
 
 async function reply(page, count, waitTime) {
     console.log("=====repslyiung====")
+
+
+    // const tweetsData = await page.evaluate(() => {
+    //     // Get all root tweet elements
+    //     const rootTweetElements = Array.from(document.querySelectorAll('div[data-testid="cellInnerDiv"]'));
+    
+    //     // Extract tweet text, URLs, external links and tweet class
+    //     return rootTweetElements.map(rootElement => {
+    //       const tweetTextElement = rootElement.querySelector('div[data-testid="tweetText"]');
+    //       const tweetText = tweetTextElement ? tweetTextElement.textContent : null;
+    //       const tweetClass = tweetTextElement ? tweetTextElement.className : null;
+    
+    //       const urlElement = rootElement.querySelector('a[href]');
+    //       const urlIfAny = urlElement ? urlElement.href : null;
+    
+    //       const externalLinkElement = rootElement.querySelector('a[href][rel="noopener noreferrer nofollow"]');
+    //       const externalLink = externalLinkElement ? externalLinkElement.href : null;
+    //       if(!tweetText) return null;
+    //       return {
+    //         tweetText,
+    //         tweetClass,
+    //         urlIfAny,
+    //         externalLink
+    //       };
+    //     }).filter(item => item !== null);
+    //   });
+    
+    
+    //     console.log("tweetsData===>", tweetsData)
+  
+  
+    //   const prompt = `
+    //   Imagine you are a decision maker tasked with deciding whether to respond to a tweet or not.
+    //   Given a list of tweets, select the top tweet that meets the following criteria: 
+    //   - it is cool
+    //   - easy-going
+    //   - fun
+    //   - impactful
+    //   - it wouldn't cause any controversy if responded to with humor. 
+  
+    //   sample Input: [{
+    //     tweetText: "test",
+    //     tweetClass: "test",
+    //     urlIfAny: "test",
+    //     externalLink: "test"
+    //   },{}]
+  
+    //   *actual Tweet is the value of key 'tweetText'.
+      
+    //   After you pick the top tweet, generate a reply that meets the following criteria:
+    //   - the maximum character length of reply tweet is 250 characters including the text after #.
+    //   - The tweet should have genuine humor
+    //   - The reply tweet should be positive and thought provoking
+    //   - The reply tweet should be relatable to people
+  
+  
+    //   sample Output: {
+    //     tweetText: "test",
+    //     tweetClass: "test",
+    //     urlIfAny: "test",
+    //     externalLink: "test",
+    //     reply: "test"
+    //   }
+      
+    //   Tweets array:
+    //   ${JSON.stringify(tweetsData)}
+    // `
+          
+    // console.log("----prompt results: ", prompt);
+  
+    //   let chatgptresponse = await generateResponse(prompt, false);
+  
+  
+    //   console.log("----chatgpt results: ", JSON.parse(chatgptresponse).reply);
+  
+  
+  
+  
+  
+  
+
+    
+    
+    
     for (i = 0; i < count; i++) {
         try {
             // await page.waitForTimeout(2000);
