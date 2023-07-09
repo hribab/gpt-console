@@ -6,6 +6,9 @@ try {
     if (!input.trim()) {
         return;
     }
+    if (input.trim() && input.trim().length < 3) {
+      return;
+   }
     if (input.length > 8000) {
         return callback(null, "Text is too large to process.");
     }

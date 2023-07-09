@@ -2,21 +2,12 @@
 
 const repl = require("repl");
 
-const { validateCommandInputs } = require('./utils/validation/scriptValidation');
-const { codeLint } = require('./commands/codeLint');
-const { codeOptimize } = require('./commands/codeOptimization')
-const { codeRefactor } = require('./commands/codeRefactoring')
-const { codeReview } = require('./commands/codeReview')
-const { errorHandling } = require('./commands/errorHandling')
-const { generateDocumentation } = require('./commands/generateDoc')
-const { generateUnitTests } = require('./commands/generateUnitTestCases')
-const { performanceProfiling } = require('./commands/performanceProfiling')
-const { scanForBugs } = require('./commands/scanForBugs')
-const { executeSystemCommand } = require('./commands/systemCommands')
-const { scanForSecurity } = require('./commands/securityAudit')
+const { completerFunc, welcomeMessage, birdHelpMessage, chipHelpMessage, pixieHelpMessage } = require('./utils/helper/cliHelpers')
 const { handleDefaultCase } = require('./commands/defaultCommand')
-const { completerFunc, welcomeMessage } = require('./utils/helper/cliHelpers')
-
+const { pauseBird } = require('./agent/bird/lifecycle/pauseBird')
+const { startBird } = require('./agent/bird/lifecycle/startBird')
+// const { stopBird } = require('./agent/bird/stopBird')
+// const { statusBird } = require('./agent/bird/statusBird')
 
 welcomeMessage();
 // Create REPL instance
@@ -30,51 +21,39 @@ gptCli.eval = async (input, context, filename, callback) => {
   if (!input.trim()) { 
     callback(null, );
   }
-  const tokens = input.trim().split(" ");
+  const tokens = input.trim().toLowerCase().split(" ");
   const command = tokens[0];
   switch (command.trim()) {
-    case "lint-code":
-      validateCommandInputs(tokens, callback);
-      await codeLint(tokens[1].trim(), callback);
+    case "bird":
+      if (tokens[1] && tokens[1].trim() == 'start') {
+        startBird();
+        callback(null, );
+        break;
+      }
+      if (tokens[1] && tokens[1].trim() == 'pause') {
+        pauseBird();
+        callback(null, );
+        break;
+      }
+      if (tokens[1] && tokens[1].trim() == 'stop') {
+        stopBird();
+        callback(null, );
+        break;
+      }
+      if (tokens[1] && tokens[1].trim() == 'status') {
+        statusBird()
+        callback(null, );
+        break;
+      }
+      birdHelpMessage();
+      callback(null, );
       break;
-    case "optimize-code":
-      validateCommandInputs(tokens, callback);
-      await codeOptimize(tokens[1].trim(), callback);
+    case "chip":
+      chipHelpMessage();
+      callback(null, );
       break;
-    case "refactor-code":
-      validateCommandInputs(tokens, callback);
-      await codeRefactor(tokens[1].trim(), callback);
-      break;
-    case "review-code":
-      validateCommandInputs(tokens, callback);
-      await codeReview(tokens[1].trim(), callback);
-      break;
-    case "error-handling":
-      validateCommandInputs(tokens, callback);
-      await errorHandling(tokens[1].trim(), callback);
-      break;
-    case "generate-docs":
-      validateCommandInputs(tokens, callback);
-      await generateDocumentation(tokens[1].trim(), callback);
-      break;
-    case "unit-tests":
-      validateCommandInputs(tokens, callback);
-      await generateUnitTests(tokens[1].trim(), callback);
-      break;
-    case "performance-profiling":
-      validateCommandInputs(tokens, callback);
-      await performanceProfiling(tokens[1].trim(), callback);
-      break;
-    case "scan-bugs":
-      validateCommandInputs(tokens, callback);
-      await scanForBugs(tokens[1].trim(), callback);
-      break;
-    case "scan-security":
-      validateCommandInputs(tokens, callback);
-      await scanForSecurity(tokens[1].trim(), callback);
-      break;
-    case "syscmd":
-      executeSystemCommand(input);
+    case "pixie":
+      pixieHelpMessage();
       callback(null, );
       break;
     case "help":
@@ -95,5 +74,3 @@ gptCli.eval = async (input, context, filename, callback) => {
       break;
   }
 };
-
-

@@ -47,32 +47,38 @@ function completerFunc(linePartial, callback) {
 };
 
 function welcomeMessage() {
-    console.log(`
-        ${consoleFormat('Commands:', 'red')}
-        ${consoleFormat('- lint-code <filename.extension>', 'blue')}
-        ${consoleFormat('- optimize-code <filename.extension>', 'blue')}
-        ${consoleFormat('- refactor-code <filename.extension>', 'blue')}
-        ${consoleFormat('- review-code <filename.extension>', 'blue')}
-        ${consoleFormat('- error-handling <filename.extension>', 'blue')}
-        ${consoleFormat('- generate-docs <filename.extension>', 'blue')}
-        ${consoleFormat('- unit-tests <filename.extension>', 'blue')}
-        ${consoleFormat('- performance-profiling <filename.extension>', 'blue')}
-        ${consoleFormat('- scan-bugs <filename.extension>', 'blue')}
-        ${consoleFormat('- scan-security <filename.extension>', 'blue')}
-        ${consoleFormat('- syscmd <Any system command that you usually run in the terminal>', 'blue')}
-        
-        ${consoleFormat('Multi line text input:', 'red')}
-        ${consoleFormat('- Type .editor and press enter to enter \'editor mode\'', 'blue')}
-        ${consoleFormat('- Type or paste your multiline code or text into the editor', 'blue')}
-        ${consoleFormat('- When you\'re done, press Ctrl + D to exit editor mode, and the ChatGPT response will be printed in the console', 'blue')}
-        
-        ${consoleFormat('Autonomous Agents:', 'red')}
-        ${consoleFormat('- fullstackdev', 'blue')}
-        ${consoleFormat('- fullstackqa', 'blue')}
-        ${consoleFormat('- sfdcqa', 'blue')}
-        
-        ${consoleFormat('For all other commands or texts, the ChatGPT response will be printed in the console.', 'green')}
-        ${consoleFormat('Try: What are some tips to keep myself motivated for coding today?', 'green')}
+    console.log(`     
+        ${consoleFormat('Your Personal Autonomous Agents:', 'red')}
+        ${consoleFormat('- Bird: Seamlessly manages your Twitter, engaging in Tweets and Replies', 'blue')}
+        ${consoleFormat('- Pixie: Crafts sophisticated landing pages using ReactJS tailored to your needs', 'blue')}
+        ${consoleFormat('- Chip: Capable of answering any code-related questions in your stack', 'blue')}
+    `);
+}
+
+function birdHelpMessage() {
+    console.log(`     
+        ${consoleFormat('How to use Bird?:', 'red')}
+        ${consoleFormat('bird start', 'blue')}
+        ${consoleFormat('bird stop', 'blue')}
+        ${consoleFormat('bird status', 'blue')}
+    `);
+}
+
+function pixieHelpMessage() {
+    console.log(`     
+        ${consoleFormat('Your Personal Autonomous Agents:', 'red')}
+        ${consoleFormat('- Bird: Seamlessly manages your Twitter, engaging in Tweets and Replies', 'blue')}
+        ${consoleFormat('- Pixie: Crafts sophisticated landing pages using ReactJS tailored to your needs', 'blue')}
+        ${consoleFormat('- Chip: Capable of answering any code-related questions in your stack', 'blue')}
+    `);
+}
+
+function chipHelpMessage() {
+    console.log(`     
+        ${consoleFormat('Your Personal Autonomous Agents:', 'red')}
+        ${consoleFormat('- Bird: Seamlessly manages your Twitter, engaging in Tweets and Replies', 'blue')}
+        ${consoleFormat('- Pixie: Crafts sophisticated landing pages using ReactJS tailored to your needs', 'blue')}
+        ${consoleFormat('- Chip: Capable of answering any code-related questions in your stack', 'blue')}
     `);
 }
 
@@ -80,5 +86,8 @@ module.exports = {
     runSpinnerAndSaveResponse,
     runSpinnerAndReturnResponse,
     completerFunc,
-    welcomeMessage
+    welcomeMessage,
+    birdHelpMessage,
+    pixieHelpMessage,
+    chipHelpMessage
 }
