@@ -1,0 +1,55 @@
+.card-testimonial{
+    margin-top: 30px;
+    text-align: center;
+
+    .card-icon{
+        padding: 0;
+
+        i{
+            font-size: 30px;
+            border: 0;
+            display: block;
+            line-height: 100px;
+            margin: 0px auto;
+            margin-bottom: 30px;
+        }
+    }
+    .card-body{
+        padding: 15px 30px;
+        margin-top: -70px;
+
+        .card-description{
+            font-style: italic;
+        }
+        .card-category{
+            margin-bottom: 20px;
+        }
+    }
+
+    .card-avatar{
+        margin-top: 0;
+        .img{
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+        }
+    }
+
+    .card-footer{
+        .card-title{
+            color: $black-color;
+            text-align: center;
+        }
+        .card-category{
+            color: $dark-gray;
+        }
+        .card-avatar{
+            margin-top: 20px;
+            .img{
+                border-radius: 50%;
+                width: 60px;
+                height: 60px;
+            }
+        }
+    }
+}

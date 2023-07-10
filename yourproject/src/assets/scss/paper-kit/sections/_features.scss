@@ -1,0 +1,65 @@
+.features-3{
+    .iphone-container{
+        max-width: 200px;
+        margin: 0 auto;
+        img{
+            max-width: 100%;
+            padding-top: 40px;
+        }
+    }
+}
+.features-4{
+    .ipad-container{
+        max-width: 500px;
+        margin: 0 auto 0;
+        img{
+            max-width: 100%;
+        }
+    }
+    .info-horizontal{
+        padding: 50px 0 0px;
+    }
+    h5.description{
+        margin-bottom: 60px;
+    }
+}
+.features-5{
+    background-position: center center;
+    background-size: cover;
+    .info, .title{
+        color: $white-color;
+    }
+    .title:first-of-type{
+        padding-top: 50px;
+    }
+    .info{
+        .title{
+            padding-top: 20px;
+        }
+        p{
+            color: rgba(255, 255, 255, 0.8);
+        }
+    }
+    .container [class*=col-]{
+        border: 1px solid rgba(255,255,255,.35);
+        border-top: 0;
+        border-left: 0;
+
+        &:last-child{
+            border-right: 0;
+        }
+    }
+    .bottom-line [class*=col-]{
+        border-bottom: 0;
+    }
+    .filter:after{
+        background-color: rgba(0, 0, 0, 0.5);
+        content: "";
+        display: block;
+        height: 100%;
+        left: 0;
+        position: absolute;
+        width: 100%;
+        top: 0;
+    }
+}

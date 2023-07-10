@@ -1,0 +1,6 @@
+.input-group .input-group-append .input-group-text {
+  border-right: 1px solid $medium-gray;
+}
+.input-group.no-border .input-group-append .input-group-text {
+  border: 0;
+}

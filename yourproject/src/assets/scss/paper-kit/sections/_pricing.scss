@@ -1,0 +1,16 @@
+#pricing{
+    .container + .filter{
+        .title{
+            color: $white-color;
+        }
+        .description{
+            color: $medium-gray;
+        }
+    }
+
+    .pricing-5{
+        .title{
+            margin-top: 80px;
+        }
+    }
+}

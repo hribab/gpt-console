@@ -1,0 +1,54 @@
+.card.card-profile{
+    [class*=col-]{
+        .card-body{
+            padding-top: 0px;
+            .card-title{
+                margin-top: 10px !important;
+            }
+        }
+    }
+}
+.section{
+    .page-header{
+        .container{
+            z-index: 2;
+        }
+        .card{
+            .card-body{
+                .author{
+                    .avatar{
+                        width: 130px;
+                        height: 130px;
+                        border: 0;
+                    }
+                }
+            }
+        }
+        .title,
+        .description{
+            color: $white-color;
+        }
+        .filter:after{
+            background-color: rgba(0, 0, 0, 0.5);
+            content: "";
+            display: block;
+            height: 100%;
+            left: 0;
+            top:0;
+            position: absolute;
+            width: 100%;
+            z-index: 1;
+        }
+    }
+    .team-4{
+        &.card-profile{
+            margin-top: 70px;
+        }
+
+    }
+    .team-5.section-image{
+        .title{
+            margin-top: 50px;
+        }
+    }
+}

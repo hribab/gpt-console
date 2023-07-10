@@ -1,0 +1,68 @@
+@mixin social-buttons-color ($color){
+    color: $white-color;
+    background-color: $color;
+    border-color: $color;
+    opacity: 0.8;
+
+    &:hover,
+    &:focus,
+    &:active,
+    &.active,
+    .open > &.dropdown-toggle{
+        background-color: $color !important;
+        border-color: $color !important;
+        color: $white-color;
+        opacity: 1;
+    }
+
+    &.btn-border{
+      border-color: $color;
+      color: $color;
+
+      &:hover,
+      &:focus,
+      &:active,
+      &.active,
+      .open > &.dropdown-toggle {
+        background-color: $color;
+        border-color: $color;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      &:disabled,
+      &[disabled],
+      &.disabled {
+        background-color: $transparent-bg;
+        border-color: $color;
+      }
+    }
+
+    &.btn-link {
+
+    color: $color;
+    opacity: 0.8;
+
+      &:hover,
+      &:focus,
+      &:active,
+      &.active,
+      .open > &.dropdown-toggle{
+          background-color: $transparent-bg !important;
+          color: $color;
+          opacity: 1;
+          border-color: $transparent-bg !important;
+      i{
+          color: $color;
+          opacity: 1;
+      }
+
+      }
+  }
+
+}
+@mixin social-label-color ($color){
+    background-color: $color;
+}
+@mixin social-icon-color ($color){
+    color: $color;
+}

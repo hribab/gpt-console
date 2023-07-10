@@ -1,0 +1,48 @@
+.card-product {
+  .card-body {
+    .card-description {
+      .name {
+        margin-top: 20px;
+      }
+    }
+    .card-text {
+      display: inline-block;
+      margin-right: 65px;
+    }
+    .actions {
+      h5 {
+        color: $default-states-color;
+      }
+    }
+  }
+  .image-plain {
+    height: 0;
+    margin-top: 110px;
+  }
+  .author {
+    text-align: center;
+    text-transform: none;
+    margin-top: -65px;
+    .card-title {
+      color: $default-states-color;
+      line-height: 24px;
+      margin-bottom: 5px !important;
+      margin-top: 0;
+      small {
+          color: $card-muted-color;
+      }
+    }
+    .card-category {
+        margin-bottom: 15px;
+    }
+  }
+
+  .card-img-top {
+      background-color: transparent;
+      box-shadow: none !important;
+
+  }
+  .btn-just-icon.btn-link {
+    padding: 0 !important;
+  }
+}

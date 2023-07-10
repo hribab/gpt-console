@@ -1,0 +1,39 @@
+@keyframes Floatingy {
+  from {
+    -webkit-transform: translate(0, 0px);
+  }
+  65% {
+    -webkit-transform: translate(50px, 0);
+  }
+  to {
+    -webkit-transform: translate(0, 0px);
+  }
+}
+
+@keyframes Floatingx {
+  from {
+    -webkit-transform: translate(50px, 0px);
+  }
+  65% {
+    -webkit-transform: translate(0, 0);
+  }
+  to {
+    -webkit-transform: translate(50px, 0px);
+  }
+}
+.grid.grid--loaded .grid__item {
+  position: absolute;
+}
+.grid.grid--loaded .grid__item.sixth-card {
+  left: 400px;
+}
+.grid.grid--loaded .grid__item.third-card {
+  left: 800px;
+}
+.grid__item .grid__link .grid__img{
+  transform: translate3d(0, 0, 0);
+  transition: all 0.3s;
+}
+.grid__item .grid__link .grid__img:hover{
+  transform: translate3d(-22px, -28px, 16px);
+}

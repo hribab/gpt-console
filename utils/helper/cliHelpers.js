@@ -68,6 +68,7 @@ function pixieHelpMessage() {
     console.log(`     
         ${consoleFormat('How to use Pixie?:', 'red')}
         ${consoleFormat('pixie start "your business description here"', 'blue')}
+        ${consoleFormat('pixie update "update to existing page"', 'blue')}
         ${consoleFormat('pixie stop', 'blue')}
         ${consoleFormat('pixie status', 'blue')}
     `);

@@ -1,0 +1,90 @@
+.card-image {
+  .details-center {
+    .author {
+      position: relative;
+      display: inline-block;
+      text-align: left;
+      margin: 20px auto 0;
+      img {
+          position: absolute;
+          top: 0;
+          left: -50px;
+      }
+      .name {
+          color: #66615b;
+          font-size: 1.1em;
+          font-weight: bold;
+          line-height: 1.15;
+          max-width: 11em;
+          overflow: hidden;
+          padding-top: 3px;
+          text-overflow: ellipsis;
+      }
+    }
+  }
+  .card-body {
+    min-height: 50px;
+    padding: 0 4px 0.5em;
+    position: relative;
+
+      .author {
+          img {
+            height: 40px;
+            width: 40px;
+            margin-bottom: 5px;
+            border-radius: 50%;
+          }
+      }
+      .name {
+        color: $font-color;
+        font-size: 1.2em;
+        font-weight: bold;
+        line-height: 1.15;
+        max-width: 14em;
+        overflow: hidden;
+        padding-top: 3px;
+        text-overflow: ellipsis;
+
+        &:hover, &:active, &:focus {
+            color: $default-states-color;
+        }
+      }
+      .meta {
+        color: $brown-font-color;
+        font-size: 0.8em;
+      }
+      .actions {
+        float: right;
+        font-size: 0.875em;
+        line-height: 2.6;
+        position: absolute;
+        right: 4px;
+        top: 36px;
+        z-index: 1;
+
+        .btn.btn-simple{
+          padding-left: 2px;
+        }
+      }
+    }
+
+  .card-body-center {
+    text-align: center;
+    .author {
+      position: relative;
+      display: inline-block;
+      text-align: left;
+      margin: 20px auto 0;
+
+        img {
+            position: absolute;
+            left: 0;
+            top:0;
+        }
+        .text {
+            padding-left: 50px;
+        }
+    }
+  }
+
+}

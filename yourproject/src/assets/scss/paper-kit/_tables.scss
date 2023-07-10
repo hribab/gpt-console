@@ -1,0 +1,150 @@
+.table{
+    thead,
+    tbody,
+    tfoot{
+        tr > th,
+        tr > td{
+            border-top: 1px solid $table-line-color;
+        }
+    }
+   > thead > tr > th{
+       border-bottom-width: 0;
+       font-size: $font-size-h5;
+       font-weight: $font-weight-light;
+   }
+
+   .radio,
+   .form-check{
+       margin-top: -23px;
+    //    padding-left: 5px;
+       width: 15px;
+   }
+   > thead > tr > th,
+   > tbody > tr > th,
+   > tfoot > tr > th,
+   > thead > tr > td,
+   > tbody > tr > td,
+   > tfoot > tr > td{
+       padding: 12px 8px;
+       vertical-align: middle;
+   }
+
+   .th-description{
+       max-width: 150px;
+   }
+   .td-price{
+       font-size: 26px;
+       font-weight: $font-weight-light;
+       margin-top: 5px;
+       text-align: right;
+   }
+   .td-total{
+        font-weight: $font-weight-bold;
+        font-size: $font-size-h5;
+        padding-top: 20px;
+        text-align: right;
+    }
+
+   .td-actions .btn{
+
+        &.btn-sm {
+            padding-left: 3px;
+            padding-right: 3px;
+        }
+    }
+
+    > tbody > tr{
+        position: relative;
+    }
+}
+.table-striped{
+    tbody > tr:nth-of-type(2n+1) {
+        background-color: #fff;
+    }
+       > thead > tr > th,
+   > tbody > tr > th,
+   > tfoot > tr > th,
+   > thead > tr > td,
+   > tbody > tr > td,
+   > tfoot > tr > td{
+        padding: 15px 8px;
+    }
+}
+.table-shopping{
+    > thead > tr > th{
+        color: $muted_color;
+        font-size: 1.1em;
+        font-weight: $font-weight-light;
+    }
+    > tbody > tr > td{
+        font-size: $font-paragraph;
+        padding: 30px 5px;
+        b{
+            display: block;
+            margin-bottom: 5px;
+        }
+    }
+    .td-number,
+    .td-price,
+    .td-total{
+        font-size: 1.2em;
+        font-weight: $font-weight-light;
+        min-width: 130px;
+        text-align: right;
+
+        small{
+            margin-right: 3px;
+        }
+    }
+    .td-product{
+        min-width: 170px;
+        padding-left: 30px;
+        strong{
+            color: $default-states-color;
+            font-size: 1.2em;
+            font-weight: $font-weight-bold;
+        }
+    }
+    .td-number,
+    .td-total{
+        color: $default-states-color;
+        font-weight: $font-weight-bold;
+    }
+    .td-quantity{
+        min-width: 200px;
+        .btn-group{
+            margin-left: 10px;
+        }
+    }
+    .img-container{
+        border-radius: $border-radius-large;
+        display: block;
+        height: 100px;
+        overflow: hidden;
+        width: 100px;
+
+        img{
+            width: 100%;
+        }
+    }
+    .tr-actions >td{
+        border-top: 0;
+    }
+}
+
+// quatity buttons
+
+.btn-group .btn:first-child:not(:last-child):not(.dropdown-toggle){
+    color: $default-color;
+
+    &:hover{
+        color: $white-color;
+    }
+}
+.btn-group .btn:last-child:not(:first-child){
+    color: $default-color;
+
+    &:hover{
+        color: $white-color;
+    }
+}

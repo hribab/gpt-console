@@ -1,0 +1,11 @@
+.headroom {
+  transition: top 0.5s ease-in-out;
+}
+.headroom--pinned {
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+.headroom--unpinned {
+  top: -80px;
+}

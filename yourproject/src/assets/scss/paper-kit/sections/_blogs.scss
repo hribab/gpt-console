@@ -1,0 +1,22 @@
+.card.card-blog{
+    [class*=col-]{
+        .card-image{
+            .img{
+                border-radius: $border-radius-extreme;
+            }
+        }
+    }
+    .card-category{
+        padding-top: 10px;
+    }
+}
+.blog-1{
+    .card-blog{
+        margin-bottom: 80px;
+    }
+}
+.blog-3{
+    .card-blog{
+        margin-bottom: 40px;
+    }
+}

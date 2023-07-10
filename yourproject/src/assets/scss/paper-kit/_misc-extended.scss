@@ -1,0 +1,55 @@
+.section-buttons .btn,
+.section-buttons .btn-morphing {
+  margin-bottom: 10px;
+}
+
+.btn {
+  &.btn-just-icon {
+    .nc-icon {
+      top: 0;
+    }
+  }
+  &.dropdown-toggle:focus {
+    box-shadow: none !important;
+  }
+}
+
+.dropup {
+  .dropdown-menu {
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+    &::after {
+      bottom: -11px !important;
+    }
+    &::before {
+      bottom: -12px !important;
+    }
+  }
+}
+
+.section {
+  .section-project {
+    .projects-3 {
+      padding-bottom: 0;
+    }
+  }
+}
+
+.bootstrap-select {
+  .dropdown-menu[x-placement="top-start"] {
+    .dropdown-menu.inner {
+      margin-bottom: -50px;
+    }
+  }
+}
+
+#modals .btn,
+.btn[data-toggle="tooltip"],
+.btn[data-toggle="popover"] {
+  margin-bottom: 10px;
+}
+
+#modals .btn {
+  margin-right: 10px;
+}

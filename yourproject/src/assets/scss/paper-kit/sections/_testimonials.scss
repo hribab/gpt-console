@@ -1,0 +1,194 @@
+#testimonials{
+    .section-image{
+        // height: 100vh;
+    }
+    .testimonials-1{
+        .title{
+            margin-top: 40px;
+        }
+    }
+    .testimonials-2{
+        .card{
+            margin-top: 10px;
+            .carousel-inner{
+                height: 500px;
+                .carousel-item{
+                        height: 100%;
+                        width: 100%;
+                    .carousel-caption{
+                        position: absolute;
+                        top: 0px;
+                        left: 25%;
+                        z-index: 10;
+                        padding-top: 30px;
+                        padding-bottom: 20px;
+                        color: #fff;
+                        text-align: center;
+
+                        .card-testimonial{
+                            .card-footer{
+                                .card-title,
+                                .card-avatar{
+                                    color: $white-color;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .card-testimonial{
+            .card-avatar{
+                border-radius: 50%;
+                overflow: hidden;
+                margin-bottom: 70px;
+                box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+                width: 130px;
+                margin: 0 auto;
+
+                .img{
+                    width: 130px;
+                    height: 130px;
+                }
+                a{
+                    left: 38%;
+                }
+            }
+            .card-footer{
+                margin-top: 0;
+            }
+        }
+    }
+}
+.testimonials-2{
+    .testimonials-people{
+        margin-top: -70px;
+    }
+    .left-first-person, .left-second-person, .left-third-person, .left-fourth-person, .left-fifth-person, .left-sixth-person,
+    .right-first-person, .right-second-person, .right-third-person, .right-fourth-person, .right-fifth-person, .right-sixth-person{
+        opacity: 1 !important;
+    }
+}
+
+.section-testimonials {
+  background-image: none;
+}
+.section-testimonials .our-clients {
+  margin-top: 135px;
+}
+.section-testimonials .our-clients img {
+  width: 100%;
+  max-width: 140px;
+  display: inline-block;
+}
+.section-testimonials .card-profile .card-title,
+.section-testimonials .card-profile .card-description {
+  text-align: left !important;
+}
+.section-testimonials .card {
+  margin: 0 auto;
+  max-width: 460px;
+  padding-bottom: 30px;
+}
+.section-testimonials .card img {
+  box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+}
+.section-testimonials .fa-star {
+  font-size: 20px;
+  color: #fec42d;
+}
+.section-testimonials .card.card-testimonial .card-body {
+  margin-top: 0;
+  padding: 15px 50px;
+}
+.section-testimonials .page-carousel {
+  margin-top: 60px;
+}
+.section-testimonials .testimonials-people {
+  position: relative;
+}
+.section-testimonials .testimonials-people > img {
+  position: absolute;
+  border-radius: 50%;
+  box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translate3D(0px, 50px, 0px);
+  -webkit-transform: translate3D(0px, 50px, 0px);
+  -webkit-transition: all 0.6s cubic-bezier(0.34, 2, 0.7, 1) 0s;
+  -moz-transition: all 0.6s cubic-bezier(0.34, 2, 0.7, 1) 0s;
+  -o-transition: all 0.6s cubic-bezier(0.34, 2, 0.7, 1) 0s;
+  -ms-transition: all 0.6s cubic-bezier(0.34, 2, 0.7, 1) 0s;
+  transition: all 0.6s cubic-bezier(0.34, 2, 0.7, 1) 0s;
+}
+.section-testimonials .testimonials-people .left-first-person {
+  left: 2%;
+  top: 2%;
+  height: 70px;
+  width: 70px;
+}
+.section-testimonials .testimonials-people .left-second-person {
+  left: 65%;
+  top: 100%;
+  height: 70px;
+  width: 70px;
+}
+.section-testimonials .testimonials-people .left-third-person {
+  left: -17%;
+  top: 135%;
+  height: 120px;
+  width: 120px;
+}
+.section-testimonials .testimonials-people .left-fourth-person {
+  left: 50%;
+  top: 190%;
+  height: 55px;
+  width: 55px;
+}
+.section-testimonials .testimonials-people .left-fifth-person {
+  left: 95%;
+  top: 220%;
+  height: 35px;
+  width: 35px;
+}
+.section-testimonials .testimonials-people .left-sixth-person {
+  left: 40%;
+  top: 265%;
+  height: 95px;
+  width: 95px;
+}
+.section-testimonials .testimonials-people .right-first-person {
+  right: -10%;
+  top: 0;
+  height: 60px;
+  width: 60px;
+}
+.section-testimonials .testimonials-people .right-second-person {
+  right: 30%;
+  top: 60%;
+  height: 70px;
+  width: 70px;
+}
+.section-testimonials .testimonials-people .right-third-person {
+  right: 95%;
+  top: 95%;
+  height: 50px;
+  width: 50px;
+}
+.section-testimonials .testimonials-people .right-fourth-person {
+  right: 45%;
+  top: 145%;
+  height: 50px;
+  width: 50px;
+}
+.section-testimonials .testimonials-people .right-fifth-person {
+  right: 90%;
+  top: 195%;
+  height: 100px;
+  width: 100px;
+}
+.section-testimonials .testimonials-people .right-sixth-person {
+  right: 15%;
+  top: 260%;
+  height: 70px;
+  width: 70px;
+}

@@ -1,0 +1,42 @@
+.projects-1{
+    .card-background-image{
+        .card-category{
+            color: $white-color;
+        }
+    }
+    .project-pills{
+        margin: 30px auto;
+    }
+}
+
+.project-4{
+    .card[data-background]{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+
+        .card-body{
+            min-height: auto;
+            -webkit-box-flex: initial;
+            -webkit-flex: initial;
+            -ms-flex: initial;
+            flex: initial;
+        }
+        .icon{
+            z-index: 2;
+        }
+
+        &:after{
+            background-color: rgba(0, 0, 0, 0.35);
+        }
+    }
+    .info{
+        padding-top: 0 !important;
+    }
+    .card.card-plain{
+        .card-body{
+            margin-top: 60px;
+        }
+    }
+}

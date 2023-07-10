@@ -1,0 +1,96 @@
+/*!
+
+ =========================================================
+ * Paper Kit PRO React v1.3.2 based on Paper Kit 2 Pro - v2.3.0
+ =========================================================
+
+ * Product Page: https://www.creative-tim.com/product/paper-kit-2-pro
+ * Copyright 2023 Creative Tim (http://www.creative-tim.com)
+
+ * Designed by www.invisionapp.com Coded by www.creative-tim.com
+
+ =========================================================
+
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+ */
+
+@import "paper-kit/variables";
+@import "paper-kit/mixins";
+
+// Plugins CSS
+@import "paper-kit/plugins/plugin-bootstrap-switch";
+@import "paper-kit/plugins/plugin-nouislider";
+@import "paper-kit/plugins/plugin-bootstrap-select";
+@import "paper-kit/plugins/plugin-tagsinput";
+@import "paper-kit/plugins/plugin-fileupload";
+@import "paper-kit/plugins/plugin-datetimepicker";
+
+// Core CSS
+@import "paper-kit/nucleo-outline";
+@import "paper-kit/alerts";
+@import "paper-kit/checkbox-radio";
+@import "paper-kit/badges";
+@import "paper-kit/pagination";
+@import "paper-kit/typography";
+@import "paper-kit/misc";
+@import "paper-kit/misc-extended";
+@import "paper-kit/buttons";
+@import "paper-kit/social-buttons";
+@import "paper-kit/inputs";
+@import "paper-kit/progress-bars";
+@import "paper-kit/tooltips-and-popovers";
+
+// components
+@import "paper-kit/tabs-navs";
+@import "paper-kit/navbars";
+@import "paper-kit/navbar-extend";
+@import "paper-kit/dropdown-extend";
+@import "paper-kit/images";
+@import "paper-kit/tags";
+@import "paper-kit/animated-buttons";
+@import "paper-kit/preloaders";
+@import "paper-kit/tables";
+@import "paper-kit/info-areas";
+@import "paper-kit/media";
+@import "paper-kit/modal";
+@import "paper-kit/carousel";
+@import "paper-kit/footers";
+@import "paper-kit/headers";
+@import "paper-kit/collapse";
+
+// cards
+@import "paper-kit/cards";
+@import "paper-kit/cards/card-background";
+@import "paper-kit/cards/card-blog";
+@import "paper-kit/cards/card-contact";
+@import "paper-kit/cards/card-image";
+@import "paper-kit/cards/card-register";
+@import "paper-kit/cards/card-plain";
+@import "paper-kit/cards/card-pricing";
+@import "paper-kit/cards/card-profile";
+@import "paper-kit/cards/card-product";
+@import "paper-kit/cards/card-signup";
+@import "paper-kit/cards/card-testimonials";
+
+// For gallery, using PhotoSwipe
+@import "paper-kit/plugins/photo-swipe/main.scss";
+@import "paper-kit/plugins/photo-swipe/default-skin.scss";
+@import "paper-kit/plugins/photo-swipe/gallery.scss";
+@import "paper-kit/plugins/photo-swipe/main.scss";
+
+// Isometric cards plugin
+@import "paper-kit/plugins/plugin-isometricGrids";
+
+// example pages and sections
+@import "paper-kit/examples";
+@import "paper-kit/sections";
+@import "paper-kit/sections-extend";
+
+@import "paper-kit/responsive";
+
+// Nucleo Icons
+@import "paper-kit/nucleo-icons";
+
+// React Differences
+@import "react/react-differences";

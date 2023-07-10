@@ -1,0 +1,33 @@
+.card-contact {
+  .card-header {
+    margin: 15px;
+    border-radius: 3px;
+    padding: 15px 0 0 0;
+    background-color: $white-color;
+    border: 0;
+
+    .card-title {
+      color: $default-color;
+      margin-top: 0px;
+      padding-bottom: 25px;
+      border-bottom: 1px solid $medium-gray;
+    }
+  }
+  .card-body {
+    .card-icon {
+      float: left;
+      margin-top: 24px;
+      margin-right: 10px;
+      border: 0;
+
+      i {
+        font-size: 30px;
+        padding: 25px;
+        width: 50px;
+        border: 0;
+        border-radius: 50%;
+        height: 110px;
+      }
+    }
+  }
+}

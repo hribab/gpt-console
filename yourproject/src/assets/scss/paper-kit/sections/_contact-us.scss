@@ -1,0 +1,49 @@
+#contact-us{
+    .contactus-1{
+        &.section-image{
+            .card-contact{
+                margin-bottom: 30px;
+                margin-top: 50px;
+            }
+            .title{
+                margin-top: 15%;
+            }
+        }
+        .info-horizontal{
+            margin-left: 0
+        }
+        .description, .info-title{
+            color: $black-color !important;
+        }
+
+        & + .contactus-2{
+            padding-top: 0;
+        }
+    }
+
+    .contactus-2{
+        position: relative;
+
+        .card{
+            top: 60px;
+        }
+
+        .big-map{
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+    }
+    .card-contact{
+        .card-body{
+            .checkbox{
+                margin-top: 5px;
+            }
+        }
+    }
+
+}
+
+.section-contactus {
+  padding-bottom: 0;
+}
