@@ -9,7 +9,9 @@ const generate = require("@babel/generator").default;
 const t = require("@babel/types");
 const { exec } = require("child_process");
 const { generateResponse } = require("../../../utils/api/apiCall");
-
+// TODO: move all prompts to prompts.js
+// const {  PROMPT_GENERATOR,
+//   SECTIONS_GENERATOR} = require("../../../config/prompts");
 
 const fse = require("fs-extra");
 

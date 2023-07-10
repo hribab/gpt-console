@@ -2,8 +2,12 @@ const GENERATE_MESSAGING = (userRequirement, code) => `
 Input: I am passing entire code of generic header section of a landing page. 
 Please update only messaging for JSX code for user requirement: ${userRequirement}
 Return back same code exactly, only change happened should be text, nothing else should be changed.
-code: ${code}
-`;
+I want entire code to be returned back even if there is no change in code.
+I dont want text like rest of the code remains the same, section remains unchanged, ..etc.
+
+I want full code as it is because I will be importing the returned code in landing page component
+
+code: ${code}`;
 
 const PROMPT_GENERATOR = (userRequirement) => `I want you to act as a prompt generator for Midjourney's artificial intelligence program. Your job is to provide realistic examples that will inspire unique and interesting images from the AI. Describe only one concrete idea, don't mix many. It should not be complex, should be clean, choose all real colors, real textures, real objects. The more detailed and realistic your description, the more interesting the resulting image will be. always use hyper realistic descriptions and features for images, is should never has a scene or description which cannot be realistic. Always
 Use dark themed color pallets. also generate negative prompt: list out most of possible errors AI model cangenerate, for example two faced humans, structures defying gravity, shapes that look like human private parts ..etc
