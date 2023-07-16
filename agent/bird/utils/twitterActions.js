@@ -106,7 +106,7 @@ async function tweetWithImage(page, waitTime) {
 
     console.log("===image prompt resones====", response)
     const raw = JSON.stringify({
-        "prompt": `${response.positive_prompt}. 8K, hyper realistic, Uplight f/1.8 --ar 16:9 --seed 3000 --q 2 --v 5`,
+        "prompt": `${response.positive_prompt}. 8K, hyper realistic`,
         "negative_prompt": response.negative_prompt,
         "width": 1024,
         "height": 1024,

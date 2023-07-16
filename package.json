@@ -40,6 +40,7 @@
     "clipboardy": "2.3.0",
     "ctags": "^3.1.0",
     "eslint": "^8.39.0",
+    "firebase-admin": "^11.9.0",
     "fs-extra": "^11.1.1",
     "gitignore-parser": "^0.0.2",
     "glob": "^10.2.3",

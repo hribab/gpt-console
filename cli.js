@@ -104,7 +104,7 @@ gptCli.eval = async (input, context, filename, callback) => {
         if (extractedText) {
           extractedText = extractedText.replace(/^['"]|['"]$/g, "");
           console.log("======User Update requirement=====", extractedText);
-          updatePixie();(extractedText);
+          updatePixie(extractedText);
         }
         callback(null);
         break;
@@ -124,6 +124,15 @@ gptCli.eval = async (input, context, filename, callback) => {
       break;
     case "help":
       welcomeMessage();
+      callback(null);
+      break;
+    case "dld":
+      const currentDirectory = process.cwd();
+      const folderDestination = path.join(currentDirectory, 'folder');
+
+      // Usage example:
+      downloadFolder('path/to/folder', folderDestination);
+      
       callback(null);
       break;
     case "exit":

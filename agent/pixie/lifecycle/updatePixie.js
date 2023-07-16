@@ -1,12 +1,12 @@
+const { 
+    updatePixieOperation
+ } = require("../pixie.js");
+
 async function updatePixie(input, callback) {
-    try {      
-       console.log("=====stop====")
-    
-      } catch (err) {
-        return `An error occurred during API call: ${err}`;
-      }
+    console.log("=====updatePixie=====", input);
+    updatePixieOperation(input, callback)
 }
     
-module.exports = {
+module.exports = {   
     updatePixie
 }

@@ -5,13 +5,13 @@ const unzipper = require("unzipper");
 const { promisify } = require("util");
 const path = require("path");
 // const fs = require("fs").promises;
-const generate = require("@babel/generator").default;
-const t = require("@babel/types");
+
 const { exec } = require("child_process");
 const { generateResponse } = require("../../../utils/api/apiCall");
-// TODO: move all prompts to prompts.js
-// const {  PROMPT_GENERATOR,
-//   SECTIONS_GENERATOR} = require("../../../config/prompts");
+const {
+  extractImagePaths,
+  downloadComponentImages,
+} = require("./imageProcessing");
 
 const fse = require("fs-extra");
 
@@ -23,6 +23,8 @@ const pipeline = promisify(stream.pipeline);
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const generator = require("@babel/generator").default;
+const generate = require("@babel/generator").default;
+const t = require("@babel/types");
 
 
 
@@ -169,69 +171,110 @@ async function downloadCodeFile(url, destinationPath) {
 
 async function generateMessaging(userRequirement, filePath) {
 
-let code, gtpCode;
+let code, gtpCode, finalCode;
 try {
   code = fs.readFileSync(
     filePath,
     "utf8"
   );
+  gtpCode = code;
 } catch (err) {
   console.error(err);
 }
 
 const resp = await generateResponse(
   `
-      Input: I am passing entire code of generic header section of a landing page. 
-      Please update only messaging for JSX code for user requirement: ${userRequirement}
-      Return back same code exactly, only change happened should be text, nothing else should be changed.
-      I want entire code to be returned back even if there is no change in code.
-      I dont want text like rest of the code remains the same, section remains unchanged, ..etc.
 
-      I want full code as it is because I will be importing the returned code in landing page component
+  Given the User Requirement: “ ${userRequirement} “, 
+        
+  return me messaging updates to JSX code
+
+  rules are: 
+  1. The messaging should cover all the text in the JSX code
+  2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
+  3. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
+  4. Buttons text should be updated as well if any
   
-      code: ${code}
+  Output should be json object with the following format:
+  [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
+  
+  In the response no other text should be there, it must be only JSON. 
+  
+  Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
+  
+  Here is the JSX code to modify:
+
+\`\`\`jsx
+
+${code}
     `,
   false
 );
 
-console.log("====resp====", resp);
 
-function extractCode(input) {
-  const regex = /```(javascript|jsx)?([\s\S]*?)```/g;
-  const match = regex.exec(input);
-  return match ? match[2].trim() : null;
-}
+let updates;
+  try {
+    // Try to parse the input directly.
+    updates = JSON.parse(resp);
+  } catch(e) {
+    // If that fails, find the first valid JSON string within the input.
+    const regex = /```json?([\s\S]*?)```/g;
+    const match = regex.exec(resp);
+    updates = match ? JSON.parse(match[1].trim()) : null;
+  }
 
-gtpCode = extractCode(resp);
+  console.log("===updates===", updates);
+  const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
 
-// Parse the code into an AST
-let ast;
-try {
-  ast = parser.parse(gtpCode, {
-    sourceType: "module",
-    plugins: ["jsx"],
+  let currentLineNumber = 1;
+  traverse(baseAST, {
+      enter(path) {
+          if(path.node.loc) {
+              currentLineNumber = path.node.loc.start.line;
+          }
+
+          if (
+              t.isJSXText(path.node)
+          ) {
+              const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.trim().toLowerCase());
+              if(lineUpdate) {
+                path.node.value = path.node.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+              }
+          }
+      },
   });
-} catch (error) {
-  console.log("it's parse catch");
-  console.error("Syntax error:", error.message, error.stack);
-  // const resp = await generateResponse(`There is a syntax error in the below javascript code. Please correct the syntax errors only.
-  // response should has only the code, nothing else should be there in response
-  // error: ${error.message}
-  // stacktrace : ${error.stack.split('\n')[0]}
-  // code: ${code}
-  // `, false)
 
-  // console.log("----res[====", resp)
-  // ast = parser.parse(resp, {
-  //   sourceType: "module",
-  //   plugins: ["jsx"],
-  // });
-  console.error("Major part of stack trace:", error.stack.split("\n")[0]);
-}
+  const { code: newCode } = generator(baseAST);
+  console.log("--newCode----", newCode);
+
+
+// let ast;
+// try {
+//   ast = parser.parse(gtpCode, {
+//     sourceType: "module",
+//     plugins: ["jsx"],
+//   });
+// } catch (error) {
+//   console.log("it's parse catch");
+//   console.error("Syntax error:", error.message, error.stack);
+//   // const resp = await generateResponse(`There is a syntax error in the below javascript code. Please correct the syntax errors only.
+//   // response should has only the code, nothing else should be there in response
+//   // error: ${error.message}
+//   // stacktrace : ${error.stack.split('\n')[0]}
+//   // code: ${code}
+//   // `, false)
+
+//   // console.log("----res[====", resp)
+//   // ast = parser.parse(resp, {
+//   //   sourceType: "module",
+//   //   plugins: ["jsx"],
+//   // });
+//   console.error("Major part of stack trace:", error.stack.split("\n")[0]);
+// }
 
 let output;
 try {
-  output = generate(ast).code;
+  output = generate(baseAST).code;
   console.log("==syntax checked==cahtgptcode====", output);
 
   try {
@@ -251,159 +294,6 @@ try {
 }
 
 }
-
-function extractImagePaths(code) {
-  const regex = /require\(["']([^"']+)["']\)/g;
-  const matches = [];
-  let match;
-  while ((match = regex.exec(code)) !== null) {
-      matches.push(match[1]);
-  }
-  return matches;
-}
-
-  // Function to get image details
-async function getImageDetails(generationId) {
-    const getOptions = {
-      method: 'GET',
-      headers: {
-        "accept": "application/json",
-        "authorization": "Bearer 2dd1df64-644e-47ab-9f6a-724111b49c9f",
-      },
-      redirect: 'follow'
-    };
-
-    while (true) {
-      try {
-        const response = await fetch(`https://cloud.leonardo.ai/api/rest/v1/generations/${generationId}`, getOptions);
-        const data = await response.json();
-        if (data.generations_by_pk.status === "COMPLETE") {
-          return data.generations_by_pk.generated_images[0].url;
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds before retrying
-    }
-  }
-// Function to get image details
-async function getImageDetails(generationId) {
-  const getOptions = {
-    method: "GET",
-    headers: {
-      accept: "application/json",
-      authorization: "Bearer 2dd1df64-644e-47ab-9f6a-724111b49c9f",
-    },
-    redirect: "follow",
-  };
-
-  while (true) {
-    try {
-      const response = await fetch(
-        `https://cloud.leonardo.ai/api/rest/v1/generations/${generationId}`,
-        getOptions
-      );
-      const data = await response.json();
-      if (data.generations_by_pk.status === "COMPLETE") {
-        return data.generations_by_pk.generated_images[0].url;
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 5 seconds before retrying
-  }
-}
-
-// Function to download image
-async function downloadImage(url, filename) {
-    try {
-      // Ensure the directory exists
-     console.log("==creating=filename====", filename)
-      // Split the path into its parts
-      let parts = filename.split(path.sep);
-      // Pop the last part of the path array which should be the filename
-      parts.pop();
-
-      let dirPath = '';
-      for(let part of parts) {
-          dirPath = path.join(dirPath, part);
-          if (!fs.existsSync(dirPath)) {
-              fs.mkdirSync(dirPath);
-          }
-      }
-
-
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`unexpected response ${response.statusText}`);
-      await pipeline(response.body, fs.createWriteStream(filename));
-      
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }
-
-async function downloadComponentImages(userRequirement, outputImagePath) {
-
-  const gptPrompt = `I want you to act as a prompt generator for Midjourney's artificial intelligence program. Your job is to provide realistic examples that will inspire unique and interesting images from the AI. Describe only one concrete idea, don't mix many. It should not be complex, should be clean, choose all real colors, real textures, real objects. The more detailed and realistic your description, the more interesting the resulting image will be. always use hyper realistic descriptions and features for images, is should never has a scene or description which cannot be realistic. Always
-  Use dark themed color pallets. also generate negative prompt: list out most of possible errors AI model cangenerate, for example two faced humans, structures defying gravity, shapes that look like human private parts ..etc
-
-  Response should be maximum of 60 words, prompt and negative prompt. and response must be in json
-  example output: {"positive_prompt": "", "negative_prompt": ""}
-
-  Here is your first prompt: "Elegant Background image for landing page of user requirement:  ${userRequirement}"
-
-  Main requirement is response must be in json
-`
-  const gptRawResponse = await generateResponse(gptPrompt)
-  
-  const response = JSON.parse(gptRawResponse)
-  console.log("===image prompt ====", gptPrompt)
-  // Define headers and body for POST request
-  const myHeaders = {
-    "accept": "application/json",
-    "authorization": "Bearer 2dd1df64-644e-47ab-9f6a-724111b49c9f",
-    "content-type": "application/json"
-  };
-
-  console.log("===image prompt resones====", response)
-  const raw = JSON.stringify({
-    "prompt": `${response.positive_prompt}. 8K, hyper realistic, Uplight f/1.8 --ar 16:9 --seed 3000 --q 2 --v 5`,
-    "negative_prompt": response.negative_prompt,
-    "width": 1024,
-    "height": 1024,
-    "modelId": "291be633-cb24-434f-898f-e662799936ad",
-    "guidance_scale": 7,
-    "presetStyle": "LEONARDO",
-    "num_images": 1
-  });
-
-  const postOptions = {
-    method: 'POST',
-    headers: myHeaders,
-    body: raw,
-    redirect: 'follow'
-  };
-
-  // Function to generate image
-  async function generateImage() {
-    try {
-      const response = await fetch("https://cloud.leonardo.ai/api/rest/v1/generations", postOptions);
-      const data = await response.json();
-      return data.sdGenerationJob.generationId;
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }
-
-
- 
-  const generationId = await generateImage();
-  console.log("===generationId====", generationId)
-
-  const imageUrl = await getImageDetails(generationId);
-  console.log("===imageUrl====", imageUrl)
-  await downloadImage(imageUrl, outputImagePath);
-  }
 
 async function updateTheCodeWithImages(userRequirement, filePath) {
     let code;
