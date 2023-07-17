@@ -25,7 +25,10 @@ const traverse = require("@babel/traverse").default;
 const generator = require("@babel/generator").default;
 const generate = require("@babel/generator").default;
 const t = require("@babel/types");
-
+const {
+  designSystems,
+  skeletonAndConfigURL
+} = require("../config/designSystems");
 
 
 //npm install in your project
@@ -344,11 +347,208 @@ async function updateTheCodeWithImages(userRequirement, filePath) {
 }
 
 
+function findDesignInResponse(response, designs) {
+  const designNames = Object.keys(designs); // Extract design names
+  let designFound = designNames.find(design => response.includes(design));
+  
+  if (designFound) {
+      return designFound;
+  } else {
+      // If no design is found in the response, return a random one
+      let randomDesign = designNames[Math.floor(Math.random() * designNames.length)];
+      return randomDesign;
+  }
+}
+
+async function pickRightDesignSystem(userRequirement) {
+
+  const resp = await generateResponse(
+    `Given the User Requirement: ${userRequirement}
+
+    I want you to pick the right design system for the above user requirement
+    
+    Available desings are:
+    ${designSystems}
+
+    Response should be one of the names ${Object.keys(designSystems).join(",")}, no other text should be there.
+      `,
+    false
+  );
+
+  const selectedDesignSystem = findDesignInResponse(resp, designSystems);
+
+  return {designSystemZipURL: skeletonAndConfigURL[selectedDesignSystem].skeleton, designSystemConfig:skeletonAndConfigURL[selectedDesignSystem].config }
+}
+async function identifyEnabledSections(userRequirement) {
+
+  const resp = await generateResponse(
+    `Given the User Requirement: ${userRequirement}
+
+    I want you to return list of  sections that I can include in landing page for the above user requirement
+    
+    rules are:
+    - If the requirement is not clear, return all only headers sections true
+      
+    Available sections are:
+    headers, features, blogs, teams, projects, pricing, testmonials, contactus
+
+    Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
+
+    Response should be JSON , no other text should be there.
+
+    Request: Response should be able to parse by a below javascript function:
+    
+    
+    function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+
+      `,
+    false
+  );
+
+  let enabledSections
+  try {
+    // Try to parse the input directly.
+    enabledSections = JSON.parse(resp);
+  } catch(e) {
+    const resp = await generateResponse(
+      `Given the User Requirement: ${userRequirement}
+  
+      I want you to return list of  sections that I can include in landing page for the above user requirement
+      
+      Available sections are:
+      headers, features, blogs, teams, projects, pricing, testmonials, contactus
+  
+      Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
+  
+      Response should be JSON , no other text should be there.
+  
+      Request: Response should be able to parse by a below javascript function:
+      
+      
+      function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+  
+        `,
+      false
+    );  
+    try {
+      // Try to parse the input directly.
+      enabledSections = JSON.parse(resp);
+    } catch(e) {
+      enabledSections = {
+        headers: true,
+        features: true,
+        blogs: true,
+        teams: true,
+        projects: false,
+        pricing: true,
+        testmonials: false,
+        contactus: false,
+        footer: false,
+      }
+    }
+  }
+
+  return enabledSections
+
+}
+
+function getFirstCodefile(obj) {
+  let result = {};
+  for (let key in obj) {
+      for (let subKey in obj[key]) {
+          if (obj[key][subKey].hasOwnProperty('codefile')) {
+              result[key] = obj[key][subKey].codefile;
+              break;
+          }
+      }
+  }
+  return result;
+}
+async function identifySpecificSectionCodeFilesForEnabledSections(userRequirement, enabledSectionsForRequirement, designSystemConfigURL) {
+  let designSystemConfig;
+  try {
+    const response = await fetch(designSystemConfigURL);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    designSystemConfig = await response.json();
+  } catch (error) {
+    console.error('There was an error!', error);
+  }
+
+  let enabledSectionConfig = {};
+
+  for (let section in enabledSectionsForRequirement) {
+    if (enabledSectionsForRequirement[section]) {
+      enabledSectionConfig[section] = designSystemConfig[section];
+    }
+  }
+  let keys = Object.keys(enabledSectionConfig);
+  let groupedSectionConfig = [];
+
+  for (let i = 0; i < keys.length; i += 2) {
+    let group = {};
+    if (keys[i]) group[keys[i]] = enabledSectionConfig[keys[i]];
+    if (keys[i + 1]) group[keys[i + 1]] = enabledSectionConfig[keys[i + 1]];
+    groupedSectionConfig.push(group);
+  }
+
+let finalResult = {};
+for (let index = 0; index < groupedSectionConfig.length; index++) {
+  const element = groupedSectionConfig[index];
+  const resp = await generateResponse(
+    `Given the User Requirement: ${userRequirement}
+
+    We already identified landing for above requirement has sections ${Object.keys(enabledSectionsForRequirement).join(",")}
+    
+    Under each section we multiple codefiles with suitability field.
+
+    I want you to pick the top most suitable codefiles for the above user requirement and return the code file url
+    
+    rules are:
+    - If the requirement is not clear, pick the first codefiles and return the code file url, no other text should be there.
+      
+    Available sections and codefiles are :
+    ${JSON.stringify(element)}
+
+    Sample output: {"headers": codefileurl, "features": codefileurl, "blogs": codefileurl, "teams": codefileurl, "projects": codefileurl, "pricing": codefileurl, "testmonials": codefileurl, "contactus": codefileurl}
+
+    Response should be JSON , no other text should be there. never include any explanation or other text in response, strictly only above JSON
+
+    Request: Response should be able to parse by a below javascript function:
+    
+    function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+
+      `,
+    false
+  );
+
+  let codefileLinks
+  try {
+    // Try to parse the input directly.
+    codefileLinks = JSON.parse(resp);
+  } catch(e) {
+    codefileLinks = getFirstCodefile(element)
+    console.log("===errr==r=====", e)
+
+  }
+  finalResult = {...finalResult, ...codefileLinks}
+}
+return finalResult;
+
+}
+
+
 
 module.exports = {
   downloadAndUnzip,
   updateLandingPage,
   downloadCodeFile,
   generateMessaging,
-  updateTheCodeWithImages
+  updateTheCodeWithImages,
+  pickRightDesignSystem,
+  identifyEnabledSections,
+  identifySpecificSectionCodeFilesForEnabledSections,
 };
