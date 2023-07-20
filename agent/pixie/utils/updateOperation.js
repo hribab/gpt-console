@@ -31,10 +31,10 @@ const {
 
 
 async function checkForDesignChange(userRequirement, filePath) {
-    const createRequirement = `landing page for selling oversized t-shirts`;
+    //TODO: we need to save original user request to create the page const createRequirement = `landing page for selling oversized t-shirts`;
     const resp = await generateResponse(
         `
-        Context: I recently created a landing page for a client with the brief being ${createRequirement}. Now, the client wants to make some modifications to this page.
+        Context: I recently created a landing page for a client. Now, the client wants to make some modifications to this page.
 
         Client's Request for Modification: "${userRequirement}"
 
@@ -46,38 +46,189 @@ async function checkForDesignChange(userRequirement, filePath) {
           `,
         false
       );
+    return resp.toLocaleLowerCase().includes("true") ? true : false;
 }
 async function implementDesignChange(userRequirement, filePath) {}
-async function identifyUpdateSections(userRequirement, filePath) {}
-async function determineUpdateType(userRequirement, filePath) {}
+async function identifyUpdateSections(userRequirement) {
+
+    const resp = await generateResponse(
+        ` Context: I recently created a landing page for a client. Now, the client wants to make some modifications to this page.
+
+        Client's Request for Modification: "${userRequirement}"
+    
+        I want you to return list of  sections that user wants to make changes based on user requirement
+        
+        rules are:
+        - If the requirement is not clear, return empty object {}
+        - If the intention is to not change anything, return empty object {}
+          
+        Available sections are:
+        headers, features, blogs, teams, projects, pricing, testmonials, contactus
+    
+        Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
+    
+        Response should be JSON , no other text should be there.
+    
+        Request: Response should be able to parse by a below javascript function:
+        
+        
+        function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+    
+          `,
+        false
+      );
+    
+      let enabledSections
+      try {
+        // Try to parse the input directly.
+        enabledSections = JSON.parse(resp);
+      } catch(e) {
+        console.log("====catch====", e)
+        const resp = await generateResponse(
+          `Context: I recently created a landing page for a client. Now, the client wants to make some modifications to this page.
+
+          Client's Request for Modification: "${userRequirement}"
+      
+          I want you to return list of  sections that user wants to make changes based on user requirement
+          
+          rules are:
+          - If the requirement is not clear, return empty object {}
+          - If the intention is to not change anything, return empty object {}
+            
+          Available sections are:
+          headers, features, blogs, teams, projects, pricing, testmonials, contactus
+      
+          Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
+      
+          Response should be JSON , no other text should be there.
+      
+          Request: Response should be able to parse by a below javascript function:
+          
+          
+          function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+      
+            `,
+          false
+        );  
+        try {
+          // Try to parse the input directly.
+          enabledSections = JSON.parse(resp);
+        } catch(e) {
+          enabledSections = {
+            headers: false,
+            features: false,
+            blogs: false,
+            teams: false,
+            projects: false,
+            pricing: false,
+            testmonials: false,
+            contactus: false,
+            footer: false,
+          }
+        }
+      }
+    
+      return enabledSections
+
+}
+
+async function determineUpdateType(userRequirement) {
+    const resp = await generateResponse(
+        ` Context: I recently created a landing page for a client. Now, the client wants to make some modifications to this page.
+
+        Client's Request for Modification: "${userRequirement}"
+    
+        I want you to return type of update user wants to make based on user requirement
+        
+        rules are:
+        - If the requirement is not clear, return empty object {}
+        - If the intention is to not change anything, return empty object {}
+          
+        Available update types are:
+        messaging, backgroundimage, remove
+    
+        Sample output: {"messaging": true, "backgroundimage": true, "remove": false}
+    
+        Response should be JSON , no other text should be there.
+    
+        Request: Response should be able to parse by a below javascript function:
+        
+        
+        function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+    
+          `,
+        false
+      );
+    
+      let updateOperations
+      try {
+        // Try to parse the input directly.
+        updateOperations = JSON.parse(resp);
+      } catch(e) {
+        const resp = await generateResponse(
+          `Context: I recently created a landing page for a client. Now, the client wants to make some modifications to this page.
+
+          Client's Request for Modification: "${userRequirement}"
+      
+          I want you to return type of update user wants to make based on user requirement
+          
+          rules are:
+          - If the requirement is not clear, return empty object {}
+          - If the intention is to not change anything, return empty object {}
+            
+          Available update types are:
+          messaging: If user requirement is to update the messaging or text of any kind 
+          backgroundimage: If user requirement is to update the image of any kind
+          remove: If user requirement is to remove any thing
+      
+          Sample output: {"messaging": true, "backgroundimage": true, "remove": false}
+      
+          Response should be JSON , no other text should be there.
+      
+          Request: Response should be able to parse by a below javascript function:
+    
+          function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+      
+            `,
+          false
+        );  
+        try {
+          // Try to parse the input directly.
+          updateOperations = JSON.parse(resp);
+        } catch(e) {
+            updateOperations = {
+            messaging: false,
+            backgroundimage: false,
+            remove: false,
+          }
+        }
+      }
+    
+      return updateOperations
+}
 async function executeMessagingUpdate(userRequirement, filePath) {
 
-    let code, gtpCode, finalCode;
+    let code;
     try {
         code = fs.readFileSync(
         filePath,
         "utf8"
         );
-        gtpCode = code;
     } catch (err) {
         console.error(err);
     }
-    
+
     const resp = await generateResponse(
         `
         Given the User Requirement: “ ${userRequirement} “, 
-        
+            
         return me messaging updates to JSX code
-    
+
         rules are: 
-        1. The messaging should highlight the customer value proposition
-        2. Messaging should cover all the divs of react component, example names,  headers, descriptions..etc
-        3. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text, buttons are exempted from this rule
-        3. Branding text should be less than 3 words
-        4. Title text should be less than 5 words
-        4. Description should be more than 10 words and less than 20 words
-        5. Buttons text should be updated as well if any
-        3. Must cover all the divs of the react component that needs text update
+        1. The messaging should cover all the text in the JSX code
+        2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
+        3. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
+        4. Buttons text should be updated as well if any
         
         Output should be json object with the following format:
         [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
@@ -87,82 +238,127 @@ async function executeMessagingUpdate(userRequirement, filePath) {
         Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
         
         Here is the JSX code to modify:
-    
+
     \`\`\`jsx
-    
+
     ${code}
         `,
         false
     );
-    
-    console.log("=====resp=====", resp);
+    console.log("=====first resp=====", resp);
     let updates;
-        try {
-        // Try to parse the input directly.
+    try {
+    // Try to parse the input directly.
         updates = JSON.parse(resp);
+    } catch(e) {
+    // If that fails, find the first valid JSON string within the input.
+    const regex = /```json?([\s\S]*?)```/g;
+    const match = regex.exec(resp);
+    if(match) {
+        try{
+            updates = JSON.parse(match[1].trim())
         } catch(e) {
-        // If that fails, find the first valid JSON string within the input.
-        const regex = /```json?([\s\S]*?)```/g;
-        const match = regex.exec(resp);
-        updates = match ? JSON.parse(match[1].trim()) : null;
+            const resp = await generateResponse(
+                `
+                Given the User Requirement: “ ${userRequirement} “, 
+                    
+                return me messaging updates to JSX code
+        
+                rules are: 
+                1. The messaging should cover all the text in the JSX code
+                2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
+                3. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
+                4. Buttons text should be updated as well if any
+                
+                Output should be json object with the following format:
+                [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
+                
+                In the response no other text should be there, it must be only JSON. 
+                
+                Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
+                
+                Here is the JSX code to modify:
+        
+            \`\`\`jsx
+        
+            ${code}
+                `,
+                false
+            );
+            try {
+            // Try to parse the input directly.
+                updates = JSON.parse(resp);
+            } catch(e) {
+            // If that fails, find the first valid JSON string within the input.
+            const regex = /```json?([\s\S]*?)```/g;
+            const match = regex.exec(resp);
+            updates = match ? JSON.parse(match[1].trim()) : null;
+            }
+
         }
-    
-        console.log("====updates====", updates);
-    
-    
-        const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
-    
-        let currentLineNumber = 1;
-        traverse(baseAST, {
-            enter(path) {
-                if(path.node.loc) {
-                    currentLineNumber = path.node.loc.start.line;
+    }else{
+            const resp = await generateResponse(
+                `
+                Given the User Requirement: “ ${userRequirement} “, 
+                    
+                return me messaging updates to JSX code
+        
+                rules are: 
+                1. The messaging should cover all the text in the JSX code
+                2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
+                3. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
+                4. Buttons text should be updated as well if any
+                
+                Output should be json object with the following format:
+                [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
+                
+                In the response no other text should be there, it must be only JSON. 
+                
+                Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
+                
+                Here is the JSX code to modify:
+        
+            \`\`\`jsx
+        
+            ${code}
+                `,
+                false
+            );
+            try {
+            // Try to parse the input directly.
+                updates = JSON.parse(resp);
+            } catch(e) {
+            // If that fails, find the first valid JSON string within the input.
+            const regex = /```json?([\s\S]*?)```/g;
+            const match = regex.exec(resp);
+            updates = match ? JSON.parse(match[1].trim()) : null;
+            }
+    }
+    }
+
+    console.log("===updates===", updates);
+    const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
+
+    traverse(baseAST, {
+        enter(path) {
+
+            if (
+                t.isJSXText(path.node)
+            ) {
+                const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.trim().toLowerCase());
+                if(lineUpdate) {
+                path.node.value = path.node.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
                 }
-    
-                if (
-                    t.isJSXText(path.node)
-                ) {
-                    const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.trim().toLowerCase());
-                    if(lineUpdate) {
-                    path.node.value = path.node.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
-                    }
-                }
-            },
-        });
-    
-        const { code: newCode } = generator(baseAST);
-        console.log("--newCode----", newCode);
-    
-    
-    // let ast;
-    // try {
-    //   ast = parser.parse(gtpCode, {
-    //     sourceType: "module",
-    //     plugins: ["jsx"],
-    //   });
-    // } catch (error) {
-    //   console.log("it's parse catch");
-    //   console.error("Syntax error:", error.message, error.stack);
-    //   // const resp = await generateResponse(`There is a syntax error in the below javascript code. Please correct the syntax errors only.
-    //   // response should has only the code, nothing else should be there in response
-    //   // error: ${error.message}
-    //   // stacktrace : ${error.stack.split('\n')[0]}
-    //   // code: ${code}
-    //   // `, false)
-    
-    //   // console.log("----res[====", resp)
-    //   // ast = parser.parse(resp, {
-    //   //   sourceType: "module",
-    //   //   plugins: ["jsx"],
-    //   // });
-    //   console.error("Major part of stack trace:", error.stack.split("\n")[0]);
-    // }
-    
+            }
+        },
+    });
+
+    const { code: newCode } = generator(baseAST);
+    console.log("--newCode----", newCode);
+
     let output;
     try {
         output = generate(baseAST).code;
-        console.log("==syntax checked==cahtgptcode====", output);
-    
         try {
         fs.writeFileSync(
             filePath,
@@ -178,17 +374,12 @@ async function executeMessagingUpdate(userRequirement, filePath) {
         console.error("Syntax error:", error.message);
         console.error("Stack trace:", error.stack);
     }
-        
-        
-        
-} 
-async function executeBackgroundImageUpdate(userRequirement, filePath) {
 
-    
+}
+async function executeBackgroundImageUpdate(userRequirement, filePath) {
         let code;
         try {
-            code = fs.readFileSync(filePath, //"yourproject/src/components/Landingpage/Header.js", 
-            'utf8');
+            code = fs.readFileSync(filePath,'utf8');
         } catch (err) {
             console.error(err);
         }
