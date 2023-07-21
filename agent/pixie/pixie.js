@@ -10,9 +10,7 @@ const {
 } = require("./utils/createSkeleton");
 
 const fs = require("fs");
-
 const path = require("path");
-
 
 const { 
   checkForDesignChange,
@@ -26,10 +24,12 @@ const {
 
 const initPixie = async (userRequirement) => {
   try {
-    const {designSystemZipURL, designSystemConfig} = await pickRightDesignSystem(userRequirement);
+    const {designSystemZipURL, designSystemConfig, selectedDesignSystemName} = await pickRightDesignSystem(userRequirement);
     await downloadAndUnzip(designSystemZipURL);
     const enabledSectionsForRequirement = await identifyEnabledSections(userRequirement);
+
     const codeFilesForEnabledSections = await identifySpecificSectionCodeFilesForEnabledSections(userRequirement, enabledSectionsForRequirement, designSystemConfig);
+
     await updateLandingPage(enabledSectionsForRequirement);
 
     // // TODO: based on sections, download the code files
@@ -41,11 +41,13 @@ const initPixie = async (userRequirement) => {
         await downloadCodeFile(link, path);
         await generateMessaging(
           userRequirement,
-          path
+          path,
+          section
         );
         await updateTheCodeWithImages(
           userRequirement,
-          path
+          path,
+          selectedDesignSystemName
         );
       }
     }

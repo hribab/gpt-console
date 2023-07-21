@@ -6,10 +6,10 @@ const designSystems = {
         "description": "With its unique, sketch-like aesthetic, the Paper Kit can give your landing page a distinctive and friendly look and feel. This could be a good choice if you're aiming for an informal or artistic vibe or want your brand to seem more approachable."
     },
     "material": {
-        "description": "This kit is inspired by Google's Material Design and combines cleanliness with a depth of design. The use of shadows, gradients, and complex structures gives a 3D look to your landing page. This can be ideal if you're targeting an audience that values modern, intuitive interfaces. This theme can be particularly effective for tech startups, digital agencies, or any forward-thinking business."
+        "description": "combines cleanliness with a depth of design. The use of shadows, gradients, and complex structures gives a 3D look to your landing page. This can be ideal if you're targeting an audience that values modern, intuitive interfaces. This theme can be particularly effective for tech startups, digital agencies, or any forward-thinking business."
     },   
     "nowui": {
-        "description": "Inspired by the simplistic beauty of flat design, the Now UI Kit Pro offers a refreshingly clean and vibrant look to your landing page. Its use of bold colors, beautiful typography, and clear user interface components creates a visually pleasing experience. This could be an excellent choice if your aim is to engage users with a modern, easy-to-navigate, and aesthetically pleasing interface. It can be particularly effective for creative agencies, freelancers, or any businesses aiming to project a contemporary and innovative brand image."
+        "description": "Refreshingly clean and vibrant look to your landing page. Its use of bold colors, beautiful typography, and clear user interface components creates a visually pleasing experience. This could be an excellent choice if your aim is to engage users with a modern, easy-to-navigate, and aesthetically pleasing interface. It can be particularly effective for creative agencies, freelancers, or any businesses aiming to project a contemporary and innovative brand image."
     },
    
 };
