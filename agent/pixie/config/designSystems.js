@@ -1,18 +1,18 @@
 const designSystems = {
     "blk": {
-        "description": "The dark theme and sleek, modern design of this system can lend an air of sophistication and innovation to your landing page. This can be particularly effective if your product or service is tech-oriented or you're targeting a younger demographic."
+        "description": "The BLK Design System, with its dark theme and sleek, modern aesthetic, lends an air of sophistication and innovation. Particularly suitable for tech-focused or cutting-edge businesses, this system might appeal to a younger, tech-savvy demographic. It's an excellent choice for projects such as cryptocurrency platforms, digital agency portfolios, music or entertainment websites, or any application that aims for a strong visual impact."
     },
     "paperui": {
-        "description": "With its unique, sketch-like aesthetic, the Paper Kit can give your landing page a distinctive and friendly look and feel. This could be a good choice if you're aiming for an informal or artistic vibe or want your brand to seem more approachable."
+        "description": "The Paper Kit 2 PRO offers a light, clean, and flat aesthetic. This kit could give your project a clear, uncluttered look and feel, which makes it ideal for educational platforms, non-profits, startups, small businesses, or personal portfolios. It might be particularly effective if you're aiming for an easy-to-understand, friendly, or approachable vibe."
     },
     "material": {
-        "description": "combines cleanliness with a depth of design. The use of shadows, gradients, and complex structures gives a 3D look to your landing page. This can be ideal if you're targeting an audience that values modern, intuitive interfaces. This theme can be particularly effective for tech startups, digital agencies, or any forward-thinking business."
+        "description": "The Material Kit PRO, based on Google's Material Design, combines a clean look with a depth of design. Its use of shadows, gradients, and complex structures gives a 3D feel to your project. Ideal for productivity apps, project management tools, eCommerce, and social networking sites, this theme might be particularly effective for tech companies, or any business requiring a modern, user-friendly interface."
     },   
     "nowui": {
-        "description": "Refreshingly clean and vibrant look to your landing page. Its use of bold colors, beautiful typography, and clear user interface components creates a visually pleasing experience. This could be an excellent choice if your aim is to engage users with a modern, easy-to-navigate, and aesthetically pleasing interface. It can be particularly effective for creative agencies, freelancers, or any businesses aiming to project a contemporary and innovative brand image."
-    },
-   
-};
+        "description": "The Now UI Kit PRO brings a refreshingly clean and vibrant look to your project. Its use of bold colors, beautiful typography, and clear user interface components creates a visually pleasing experience. This could be an excellent choice for marketing or advertising agencies, lifestyle blogs, e-commerce platforms with a fun and vibrant aesthetic, or even travel and tourism websites. It might be particularly effective for any businesses aiming to project a contemporary, innovative brand image."
+    }
+}
+
 
 
 const skeletonAndConfigURL = {
