@@ -196,138 +196,208 @@ async function downloadCodeFile(url, destinationPath) {
 }
 
 async function generateMessaging(userRequirement, filePath, section) {
+    let code, gtpCode, finalCode;
+    try {
+      code = fs.readFileSync(
+        filePath,
+        "utf8"
+      );
+      gtpCode = code;
+    } catch (err) {
+      console.error(err);
+    }
 
-let code, gtpCode, finalCode;
-try {
-  code = fs.readFileSync(
-    filePath,
-    "utf8"
-  );
-  gtpCode = code;
-} catch (err) {
-  console.error(err);
-}
+    const resp = await generateResponse(
+      `
+      Given the User Requirement: “ ${userRequirement} “, 
+            
+      Return me messaging updates to JSX code for section ${section} of landing page.
 
-const resp = await generateResponse(
-  `
+      rules are: 
+      1. The messaging should cover all the text in the JSX code
+      2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
+      3. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
+      4. Buttons text should be updated as well if any
+      5. Look for the word "fill in" in the code, all the lables and strings should be updated with the user requirement in the context of ${section} section
+      
+      Output should be json object with the following format:
+      [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
+      
+      In the response no other text should be there, it must be only JSON. 
+      
+      Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
+      
+      Here is the JSX code to modify:
 
-  Given the User Requirement: “ ${userRequirement} “, 
-        
-  Return me messaging updates to JSX code for section ${section} of landing page.
+    \`\`\`jsx
 
-  rules are: 
-  1. The messaging should cover all the text in the JSX code
-  2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
-  3. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
-  4. Buttons text should be updated as well if any
-  5. Look for the word "fill in" in the code, all the lables and strings should be updated with the user requirement in the context of ${section} section
-  
-  Output should be json object with the following format:
-  [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
-  
-  In the response no other text should be there, it must be only JSON. 
-  
-  Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
-  
-  Here is the JSX code to modify:
-
-\`\`\`jsx
-
-${code}
-    `,
-  false
-);
+    ${code}
+        `,
+      false
+    );
 
 
-let updates;
-  try {
-    // Try to parse the input directly.
-    updates = JSON.parse(resp);
-  } catch(e) {
-    // If that fails, find the first valid JSON string within the input.
-    const regex = /```json?([\s\S]*?)```/g;
-    const match = regex.exec(resp);
-    updates = match ? JSON.parse(match[1].trim()) : null;
-  }
+    let updates;
+      try {
+        // Try to parse the input directly.
+        updates = JSON.parse(resp);
+      } catch(e) {
+        // If that fails, find the first valid JSON string within the input.
+        const regex = /```json?([\s\S]*?)```/g;
+        const match = regex.exec(resp);
+        if(match && match[1]){
+          try{
+            updates = JSON.parse(match[1].trim())
+          }catch(e) {
+            const resp = await generateResponse(
+              `
+              Given the User Requirement: “ ${userRequirement} “, 
+                    
+              Return me messaging updates to JSX code for section ${section} of landing page.
+            
+              rules are: 
+              1. The messaging should cover all the text in the JSX code
+              2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
+              3. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
+              4. Buttons text should be updated as well if any
+              5. Look for the word "fill in" in the code, all the lables and strings should be updated with the user requirement in the context of ${section} section
+              
+              Output should be json object with the following format:
+              [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
+              
+              In the response no other text should be there, it must be only JSON. 
+              
+              Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
+              
+              Here is the JSX code to modify:
+            
+            \`\`\`jsx
+            
+            ${code}
+                `,
+              false
+            );
+            updates = JSON.parse(resp);  
+          }
+        }
+      }
+      if(!updates){
+        const resp = await generateResponse(
+          `
+          Given the User Requirement: “ ${userRequirement} “, 
+                
+          Return me messaging updates to JSX code for section ${section} of landing page.
 
-  console.log("===updates===", updates);
-  const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
+          rules are: 
+          1. The messaging should cover all the text in the JSX code
+          2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
+          3. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
+          4. Buttons text should be updated as well if any
+          5. Look for the word "fill in" in the code, all the lables and strings should be updated with the user requirement in the context of ${section} section
+          
+          Output should be json object with the following format:
+          [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
+          
+          In the response no other text should be there, it must be only JSON. 
+          
+          Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
+          
+          Here is the JSX code to modify:
 
-  traverse(baseAST, {
-    enter(path) {
-        if (path.isJSXText()) {
-            const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.trim().toLowerCase());
-            if(lineUpdate) {
-                path.node.value = path.node.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
-            }
+        \`\`\`jsx
+
+        ${code}
+            `,
+          false
+        );
+      
+        try {
+          // Try to parse the input directly.
+          updates = JSON.parse(resp);
+        } catch(e) {
+          return;
         }
 
-        if (path.isJSXAttribute()) {
-            if (path.node.name.name === 'title' || path.node.name.name === 'description') {
-                if (path.node.value.type === 'StringLiteral') {
-                    const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.value.trim().toLowerCase());
-                    if(lineUpdate) {
-                        path.node.value.value = path.node.value.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
-                    }
-                } else if (path.node.value.type === 'JSXExpressionContainer' && path.node.value.expression.type === 'StringLiteral') {
-                    const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.expression.value.trim().toLowerCase());
-                    if(lineUpdate) {
-                        path.node.value.expression.value = path.node.value.expression.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+      }
+      if(!updates){
+        return;
+      }
+      console.log("===updates===", updates);
+      const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
+
+      traverse(baseAST, {
+        enter(path) {
+            if (path.isJSXText()) {
+                const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.trim().toLowerCase());
+                if(lineUpdate) {
+                    path.node.value = path.node.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+                }
+            }
+
+            if (path.isJSXAttribute()) {
+                if (path.node.name.name === 'title' || path.node.name.name === 'description') {
+                    if (path.node.value.type === 'StringLiteral') {
+                        const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.value.trim().toLowerCase());
+                        if(lineUpdate) {
+                            path.node.value.value = path.node.value.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+                        }
+                    } else if (path.node.value.type === 'JSXExpressionContainer' && path.node.value.expression.type === 'StringLiteral') {
+                        const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.expression.value.trim().toLowerCase());
+                        if(lineUpdate) {
+                            path.node.value.expression.value = path.node.value.expression.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+                        }
                     }
                 }
             }
-        }
-    },
-  });
+        },
+      });
 
+      // const { code: newCode } = generator(baseAST);
+    // let ast;
+    // try {
+    //   ast = parser.parse(gtpCode, {
+    //     sourceType: "module",
+    //     plugins: ["jsx"],
+    //   });
+    // } catch (error) {
+    //   console.log("it's parse catch");
+    //   console.error("Syntax error:", error.message, error.stack);
+    //   // const resp = await generateResponse(`There is a syntax error in the below javascript code. Please correct the syntax errors only.
+    //   // response should has only the code, nothing else should be there in response
+    //   // error: ${error.message}
+    //   // stacktrace : ${error.stack.split('\n')[0]}
+    //   // code: ${code}
+    //   // `, false)
 
-  const { code: newCode } = generator(baseAST);
+    //   // console.log("----res[====", resp)
+    //   // ast = parser.parse(resp, {
+    //   //   sourceType: "module",
+    //   //   plugins: ["jsx"],
+    //   // });
+    //   console.error("Major part of stack trace:", error.stack.split("\n")[0]);
+    // }
 
+    let output;
+    try {
+      output = generate(baseAST).code;
+      console.log("==syntax checked==cahtgptcode====", output);
 
-// let ast;
-// try {
-//   ast = parser.parse(gtpCode, {
-//     sourceType: "module",
-//     plugins: ["jsx"],
-//   });
-// } catch (error) {
-//   console.log("it's parse catch");
-//   console.error("Syntax error:", error.message, error.stack);
-//   // const resp = await generateResponse(`There is a syntax error in the below javascript code. Please correct the syntax errors only.
-//   // response should has only the code, nothing else should be there in response
-//   // error: ${error.message}
-//   // stacktrace : ${error.stack.split('\n')[0]}
-//   // code: ${code}
-//   // `, false)
-
-//   // console.log("----res[====", resp)
-//   // ast = parser.parse(resp, {
-//   //   sourceType: "module",
-//   //   plugins: ["jsx"],
-//   // });
-//   console.error("Major part of stack trace:", error.stack.split("\n")[0]);
-// }
-
-let output;
-try {
-  output = generate(baseAST).code;
-  console.log("==syntax checked==cahtgptcode====", output);
-
-  try {
-    fs.writeFileSync(
-      filePath,
-      output,
-      "utf8"
-    );
-    console.log("File successfully written!");
-  } catch (err) {
-    console.error(err);
-  }
-} catch (error) {
-  console.log("it's catch");
-  console.error("Syntax error:", error.message);
-  console.error("Stack trace:", error.stack);
-}
+      try {
+        fs.writeFileSync(
+          filePath,
+          output,
+          "utf8"
+        );
+        console.log("File successfully written!");
+      } catch (err) {
+        console.error(err);
+      }
+    } catch (error) {
+      console.log("it's catch");
+      console.error("Syntax error:", error.message);
+      console.error("Stack trace:", error.stack);
+      return;
+    }
 
 }
 

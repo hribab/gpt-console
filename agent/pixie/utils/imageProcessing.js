@@ -30,16 +30,21 @@ async function getImageDetails(generationId) {
       redirect: 'follow'
     };
 
-    while (true) {
+    let attemptCount = 0;
+    const maxAttempts = 5;
+
+    while (attemptCount < maxAttempts) {
       try {
         const response = await fetch(`https://cloud.leonardo.ai/api/rest/v1/generations/${generationId}`, getOptions);
         const data = await response.json();
-        if (data.generations_by_pk.status === "COMPLETE") {
+        if (data && data.generations_by_pk && data.generations_by_pk.status === "COMPLETE") {
           return data.generations_by_pk.generated_images[0].url;
         }
       } catch (error) {
         console.error('Error:', error);
       }
+      
+      attemptCount++;
       await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds before retrying
     }
   }
@@ -128,8 +133,13 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
  
   const generationId = await generateImage();
   console.log("===generationId====", generationId)
-
+  if(!generationId){
+    return;
+  }
   const imageUrl = await getImageDetails(generationId);
+  if(!imageUrl){
+    return;
+  }
   console.log("===imageUrl====", imageUrl)
   await downloadImage(imageUrl, outputImagePath);
   }
