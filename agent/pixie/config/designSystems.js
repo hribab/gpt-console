@@ -25,8 +25,8 @@ const skeletonAndConfigURL = {
         "config": "https://firebasestorage.googleapis.com/v0/b/gptconsole.appspot.com/o/templatecodefiles%2Fv2designs%2Fpaper%2Fpaperuiconfig.json?alt=media&token=541deda0-521d-4480-90ef-d0fdd65696aa"
     },
     "material": {
-        "skeleton": "https://firebasestorage.googleapis.com/v0/b/gptconsole.appspot.com/o/templatecodefiles%2Fv2designs%2Fmaterial%2Fyourproject.zip?alt=media&token=24aee882-3fea-44db-b1fb-48b32fe001a8",
-        "config": "https://firebasestorage.googleapis.com/v0/b/gptconsole.appspot.com/o/templatecodefiles%2Fv2designs%2Fmaterial%2Fmaterialkitconfig.json?alt=media&token=e8c11fcc-90c0-4adb-9ecc-016310d37f77"
+        "skeleton": "https://firebasestorage.googleapis.com/v0/b/gptconsole.appspot.com/o/templatecodefiles%2Fv2designs%2Fmaterial%2Fyourproject.zip?alt=media&token=ced68999-c560-4bcf-b4dd-38b1bc389880",
+        "config": "https://firebasestorage.googleapis.com/v0/b/gptconsole.appspot.com/o/templatecodefiles%2Fv2designs%2Fmaterial%2Fmaterialkitconfig.json?alt=media&token=e38c787b-52d0-4986-b680-2aad96deac05"
     },
     "nowui": {
         "skeleton": "https://firebasestorage.googleapis.com/v0/b/gptconsole.appspot.com/o/templatecodefiles%2Fv2designs%2Fnowui%2Fyourproject.zip?alt=media&token=c60cdbc2-31ce-4ced-b31a-09565bd7d8ce",

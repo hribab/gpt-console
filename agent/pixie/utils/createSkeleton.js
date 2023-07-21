@@ -374,7 +374,7 @@ async function pickRightDesignSystem(userRequirement) {
       `,
     false
   );
-
+  
   const selectedDesignSystem = findDesignInResponse(resp, designSystems);
 
   return {designSystemZipURL: skeletonAndConfigURL[selectedDesignSystem].skeleton, designSystemConfig:skeletonAndConfigURL[selectedDesignSystem].config }
