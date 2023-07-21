@@ -384,17 +384,9 @@ async function updateTheCodeWithImages(userRequirement, filePath, selectedDesign
 }
 
 
-function findDesignInResponse(response, designs) {
-  const designNames = Object.keys(designs); // Extract design names
-  let designFound = designNames.find(design => response.includes(design));
-  
-  if (designFound) {
-      return designFound;
-  } else {
-      // If no design is found in the response, return a random one
-      let randomDesign = designNames[Math.floor(Math.random() * designNames.length)];
-      return randomDesign;
-  }
+function findDesignInResponse(designs) {
+  const designNames = Object.keys(designs); // Extract design names  
+  return designNames[Math.floor(Math.random() * designNames.length)];
 }
 
 async function pickRightDesignSystem(userRequirement) {
@@ -405,28 +397,30 @@ async function pickRightDesignSystem(userRequirement) {
     I want you to pick the right design system that suits for the above user requirement
     
     Available desings are:
-    ${designSystems}
+    ${JSON.stringify(designSystems)}
 
     Response should be one of the names ${Object.keys(designSystems).join(",")}, no other text should be there.
       `,
     false
   );
 
-  try {
-    // Try to parse the input directly.
-    enabledSections = JSON.parse(resp);
-  } catch(e) {
-   
-    try {
-      // Try to parse the input directly.
-      enabledSections = JSON.parse(resp);
-    } catch(e) {
-     
-    }
-  }
+  console.log("===resp====", resp);
+  let selectedDesignSystem;
+  if(resp){
+    const available = Object.keys(designSystems); 
+    let selected = 'material'; // default to 'material'
   
-  const selectedDesignSystem = findDesignInResponse(resp, designSystems);
-
+    for(let i = 0; i < available.length; i++) {
+        if (resp.includes(available[i])) {
+            selected = available[i];
+            break;
+        }
+    }
+    selectedDesignSystem = selected
+  }else{
+    selectedDesignSystem = findDesignInResponse(designSystems);
+  }
+  console.log("==selectedDesignSystem====", selectedDesignSystem)
   return {designSystemZipURL: skeletonAndConfigURL[selectedDesignSystem].skeleton, designSystemConfig:skeletonAndConfigURL[selectedDesignSystem].config, selectedDesignSystemName: selectedDesignSystem}
 }
 async function identifyEnabledSections(userRequirement) {
