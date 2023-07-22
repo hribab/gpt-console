@@ -101,6 +101,10 @@ const updatePixieOperation = async (userRequirement) => {
         console.log("=====executeBackgroundImageUpdate=====", codeFilePaths[section]);
         await executeBackgroundImageUpdate(userRequirement, codeFilePaths[section]);
       }
+      if (updateOperationType.remove) {
+        console.log("=====removeOperation=====", codeFilePaths[section]);
+        await removeOperation(userRequirement, codeFilePaths[section]);
+      }
     }
 
     // await executeMessagingUpdate(userRequirement, "yourproject/src/components/Landingpage/Header.js");

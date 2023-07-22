@@ -56,7 +56,8 @@ async function identifyUpdateSections(userRequirement) {
 
         Client's Request for Modification: "${userRequirement}"
     
-        I want you to return list of  sections that user wants to make changes based on user requirement
+        I want you to determine probable sections that user wants to make changes based on Request for Modification
+        based on Request for Modification, Try to guess most likely sections headers, features, blogs, teams, projects, pricing, testmonials, contactus that user wants to make changes
         
         rules are:
         - If the requirement is not clear, return empty object {}
@@ -78,6 +79,7 @@ async function identifyUpdateSections(userRequirement) {
         false
       );
     
+      console.log("=====resp=====", resp);
       let enabledSections
       try {
         // Try to parse the input directly.
@@ -109,7 +111,8 @@ async function identifyUpdateSections(userRequirement) {
       
             `,
           false
-        );  
+        );
+        console.log("=====resp2=====", resp);
         try {
           // Try to parse the input directly.
           enabledSections = JSON.parse(resp);
@@ -441,13 +444,13 @@ async function removeOperation(userRequirement, filePath) {
             
             return me remove updates to JSX code
         
-            rules are: 
-            1. List out all the code that user wants to remove from given JSX code and return underlying text of the html node, should be case insensitive
+            Rules are: 
+            1. List out all the code that user wants to remove from given JSX code and return underlying text value of the html node, should be case insensitive
             2. Updates should cover all the divs of react component, example names,  headers, descriptions, buttons..etc
             3. Must escape double quotes with backslash, example: "hello \"world\"", so that I can parse using JSON.parse()
             
             Output should be json object with the following format:
-            [{"line": The line number on the code that need to be removed, "toberemovedtext": the text of the html node that need to be removed },{},{}]
+            [{"line": The line number on the code that need to be removed, "toberemovedtext": the text value of the html node that need to be removed },{},{}]
             
             If there is nothing to remove, return empty array
 
@@ -479,8 +482,90 @@ async function removeOperation(userRequirement, filePath) {
             jsonStr = jsonStr.replace(/'<(.+?)>'/g, function(match, p1) {
                 return '"<' + p1.replace(/"/g, '\\"') + '>"';
             });
-            updates = JSON.parse(jsonStr);
-        }        
+            try {
+                // Try to parse the input directly.
+                updates = JSON.parse(jsonStr);
+
+                } catch(e) {
+
+                    const resp = await generateResponse(
+                        `
+                        Given the User Requirement: “ ${userRequirement} “, 
+                        
+                        return me remove updates to JSX code
+                    
+                        rules are: 
+                        1. List out all the code that user wants to remove from given JSX code and return underlying text value of the html node, should be case insensitive
+                        2. Updates should cover all the divs of react component, example names,  headers, descriptions, buttons..etc
+                        3. Must escape double quotes with backslash, example: "hello \"world\"", so that I can parse using JSON.parse()
+                        
+                        Output should be json object with the following format:
+                        [{"line": The line number on the code that need to be removed, "toberemovedtext": the text value of the html node that need to be removed },{},{}]
+                        
+                        If there is nothing to remove, return empty array
+            
+                        In the response no other text should be there, it must be only JSON. 
+                        
+                        Request: Response should be able to parse by javascript function JSON.parse(YourResponse), 
+                        
+                        Here is the JSX code to modify:
+                    
+                    \`\`\`jsx
+                    
+                    ${code}
+                        `,
+                        false
+                    );
+                    
+                    updates = JSON.parse(resp);
+                }
+        }
+        if(!updates){
+            const resp = await generateResponse(
+                `
+                Given the User Requirement: “ ${userRequirement} “, 
+                
+                return me remove updates to JSX code
+            
+                rules are: 
+                1. List out all the code that user wants to remove from given JSX code and return underlying text value of the html node, should be case insensitive
+                2. Updates should cover all the divs of react component, example names,  headers, descriptions, buttons..etc
+                3. Must escape double quotes with backslash, example: "hello \"world\"", so that I can parse using JSON.parse()
+                
+                Output should be json object with the following format:
+                [{"line": The line number on the code that need to be removed, "toberemovedtext": the text value of the html node that need to be removed },{},{}]
+                
+                If there is nothing to remove, return empty array
+    
+                In the response no other text should be there, it must be only JSON. 
+                
+                Request: Response should be able to parse by javascript function JSON.parse(YourResponse), 
+                
+                Here is the JSX code to modify:
+            
+            \`\`\`jsx
+            
+            ${code}
+                `,
+                false
+            );
+            
+            try {
+                // Try to parse the input directly.
+                updates = JSON.parse(resp);
+
+                } catch(e) {
+                    return;
+               
+                
+                }
+        }   
+    
+        console.log("===updates===", updates);
+
+        if(!updates){
+            return;
+        }
 
        
         const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
@@ -505,9 +590,7 @@ async function removeOperation(userRequirement, filePath) {
                 }
             }
         });
-            
-            const { code: newCode } = generator(baseAST);
-        
+                    
         let output;
         try {
             output = generate(baseAST).code;
