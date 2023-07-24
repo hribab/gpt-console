@@ -1,11 +1,21 @@
 const { initPixie } = require("../pixie.js");
+const spinners = require("cli-spinners");
 
-function startPixie(req) {
+    
+async function startPixie(req, callback) {
   try {
-    initPixie(req);
+    const spinner = spinners.dots;    
+    const interval = setInterval(() => {
+        process.stdout.write(`\r${spinner.frames[spinner.interval % spinner.frames.length]}`);
+        spinner.interval++;
+    }, spinner.frameLength);
+    
+    await initPixie(req);
+    clearInterval(interval);
+    return callback(null, "Completed");
   } catch (error) {
     //TODO: handle exception
-    console.log("=====errror===", error);
+    return callback(null, "Error Occured, Please try again");
   }
 }
 

@@ -3,7 +3,7 @@
 const repl = require("repl");
 const { exec } = require("child_process");
 const { generateResponse } = require("./utils/api/apiCall");
-
+const spinners = require("cli-spinners");
 const {
   completerFunc,
   welcomeMessage,
@@ -91,8 +91,7 @@ gptCli.eval = async (input, context, filename, callback) => {
 
         if (extractedText) {
           extractedText = extractedText.replace(/^['"]|['"]$/g, "");
-          console.log("======User requirement=====", extractedText);
-          startPixie(extractedText);
+          await startPixie(extractedText, callback);
         }
         callback(null);
         break;
@@ -103,8 +102,7 @@ gptCli.eval = async (input, context, filename, callback) => {
 
         if (extractedText) {
           extractedText = extractedText.replace(/^['"]|['"]$/g, "");
-          console.log("======User Update requirement=====", extractedText);
-          updatePixie(extractedText);
+          await updatePixie(extractedText, callback);
         }
         callback(null);
         break;
@@ -124,15 +122,6 @@ gptCli.eval = async (input, context, filename, callback) => {
       break;
     case "help":
       welcomeMessage();
-      callback(null);
-      break;
-    case "dld":
-      const currentDirectory = process.cwd();
-      const folderDestination = path.join(currentDirectory, 'folder');
-
-      // Usage example:
-      downloadFolder('path/to/folder', folderDestination);
-      
       callback(null);
       break;
     case "exit":

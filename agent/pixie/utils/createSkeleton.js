@@ -45,12 +45,26 @@ async function runCommand(command, directory) {
   });
 }
 
+async function isYarnInstalled() {
+  return new Promise((resolve, reject) => {
+    exec('yarn --version', (error, stdout, stderr) => {
+      if (error) {
+        resolve(false);
+      } else {
+        resolve(true);
+      }
+    });
+  });
+}
+
 async function executeCommand() {
   try {
-    const result = await runCommand("yarn install", "./yourproject");
-    console.log(result);
+    const yarnInstalled = await isYarnInstalled();
+    const installCommand = yarnInstalled ? 'yarn install' : 'npm install';
+    const result = await runCommand(installCommand, './yourproject');
+    // console.log(result);
   } catch (error) {
-    console.error(error);
+    // console.error(error);
   }
 }
 async function downloadAndUnzip(url) {
@@ -70,7 +84,7 @@ async function downloadAndUnzip(url) {
   // }
 
   await executeCommand();
-  console.log("Extraction complete.");
+  // console.log("Extraction complete.");
 }
 
 async function updateLandingPage(sections) {
@@ -81,7 +95,7 @@ async function updateLandingPage(sections) {
       "utf8"
     );
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     return;
   }
 
@@ -177,9 +191,9 @@ async function updateLandingPage(sections) {
       output,
       "utf8"
     );
-    console.log("File successfully written!");
+    // console.log("File successfully written!");
   } catch (err) {
-    console.error(err);
+    // console.error(err);
   }
 }
 
@@ -192,7 +206,7 @@ async function downloadCodeFile(url, destinationPath) {
   await fse.ensureDir(path.dirname(destinationPath));
 
   await streamPipeline(response.body, fs.createWriteStream(destinationPath));
-  console.log(`File downloaded to ${destinationPath}`);
+  // console.log(`File downloaded to ${destinationPath}`);
 }
 
 async function generateMessaging(userRequirement, filePath, section) {
@@ -204,7 +218,7 @@ async function generateMessaging(userRequirement, filePath, section) {
       );
       gtpCode = code;
     } catch (err) {
-      console.error(err);
+      // console.error(err);
     }
 
     const resp = await generateResponse(
@@ -322,7 +336,7 @@ async function generateMessaging(userRequirement, filePath, section) {
       if(!updates){
         return;
       }
-      console.log("===updates===", updates);
+      // console.log("===updates===", updates);
       const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
 
       traverse(baseAST, {
@@ -335,7 +349,7 @@ async function generateMessaging(userRequirement, filePath, section) {
             }
 
             if (path.isJSXAttribute()) {
-                if (path.node.name.name === 'title' || path.node.name.name === 'description') {
+                if (path.node.name.name === 'title' || path.node.name.name === 'description' || path.node.name.name === 'review' ||  path.node.name.name === 'label' ||  path.node.name.name === 'position') {
                     if (path.node.value.type === 'StringLiteral') {
                         const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.value.trim().toLowerCase());
                         if(lineUpdate) {
@@ -380,22 +394,18 @@ async function generateMessaging(userRequirement, filePath, section) {
     let output;
     try {
       output = generate(baseAST).code;
-      console.log("==syntax checked==cahtgptcode====", output);
-
       try {
         fs.writeFileSync(
           filePath,
           output,
           "utf8"
         );
-        console.log("File successfully written!");
       } catch (err) {
-        console.error(err);
+        // console.error(err);
       }
     } catch (error) {
-      console.log("it's catch");
-      console.error("Syntax error:", error.message);
-      console.error("Stack trace:", error.stack);
+      // console.error("Syntax error:", error.message);
+      // console.error("Stack trace:", error.stack);
       return;
     }
 
@@ -407,7 +417,7 @@ async function updateTheCodeWithImages(userRequirement, filePath, selectedDesign
         code = fs.readFileSync(filePath, //"yourproject/src/components/Landingpage/Header.js", 
         'utf8');
     } catch (err) {
-        console.error(err);
+        // console.error(err);
     }
     
     const imagePaths = extractImagePaths(code);
@@ -422,7 +432,7 @@ async function updateTheCodeWithImages(userRequirement, filePath, selectedDesign
         await downloadComponentImages(userRequirement, `yourproject/src/${newPath}`);
         result[imagePaths[i]] = newPath
     }
-    console.log("======images replacement pahts===", result);
+    // console.log("======images replacement pahts===", result);
 
     const ast = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
     
@@ -474,7 +484,6 @@ async function pickRightDesignSystem(userRequirement) {
     false
   );
 
-  console.log("===resp====", resp);
   let selectedDesignSystem;
   if(resp){
     const available = Object.keys(designSystems); 
@@ -490,9 +499,49 @@ async function pickRightDesignSystem(userRequirement) {
   }else{
     selectedDesignSystem = findDesignInResponse(designSystems);
   }
-  console.log("==selectedDesignSystem====", selectedDesignSystem)
   return {designSystemZipURL: skeletonAndConfigURL[selectedDesignSystem].skeleton, designSystemConfig:skeletonAndConfigURL[selectedDesignSystem].config, selectedDesignSystemName: selectedDesignSystem}
 }
+
+async function pickRightDesignSystemForUpdate(userRequirement, existingDesignSystem, existingPrompt) {
+    // create a copy of the original object
+  let newDesignSystems = {...designSystems};
+
+  // delete the 'blk' property from the new object
+  delete newDesignSystems[existingDesignSystem];
+
+  const resp = await generateResponse(
+    `Given the user update requirement: ${userRequirement}
+     for existing Prompt: ${existingPrompt}
+
+    I want you to pick the right design system that suits for the above  update requirement
+    
+    Available desings are:
+    ${JSON.stringify(newDesignSystems)}
+
+    Response should be one of the names ${Object.keys(newDesignSystems).join(",")}, no other text should be there. No explanation is required.
+      `,
+    false
+  );
+
+  let selectedDesignSystem;
+  if(resp){
+    const available = Object.keys(newDesignSystems); 
+    let selected = 'material'; // default to 'material'
+  
+    for(let i = 0; i < available.length; i++) {
+        if (resp.includes(available[i])) {
+            selected = available[i];
+            break;
+        }
+    }
+    selectedDesignSystem = selected
+  }else{
+    selectedDesignSystem = findDesignInResponse(newDesignSystems);
+  }
+  return {designSystemZipURL: skeletonAndConfigURL[selectedDesignSystem].skeleton, designSystemConfig:skeletonAndConfigURL[selectedDesignSystem].config, selectedDesignSystemName: selectedDesignSystem}
+}
+
+
 async function identifyEnabledSections(userRequirement) {
 
   const resp = await generateResponse(
@@ -596,7 +645,7 @@ async function identifySpecificSectionCodeFilesForEnabledSections(userRequiremen
     
     designSystemConfig = await response.json();
   } catch (error) {
-    console.error('There was an error!', error);
+    // console.error('There was an error!', error);
   }
 
 
@@ -659,15 +708,11 @@ for (let index = 0; index < groupedSectionConfig.length; index++) {
         const values = Object.values(enabledSectionConfig[key]);
         codefileLinks[key] = values[0].codefile;
       }
-      
     }
 
   } catch(e) {
     codefileLinks = getFirstCodefile(element)
-    console.log("===errr==r=====", e)
-
   }
-  console.log("===codefileLinks====", codefileLinks);
 
   finalResult = {...finalResult, ...codefileLinks}
 }
@@ -684,6 +729,7 @@ module.exports = {
   generateMessaging,
   updateTheCodeWithImages,
   pickRightDesignSystem,
+  pickRightDesignSystemForUpdate,
   identifyEnabledSections,
   identifySpecificSectionCodeFilesForEnabledSections,
 };

@@ -52,7 +52,7 @@ async function getImageDetails(generationId) {
 async function downloadImage(url, filename) {
     try {
       // Ensure the directory exists
-     console.log("==creating=filename====", filename)
+     // console.log("==creating=filename====", filename)
       // Split the path into its parts
       let parts = filename.split(path.sep);
       // Pop the last part of the path array which should be the filename
@@ -91,7 +91,7 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
   const gptRawResponse = await generateResponse(gptPrompt)
   
   const response = JSON.parse(gptRawResponse)
-  console.log("===image prompt ====", gptPrompt)
+  // // console.log("===image prompt ====", gptPrompt)
   // Define headers and body for POST request
   const myHeaders = {
     "accept": "application/json",
@@ -99,7 +99,7 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
     "content-type": "application/json"
   };
 
-  console.log("===image prompt resones====", response)
+  // console.log("===image prompt resones====", response)
   const raw = JSON.stringify({
     "prompt": `${response.positive_prompt}. 8K, hyper realistic`,
     "negative_prompt": response.negative_prompt,
@@ -132,7 +132,7 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
 
  
   const generationId = await generateImage();
-  console.log("===generationId====", generationId)
+  // console.log("===generationId====", generationId)
   if(!generationId){
     return;
   }
@@ -140,7 +140,7 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
   if(!imageUrl){
     return;
   }
-  console.log("===imageUrl====", imageUrl)
+  // console.log("===imageUrl====", imageUrl)
   await downloadImage(imageUrl, outputImagePath);
   }
 

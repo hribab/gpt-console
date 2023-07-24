@@ -34,9 +34,15 @@ const skeletonAndConfigURL = {
     }
 };
 
-
+const themeNames = {
+    "blk": "ObsidianCrux",
+    "paperui": "ParchmentOrigami",
+    "material": "ElementMosaic",
+    "nowui": "InstantSpectrum"
+  };
 
 module.exports = {
     designSystems,
-    skeletonAndConfigURL
+    skeletonAndConfigURL,
+    themeNames
 }

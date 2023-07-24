@@ -29,6 +29,28 @@ const {
     downloadComponentImages,
   } = require("./imageProcessing");
 
+const {
+themeNames,
+skeletonAndConfigURL
+} = require("../config/designSystems");
+
+const {
+pickRightDesignSystemForUpdate,
+identifyEnabledSections,
+identifySpecificSectionCodeFilesForEnabledSections,
+downloadAndUnzip,
+updateLandingPage,
+downloadCodeFile,
+generateMessaging,
+updateTheCodeWithImages,
+} = require("./createSkeleton");
+
+const {
+createPixieConfigFile,
+updatePixieConfigStatus,
+renameProjectFolderIfExist
+} = require("../config/pixieConfigOperations");
+  
 
 async function checkForDesignChange(userRequirement, filePath) {
     //TODO: we need to save original user request to create the page const createRequirement = `landing page for selling oversized t-shirts`;
@@ -38,21 +60,71 @@ async function checkForDesignChange(userRequirement, filePath) {
 
         Client's Request for Modification: "${userRequirement}"
 
-        Based on the client's request, i want to know if user intention is to create a fresh one or modify the existing one. If user intention is to create a fresh one, then return true, else return false.
+        Based on the client's request, i want to know if user wants to change entire website completely. If user intention is to change entire website completely, then return true, else return false.
         
-        note: any kind of user disatisfaction with the existing landing page should be considered as intention  to create a fresh one, hence reutrn true.
+        note: any kind of user disatisfaction with the existing landing page should be considered as intention is to change entire website completely, hence return true.
 
-        just return true or false
+        just return true or false, no explanation is needed.
           `,
         false
       );
     return resp.toLocaleLowerCase().includes("true") ? true : false;
 }
-async function implementDesignChange(userRequirement, filePath) {}
-async function identifyUpdateSections(userRequirement) {
+async function implementDesignChange(userRequirement, alreadySelectedDesignSystemName, existingPrompt, callback) {    
+        try {
+          renameProjectFolderIfExist()
+          const {designSystemZipURL, designSystemConfig, selectedDesignSystemName} = await pickRightDesignSystemForUpdate(userRequirement, alreadySelectedDesignSystemName, existingPrompt);
+        
+          await downloadAndUnzip(designSystemZipURL);
+          createPixieConfigFile({
+            prompt: userRequirement,
+            mode: 'madmax',
+            design: themeNames[selectedDesignSystemName],
+            pixieversion: 1,
+            time: new Date().toISOString(),
+            status: 'progress'
+          })
+          const enabledSectionsForRequirement = await identifyEnabledSections(`Initial prompt: ${existingPrompt}, Update request: ${userRequirement}`);
+      
+          const codeFilesForEnabledSections = await identifySpecificSectionCodeFilesForEnabledSections(`Initial prompt: ${existingPrompt}, Update request: ${userRequirement}`, enabledSectionsForRequirement, designSystemConfig);
+      
+          await updateLandingPage(enabledSectionsForRequirement);
+      
+          // // TODO: based on sections, download the code files
+      
+          for (let section in enabledSectionsForRequirement) {
+            if (enabledSectionsForRequirement[section]) { // If the section is true
+              const link = codeFilesForEnabledSections[section];
+              let fileName = `${section.charAt(0).toUpperCase()}${section.slice(1)}`
+              if (section === "testmonials") {
+                fileName = "Testimonials";
+              }
+              const path = `yourproject/src/components/Landingpage/${fileName}.js`;
+              await downloadCodeFile(link, path);
+              await generateMessaging(
+                `Initial prompt: ${existingPrompt}, Update request: ${userRequirement}`,
+                path,
+                section
+              );
+              await updateTheCodeWithImages(
+                `Initial prompt: ${existingPrompt}, Update request: ${userRequirement}`,
+                path,
+                selectedDesignSystemName
+              );
+            }
+          }
+          updatePixieConfigStatus('completed');
+          
+        } catch (error) {
+          return callback(null, `Error Occured, Please try again: ${error}`);
+        }
+}
+async function identifyUpdateSections(userRequirement, originalPrompt) {
 
     const resp = await generateResponse(
-        ` Context: I recently created a landing page for a client. Now, the client wants to make some modifications to this page.
+        `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
+        
+        Now, the client wants to make some modifications to this page.
 
         Client's Request for Modification: "${userRequirement}"
     
@@ -79,16 +151,18 @@ async function identifyUpdateSections(userRequirement) {
         false
       );
     
-      console.log("=====resp=====", resp);
+      // console.log("=====resp=====", resp);
       let enabledSections
       try {
         // Try to parse the input directly.
         enabledSections = JSON.parse(resp);
       } catch(e) {
-        console.log("====catch====", e)
+        // console.log("====catch====", e)
         const resp = await generateResponse(
-          `Context: I recently created a landing page for a client. Now, the client wants to make some modifications to this page.
-
+          `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
+        
+          Now, the client wants to make some modifications to this page.
+  
           Client's Request for Modification: "${userRequirement}"
       
           I want you to return list of  sections that user wants to make changes based on user requirement
@@ -112,7 +186,7 @@ async function identifyUpdateSections(userRequirement) {
             `,
           false
         );
-        console.log("=====resp2=====", resp);
+        // console.log("=====resp2=====", resp);
         try {
           // Try to parse the input directly.
           enabledSections = JSON.parse(resp);
@@ -134,10 +208,142 @@ async function identifyUpdateSections(userRequirement) {
       return enabledSections
 
 }
-
-async function determineUpdateType(userRequirement) {
+async function determineSectionsDesignChange(userRequirement, originalPrompt) {
     const resp = await generateResponse(
-        ` Context: I recently created a landing page for a client. Now, the client wants to make some modifications to this page.
+        `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
+        
+        Now, the client wants to make some design changes to this page.
+
+        Client's Request for Modification: "${userRequirement}"
+    
+        I want you to determine if user wants to change the design of any section headers, features, blogs, teams, projects, pricing, testmonials, contactus
+        If user wants to make design changes to any section, determine what sections user wants to change the design
+        
+        Return list of  sections that user wants to change the design based on user requirement
+        
+        rules are:
+        - If the requirement is not clear, return empty object {}
+        - If the intention is to not change anything, return empty object {}
+          
+        Available sections are:
+        headers, features, blogs, teams, projects, pricing, testmonials, contactus
+    
+        Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
+    
+        Response should be JSON , no other text should be there.
+    
+        Request: Response should be able to parse by a below javascript function:
+        
+        function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+    
+          `,
+        false
+      );
+    
+      let enabledSections
+      try {
+        // Try to parse the input directly.
+        enabledSections = JSON.parse(resp);
+      } catch(e) {
+        const resp = await generateResponse(
+          `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
+        
+          Now, the client wants to make some modifications to this page.
+  
+          Client's Request for Modification: "${userRequirement}"
+      
+          I want you to determine if user intension to change the design of any section headers, features, blogs, teams, projects, pricing, testmonials, contactus
+          If user wants to make design changes to any section, determine what sections user wants to change the design
+          
+          Return list of  sections that user wants to change the design based on user requirement
+
+          rules are:
+          - If the requirement is not clear, return empty object {}
+          - If the intention is to not change anything, return empty object {}
+            
+          Available sections are:
+          headers, features, blogs, teams, projects, pricing, testmonials, contactus
+      
+          Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
+      
+          Response should be JSON , no other text should be there.
+      
+          Request: Response should be able to parse by a below javascript function:
+          
+          function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+      
+            `,
+          false
+        );  
+        try {
+          // Try to parse the input directly.
+          enabledSections = JSON.parse(resp);
+        } catch(e) {
+            enabledSections = {
+                headers: false,
+                features: false,
+                blogs: false,
+                teams: false,
+                projects: false,
+                pricing: false,
+                testmonials: false,
+                contactus: false,
+                footer: false,
+              }
+        }
+      }
+    
+      return  enabledSections;
+}
+
+async function updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation(sectionsDesignChange, userRequirement, selectedInternalDesignSystem, originalRequirement) {
+    
+    const designSystemConfigURL = skeletonAndConfigURL[selectedInternalDesignSystem].config
+    
+    let designSystemConfig;
+    try {
+        const response = await fetch(designSystemConfigURL);
+        
+        if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        designSystemConfig = await response.json();
+    } catch (error) {
+        // console.error('There was an error!', error);
+    }
+    for (let section in sectionsDesignChange) {
+
+        if (sectionsDesignChange[section]) { // If the section is true
+          if(designSystemConfig[section]){
+            const allSubSections = Object.keys(designSystemConfig[section]); // Extract design names  
+
+            const subSection = allSubSections[Math.floor(Math.random() * allSubSections.length)];
+            const link = designSystemConfig[section][subSection].codefile
+            let fileName = `${section.charAt(0).toUpperCase()}${section.slice(1)}`
+            if (section === "testmonials") {
+                fileName = "Testimonials";
+            }
+            const path = `yourproject/src/components/Landingpage/${fileName}.js`;
+            await downloadCodeFile(link, path);
+            // await generateMessaging(
+            //     `Initial prompt: ${originalRequirement}, User update request: ${userRequirement}`,
+            //     path,
+            //     section
+            // );
+            // await updateTheCodeWithImages(
+            //     `Initial prompt: ${originalRequirement}, User update request: ${userRequirement}`,
+            //     path,
+            //     selectedDesignSystemName
+            // );
+          }
+        }
+    }
+}
+
+async function determineUpdateType(userRequirement, originalPrompt) {
+    const resp = await generateResponse(
+        `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
 
         Client's Request for Modification: "${userRequirement}"
     
@@ -152,7 +358,7 @@ async function determineUpdateType(userRequirement) {
     
         Sample output: {"messaging": true, "backgroundimage": true, "remove": false}
     
-        Response should be JSON , no other text should be there.
+        Response should be JSON, no other text should be there.
     
         Request: Response should be able to parse by a below javascript function:
         
@@ -248,7 +454,7 @@ async function executeMessagingUpdate(userRequirement, filePath) {
         `,
         false
     );
-    console.log("=====first resp=====", resp);
+    // console.log("=====first resp=====", resp);
     let updates;
     try {
     // Try to parse the input directly.
@@ -339,7 +545,7 @@ async function executeMessagingUpdate(userRequirement, filePath) {
     }
     }
 
-    console.log("===updates===", updates);
+    // console.log("===updates===", updates);
     const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
 
     traverse(baseAST, {
@@ -357,7 +563,7 @@ async function executeMessagingUpdate(userRequirement, filePath) {
     });
 
     const { code: newCode } = generator(baseAST);
-    console.log("--newCode----", newCode);
+    // console.log("--newCode----", newCode);
 
     let output;
     try {
@@ -368,12 +574,12 @@ async function executeMessagingUpdate(userRequirement, filePath) {
             output,
             "utf8"
         );
-        console.log("File successfully written!");
+        // console.log("File successfully written!");
         } catch (err) {
         console.error(err);
         }
     } catch (error) {
-        console.log("it's catch");
+        // console.log("it's catch");
         console.error("Syntax error:", error.message);
         console.error("Stack trace:", error.stack);
     }
@@ -388,14 +594,14 @@ async function executeBackgroundImageUpdate(userRequirement, filePath) {
         }
         
         const imagePaths = extractImagePaths(code);
-        console.log("===replacing======", imagePaths);
+        // console.log("===replacing======", imagePaths);
     
         const result = {};
         for (let i = 0; i < imagePaths.length; i++) {
             await downloadComponentImages(userRequirement, `yourproject/src/${imagePaths[i].replace("assets/img", "assets/img/aigenerated")}`);
             result[imagePaths[i]] = imagePaths[i].replace("assets/img", "assets/img/aigenerated");
         }
-        console.log(result);
+        // console.log(result);
     
         const ast = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
         
@@ -467,7 +673,7 @@ async function removeOperation(userRequirement, filePath) {
             false
         );
         
-        console.log("=====resp=====", resp);
+        // console.log("=====resp=====", resp);
         let updates;
         try {
         // Try to parse the input directly.
@@ -561,7 +767,7 @@ async function removeOperation(userRequirement, filePath) {
                 }
         }   
     
-        console.log("===updates===", updates);
+        // console.log("===updates===", updates);
 
         if(!updates){
             return;
@@ -594,7 +800,7 @@ async function removeOperation(userRequirement, filePath) {
         let output;
         try {
             output = generate(baseAST).code;
-            console.log("==syntax checked==cahtgptcode====", output);
+            // console.log("==syntax checked==cahtgptcode====", output);
         
             try {
             fs.writeFileSync(
@@ -602,12 +808,12 @@ async function removeOperation(userRequirement, filePath) {
                 output,
                 "utf8"
             );
-            console.log("File successfully written!");
+            // console.log("File successfully written!");
             } catch (err) {
             console.error(err);
             }
         } catch (error) {
-            console.log("it's catch");
+            // console.log("it's catch");
             console.error("Syntax error:", error.message);
             console.error("Stack trace:", error.stack);
         }
@@ -655,7 +861,7 @@ async function removeOperationByClassName(userRequirement, filePath) {
         false
     );
     
-    console.log("=====resp=====", resp);
+    // console.log("=====resp=====", resp);
     let updates;
     try {
     // Try to parse the input directly.
@@ -699,13 +905,13 @@ async function removeOperationByClassName(userRequirement, filePath) {
         });
         
         const { code: newCode } = generator(baseAST);
-        console.log("--newCode----", newCode);
+        // console.log("--newCode----", newCode);
 
     
     let output;
     try {
         output = generate(baseAST).code;
-        console.log("==syntax checked==cahtgptcode====", output);
+        // console.log("==syntax checked==cahtgptcode====", output);
     
         try {
         fs.writeFileSync(
@@ -713,12 +919,12 @@ async function removeOperationByClassName(userRequirement, filePath) {
             output,
             "utf8"
         );
-        console.log("File successfully written!");
+        // console.log("File successfully written!");
         } catch (err) {
         console.error(err);
         }
     } catch (error) {
-        console.log("it's catch");
+        // console.log("it's catch");
         console.error("Syntax error:", error.message);
         console.error("Stack trace:", error.stack);
     }
@@ -731,6 +937,8 @@ module.exports = {
     determineUpdateType,
     executeMessagingUpdate,
     executeBackgroundImageUpdate,
+    determineSectionsDesignChange,
+    updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation,
     removeOperation,
 };
 
