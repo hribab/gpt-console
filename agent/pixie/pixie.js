@@ -7,6 +7,7 @@ const {
   downloadCodeFile,
   generateMessaging,
   updateTheCodeWithImages,
+  runTheApp,
 } = require("./utils/createSkeleton");
 const {
   createPixieConfigFile,
@@ -34,10 +35,11 @@ const {
   updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation
 } = require("./utils/updateOperation");
 
-const initPixie = async (userRequirement, callback) => {
+const initPixie = async (userRequirement) => {
   try {
     renameProjectFolderIfExist()
     const {designSystemZipURL, designSystemConfig, selectedDesignSystemName} = await pickRightDesignSystem(userRequirement);
+    await downloadAndUnzip(designSystemZipURL);
     createPixieConfigFile({
       prompt: userRequirement,
       mode: 'madmax',
@@ -46,7 +48,6 @@ const initPixie = async (userRequirement, callback) => {
       time: new Date().toISOString(),
       status: 'progress'
     })
-    await downloadAndUnzip(designSystemZipURL);
     const enabledSectionsForRequirement = await identifyEnabledSections(userRequirement);
 
     const codeFilesForEnabledSections = await identifySpecificSectionCodeFilesForEnabledSections(userRequirement, enabledSectionsForRequirement, designSystemConfig);
@@ -75,11 +76,12 @@ const initPixie = async (userRequirement, callback) => {
           selectedDesignSystemName
         );
       }
-    }    
-    updatePixieConfigStatus('completed');
-
+    }
+    updatePixieConfigStatus(`completed`);
+    const result = await runTheApp();
+    return result;
   } catch (error) {
-    return callback(null, `Error Occured, Please try again: ${error}`);
+    return `Error Occured, Please try again: ${error}`;
   }
 };
 

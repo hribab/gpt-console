@@ -45,6 +45,26 @@ async function runCommand(command, directory) {
   });
 }
 
+async function runStartCommand(command, directory) {
+  return new Promise((resolve, reject) => {
+    exec(command, { cwd: directory }, (error, stdout, stderr) => {
+      if (error) {
+        console.warn(error);
+        reject(error);
+      } else {
+        // Let's suppose that the stdout contains the URL at which the app is running
+        // Example: "Starting the development server...\nhttp://localhost:3000"
+        const matches = stdout.match(/(http:\/\/localhost:\d+)/);
+        if (matches) {
+          resolve(matches[0]);
+        } else {
+          resolve(stdout ? stdout : stderr);
+        }
+      }
+    });
+  });
+}
+
 async function isYarnInstalled() {
   return new Promise((resolve, reject) => {
     exec('yarn --version', (error, stdout, stderr) => {
@@ -55,6 +75,18 @@ async function isYarnInstalled() {
       }
     });
   });
+}
+
+async function runTheApp() {
+  try {
+    const yarnInstalled = await isYarnInstalled();
+    const installCommand = yarnInstalled ? 'yarn start' : 'npm start';
+    const result = await runStartCommand(installCommand, './yourproject');
+    return `App is running at ${result}`
+    // console.log(result);
+  } catch (error) {
+    // console.error(error);
+  }
 }
 
 async function executeCommand() {
@@ -429,8 +461,10 @@ async function updateTheCodeWithImages(userRequirement, filePath, selectedDesign
         imagePaths[i].replace("assets/images", "assets/images/aigenerated") : 
         imagePaths[i].replace("assets/img", "assets/img/aigenerated");
 
-        await downloadComponentImages(userRequirement, `yourproject/src/${newPath}`);
-        result[imagePaths[i]] = newPath
+        const isSuccess = await downloadComponentImages(userRequirement, `yourproject/src/${newPath}`);
+        if(isSuccess){
+          result[imagePaths[i]] = newPath
+        }
     }
     // console.log("======images replacement pahts===", result);
 
@@ -721,8 +755,8 @@ return finalResult;
 }
 
 
-
 module.exports = {
+  runTheApp,
   downloadAndUnzip,
   updateLandingPage,
   downloadCodeFile,

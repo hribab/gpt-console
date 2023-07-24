@@ -41,7 +41,7 @@ async function getImageDetails(generationId) {
           return data.generations_by_pk.generated_images[0].url;
         }
       } catch (error) {
-        console.error('Error:', error);
+        //// console.log('Error:', error);
       }
       
       attemptCount++;
@@ -72,7 +72,7 @@ async function downloadImage(url, filename) {
       await pipeline(response.body, fs.createWriteStream(filename));
       
     } catch (error) {
-      console.error('Error:', error);
+      // console.log('Error:', error);
     }
   }
 
@@ -123,9 +123,19 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
     try {
       const response = await fetch("https://cloud.leonardo.ai/api/rest/v1/generations", postOptions);
       const data = await response.json();
-      return data.sdGenerationJob.generationId;
+      if(data.sdGenerationJob && data.sdGenerationJob.generationId){
+        return data.sdGenerationJob.generationId;
+      }else{
+        const response = await fetch("https://cloud.leonardo.ai/api/rest/v1/generations", postOptions);
+        const data = await response.json();
+        if(data.sdGenerationJob && data.sdGenerationJob.generationId){
+          return data.sdGenerationJob.generationId;
+        }else{
+          return;
+        }
+      }
     } catch (error) {
-      console.error('Error:', error);
+      // console.log('Error:', error);
     }
   }
 
@@ -134,14 +144,15 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
   const generationId = await generateImage();
   // console.log("===generationId====", generationId)
   if(!generationId){
-    return;
+    return false;
   }
   const imageUrl = await getImageDetails(generationId);
   if(!imageUrl){
-    return;
+    return false;
   }
   // console.log("===imageUrl====", imageUrl)
   await downloadImage(imageUrl, outputImagePath);
+  return true;
   }
 
 

@@ -3,18 +3,21 @@ const spinners = require("cli-spinners");
 
     
 async function startPixie(req, callback) {
+  const spinner = spinners.dots;
+  let interval;
   try {
-    const spinner = spinners.dots;    
-    const interval = setInterval(() => {
-        process.stdout.write(`\r${spinner.frames[spinner.interval % spinner.frames.length]}`);
-        spinner.interval++;
+    // callback(null, "Bot started, Please wait...");
+    process.stdout.write('\r');
+    interval = setInterval(() => {
+      process.stdout.write(`\r${spinner.frames[spinner.interval % spinner.frames.length]}`);
+      spinner.interval++;
     }, spinner.frameLength);
-    
-    await initPixie(req);
+    const result = await initPixie(req);
     clearInterval(interval);
-    return callback(null, "Completed");
+    return callback(null, `Completed, ${result}`);
   } catch (error) {
     //TODO: handle exception
+    clearInterval(interval);
     return callback(null, "Error Occured, Please try again");
   }
 }

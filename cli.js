@@ -92,6 +92,7 @@ gptCli.eval = async (input, context, filename, callback) => {
         if (extractedText) {
           extractedText = extractedText.replace(/^['"]|['"]$/g, "");
           await startPixie(extractedText, callback);
+          process.stdout.write('\r');
         }
         callback(null);
         break;
