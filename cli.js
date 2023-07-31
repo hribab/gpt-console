@@ -53,7 +53,6 @@ const gptCli = repl.start({
 gptCli.eval = async (input, context, filename, callback) => {
   if (!input.trim()) {
     callback(null);
-    gptCli.displayPrompt();
     return;
   }
   const tokens = input.trim().toLowerCase().split(" ");
@@ -93,16 +92,12 @@ gptCli.eval = async (input, context, filename, callback) => {
       if (tokens[1] && tokens[1].trim() == "start") {
         let matches = input.match(/pixie start ['"]?(.*)['"]?/);
         let extractedText = matches && matches[1] ? matches[1] : null;
-
         if (extractedText) {
           extractedText = extractedText.replace(/^['"]|['"]$/g, "");
-          gptCli.prompt = "";
           await startPixie(extractedText, callback);
           process.stdout.write('\r');
-          gptCli.prompt = "gpt-console>";
         }
         callback(null);
-        gptCli.displayPrompt();  // Display the prompt after the callback
         break;
       }
       if (tokens[1] && tokens[1].trim() == "update") {
@@ -111,9 +106,7 @@ gptCli.eval = async (input, context, filename, callback) => {
 
         if (extractedText) {
           extractedText = extractedText.replace(/^['"]|['"]$/g, "");
-          gptCli.prompt = "";  // Hide the prompt
           await updatePixie(extractedText, callback);
-          gptCli.prompt = "gpt-console>"; 
         }
         callback(null);
         break;

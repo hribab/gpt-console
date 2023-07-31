@@ -5,8 +5,11 @@ const unzipper = require("unzipper");
 const { promisify } = require("util");
 const path = require("path");
 // const fs = require("fs").promises;
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
 
-const { exec } = require("child_process");
+const {spawn } = require("child_process");
+
 const { generateResponse } = require("../../../utils/api/apiCall");
 const {
   extractImagePaths,
@@ -14,8 +17,8 @@ const {
 } = require("./imageProcessing");
 
 const fse = require("fs-extra");
+const os = require('os');
 
-const util = require("util");
 const { copySync, removeSync } = require("fs-extra");
 const streamPipeline = util.promisify(require("stream").pipeline);
 const pipeline = promisify(stream.pipeline);
@@ -45,25 +48,104 @@ async function runCommand(command, directory) {
   });
 }
 
+async function killIfAlreadyRunning() {
+    const isWindows = os.platform() === 'win32';
+    if (isWindows) {
+        // Windows command
+        try {
+            const { stdout: output } = await exec('netstat -ano | findstr :3000');
+            const processId = output.trim().split(/\s+/).pop();
+            await exec(`taskkill /PID ${processId} /F`);
+        } catch (err) {
+            console.error(`exec error: ${err}`);
+        }
+    } else {
+        // Mac / Linux command
+        try {
+            const { stdout: output } = await exec('lsof -i tcp:3000');
+            const lines = output.split('\n');
+            for (let line of lines) {
+                const p = line.trim().split(/\s+/);
+                const address = p[1];
+                if (address !== undefined && !isNaN(address)) {
+                    await exec('kill -9 ' + p[1]);
+                }
+            }
+        } catch (err) {
+            console.error(`exec error: ${err}`);
+        }
+    }
+}
+
+
+// async function runStartCommand(command, directory) {
+//   return new Promise((resolve, reject) => {
+//     exec(command, { cwd: directory }, (error, stdout, stderr) => {
+//       if (error) {
+//         console.log("======err--------", error)
+//         // console.warn(error);
+//         reject(error);
+//         if(error.includes("Something is already running on port 3000")){
+//           killIfAlreadyRunning()
+//         }
+//       } else {
+//         console.log("======err--------", stdout)
+
+//         if(stdout.includes("Something is already running on port 3000")){
+//           killIfAlreadyRunning()
+//         }
+//         // Let's suppose that the stdout contains the URL at which the app is running
+//         // Example: "Starting the development server...\nhttp://localhost:3000"
+//         const matches = stdout.match(/(http:\/\/localhost:\d+)/);
+//         if (matches) {
+//           resolve(matches[0]);
+//         } else {
+//           resolve(stdout ? stdout : stderr);
+//         }
+//       }
+//     });
+//   });
+// }
+
 async function runStartCommand(command, directory) {
   return new Promise((resolve, reject) => {
-    exec(command, { cwd: directory }, (error, stdout, stderr) => {
-      if (error) {
-        console.warn(error);
-        reject(error);
-      } else {
-        // Let's suppose that the stdout contains the URL at which the app is running
-        // Example: "Starting the development server...\nhttp://localhost:3000"
-        const matches = stdout.match(/(http:\/\/localhost:\d+)/);
-        if (matches) {
-          resolve(matches[0]);
-        } else {
-          resolve(stdout ? stdout : stderr);
-        }
+    const [cmd, ...args] = command.split(' ');
+    const proc = spawn(cmd, args, { cwd: directory });
+
+    return proc.stdout.on('data', async (data) => {
+      if (data.includes("Something is already running on port 3000")) {
+        await killIfAlreadyRunning();
+        const [cmd, ...args] = command.split(' ');
+        const proc = spawn(cmd, args, { cwd: directory });
+        proc.stdout.on('data', async (data) => {
+          if(data.toString().includes("localhost")){
+            return resolve("http://localhost:3000")
+          }
+        });
       }
+      if (data.toString().includes("localhost")) {
+        return resolve("http://localhost:3000")
+      }
+      // const matches = data.toString().match(/(http:\/\/localhost:\d+)/);
+      // console.log("===matches====", matches)
+      // if (matches) {
+      //   resolve(matches[0]);
+      // }
     });
+
+    // proc.stderr.on('data', async (data) => {
+    //   if (data.includes("Something is already running on port 3000")) {
+    //     await killIfAlreadyRunning();
+    //   }
+    // });
+
+    // proc.on('error', (error) => {
+    //   console.error(`exec error: ${error}`);
+    //   reject(error);
+    // });
   });
 }
+
 
 async function isYarnInstalled() {
   return new Promise((resolve, reject) => {
@@ -81,7 +163,7 @@ async function runTheApp() {
   try {
     const yarnInstalled = await isYarnInstalled();
     const installCommand = yarnInstalled ? 'yarn start' : 'npm start';
-    const result = await runStartCommand(installCommand, './yourproject');
+    const result = await runStartCommand(installCommand, './yourproject');    
     return `App is running at ${result}`
     // // console.log(result);
   } catch (error) {
@@ -242,7 +324,9 @@ async function downloadCodeFile(url, destinationPath) {
   // // console.log(`File downloaded to ${destinationPath}`);
 }
 
-async function generateMessaging(userRequirement, filePath, section, formMattedContextFromWebURL) {
+async function generateMessaging(userRequirement, filePath, section, formMattedContextFromWebURL=null) {
+  // console.log("---generateMessaging ====", section,formMattedContextFromWebURL );
+
     let code, gtpCode, finalCode;
     try {
       code = fs.readFileSync(
@@ -251,15 +335,15 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
       );
       gtpCode = code;
     } catch (err) {
+      return;
       // console.error(err);
     }
 
     const resp = await generateResponse(
       `
-      Given the User Requirement: “ ${userRequirement} “, 
-      ${formMattedContextFromWebURL}
-      Return me messaging updates to JSX code for section ${section} of landing page.
+      Given the User Requirement: “ ${userRequirement} “, ${formMattedContextFromWebURL}
 
+      Return me messaging updates to JSX code for section ${section} of landing page.
       rules are: 
       1. The messaging should cover all the text in the JSX code
       2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
@@ -272,9 +356,11 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
       
       In the response no other text should be there, it must be only JSON. 
       
-      Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
+      Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
       
       Here is the JSX code to modify:
+      
+      \`\`\`jsx
 
     ${code}
         `,
@@ -296,10 +382,9 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
           }catch(e) {
             const resp = await generateResponse(
               `
-              Given the User Requirement: “ ${userRequirement} “, 
-                    
+              Given the User Requirement: “ ${userRequirement} “, ${formMattedContextFromWebURL}
+
               Return me messaging updates to JSX code for section ${section} of landing page.
-            
               rules are: 
               1. The messaging should cover all the text in the JSX code
               2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
@@ -312,10 +397,11 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
               
               In the response no other text should be there, it must be only JSON. 
               
-              Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
+              Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
               
               Here is the JSX code to modify:
-          
+              
+              \`\`\`jsx
             
             ${code}
                 `,
@@ -328,10 +414,9 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
       if(!updates){
         const resp = await generateResponse(
           `
-          Given the User Requirement: “ ${userRequirement} “, 
-                
-          Return me messaging updates to JSX code for section ${section} of landing page.
+          Given the User Requirement: “ ${userRequirement} “, ${formMattedContextFromWebURL}
 
+          Return me messaging updates to JSX code for section ${section} of landing page.
           rules are: 
           1. The messaging should cover all the text in the JSX code
           2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
@@ -344,11 +429,11 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
           
           In the response no other text should be there, it must be only JSON. 
           
-          Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
+          Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
           
           Here is the JSX code to modify:
-
-        \`\`\`jsx
+          
+          \`\`\`jsx
 
         ${code}
             `,
@@ -422,8 +507,92 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
     // }
 
     let output;
+    
     try {
       output = generate(baseAST).code;
+      // console.log("=====output===", output)
+      let subStringArray = ["Scrollingfeature1", "Scrollingfeature2", "Scrollingfeature3"];
+      let lines;
+      if(section.toLowerCase().includes("header")){
+        let allSubstringsPresent = subStringArray.every(subString => output.includes(subString));
+        if(allSubstringsPresent){
+          const resp = await generateResponse(
+            `
+            Given the user requirement: "${userRequirement}", and web context from "${formMattedContextFromWebURL}", we're focusing on the "${section}" section of the landing page.
+            With these considerations in mind, we need you to generate three succinct and compelling header lines, with a maximum of three words each, for a dynamic scrolling text display.
+            These lines, serving as the primary points of attraction, should effectively encourage the user to take action by clicking the button
+            
+            example output: 
+            {
+              headers:  ["line1", "line2", "line3"]
+            }
+            response should be json
+            
+            Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
+
+              `,
+            false
+          );
+          try {
+            // Try to parse the input directly.
+            lines = JSON.parse(resp);
+          } catch(e) {
+            const resp = await generateResponse(
+              `
+              Given the user requirement: "${userRequirement}", and web context from "${formMattedContextFromWebURL}", we're focusing on the "${section}" section of the landing page.
+              With these considerations in mind, we need you to generate three succinct and compelling header lines, with a maximum of three words each, for a dynamic scrolling text display.
+              These lines, serving as the primary points of attraction, should effectively encourage the user to take action by clicking the button
+              
+              example output:
+              {
+                headers:  ["line1", "line2", "line3"]
+              }
+              
+             
+              response should be json
+              Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
+  
+                `,
+              false
+            );
+            try {
+              // Try to parse the input directly.
+              lines = JSON.parse(resp);
+            } catch(e) {
+              lines = null;
+            }
+          }
+  
+        
+        }
+        if(!lines){
+          const resp = await generateResponse(
+            `
+            Given the user requirement: "${userRequirement}", and web context from "${formMattedContextFromWebURL}", we're focusing on the "${section}" section of the landing page.
+            With these considerations in mind, we need you to generate three succinct and compelling header lines, with a maximum of three words each, for a dynamic scrolling text display.
+            These lines, serving as the primary points of attraction, should effectively encourage the user to take action by clicking the button
+            example output: ["line1", "line2", "line3"]
+            response should be json
+            Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
+              `,
+            false
+          );
+          try {
+            // Try to parse the input directly.
+            lines = JSON.parse(resp);
+          } catch(e) {
+            lines = ["Scrollingfeature1", "Scrollingfeature1", "Scrollingfeature1"]
+          }
+        }
+
+        // console.log("---lines ====", lines );
+
+        if(lines && lines.headers && lines.headers.length > 0){
+          for (let i = 0; i < subStringArray.length; i++) {
+            output = output.split(subStringArray[i]).join(lines.headers[i]);
+          }
+        }
+      }
       try {
         fs.writeFileSync(
           filePath,
@@ -441,25 +610,29 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
 
 }
 
-async function updateTheCodeWithImages(userRequirement, filePath, selectedDesignSystemName) {
-    let code;
+async function updateTheCodeWithImages(userRequirement, filePath, selectedDesignSystemName, formMattedContextFromWebURL=null) {
+    // console.log("------------------", filePath, selectedDesignSystemName)  
+  let code;
     try {
-        code = fs.readFileSync(filePath, //"yourproject/src/components/Landingpage/Header.js", 
-        'utf8');
+        code = fs.readFileSync(filePath, 'utf8');
     } catch (err) {
+        // console.log("==code=error==" )
+        return;
         // console.error(err);
     }
     
     const imagePaths = extractImagePaths(code);
-
+    // console.log("=========imagePaths=============", imagePaths, selectedDesignSystemName === 'material')
     const result = {};
 
     for (let i = 0; i < imagePaths.length; i++) {
         let newPath = selectedDesignSystemName === 'material' ? 
         imagePaths[i].replace("assets/images", "assets/images/aigenerated") : 
         imagePaths[i].replace("assets/img", "assets/img/aigenerated");
+        console.log("========downloadComponentImages==========started==")
 
-        const isSuccess = await downloadComponentImages(userRequirement, `yourproject/src/${newPath}`);
+        const isSuccess = await downloadComponentImages(userRequirement, `yourproject/src/${newPath}`, formMattedContextFromWebURL);
+        console.log("========downloadComponentImages==========done==")
         if(isSuccess){
           result[imagePaths[i]] = newPath
         }
@@ -516,6 +689,7 @@ async function pickRightDesignSystem(userRequirement) {
     false
   );
 
+  console.log("====resp=====", resp)
   let selectedDesignSystem;
   if(resp){
     const available = Object.keys(designSystems); 
@@ -531,6 +705,8 @@ async function pickRightDesignSystem(userRequirement) {
   }else{
     selectedDesignSystem = findDesignInResponse(designSystems);
   }
+  console.log("====resp=====", selectedDesignSystem)
+
   return {designSystemZipURL: skeletonAndConfigURL[selectedDesignSystem].skeleton, designSystemConfig:skeletonAndConfigURL[selectedDesignSystem].config, selectedDesignSystemName: selectedDesignSystem}
 }
 
@@ -867,7 +1043,7 @@ function formatContextFromURL(section, rawTextFromURL){
     case "pricing":
       if(rawTextFromURL[section]){
         if (Array.isArray(rawTextFromURL[section]) && rawTextFromURL[section].length) {
-          referenceTextFromURL = rawTextFromURL[section]
+          referenceTextFromURL = rawTextFromURL[section].map(item => item.name)
         }
       }
       break;

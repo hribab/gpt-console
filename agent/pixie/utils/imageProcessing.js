@@ -76,21 +76,59 @@ async function downloadImage(url, filename) {
     }
   }
 
-async function downloadComponentImages(userRequirement, outputImagePath) {
-
-  const gptPrompt = `I want you to act as a prompt generator for Midjourney's artificial intelligence program. Your job is to provide realistic examples that will inspire unique and interesting images from the AI. Describe only one concrete idea, don't mix many. It should not be complex, should be clean, choose all real colors, real textures, real objects. The more detailed and realistic your description, the more interesting the resulting image will be. always use hyper realistic descriptions and features for images, is should never has a scene or description which cannot be realistic. Always
+async function downloadComponentImages(userRequirement, outputImagePath, formMattedContextFromWebURL) {
+  try {
+  const gptPrompt = `
+  I want you to act as a prompt generator for Midjourney's artificial intelligence program. Your job is to provide realistic examples that will inspire unique and interesting images from the AI. Describe only one concrete idea, don't mix many. It should not be complex, should be clean, choose all real colors, real textures, real objects. The more detailed and realistic your description, the more interesting the resulting image will be. always use hyper realistic descriptions and features for images, is should never has a scene or description which cannot be realistic. Always
   Use dark themed color pallets. also generate negative prompt: list out most of possible errors AI model cangenerate, for example two faced humans, structures defying gravity, shapes that look like human private parts ..etc
 
   Response should be maximum of 60 words, prompt and negative prompt. and response must be in json
   example output: {"positive_prompt": "", "negative_prompt": ""}
 
-  Here is your first prompt: "Background image for landing page of user requirement:  ${userRequirement}"
+  Here is your first prompt: "Background image for landing page of user requirement:  ${userRequirement} ${formMattedContextFromWebURL}"
+  Limit your response to 60 words for both prompts, provided in JSON format.
+  Example output: {"positive_prompt": "", "negative_prompt": ""}.
 
-  Main requirement is response must be in json
-`
-  const gptRawResponse = await generateResponse(gptPrompt)
+  Response Must be only JSON , no other text should be there.
+
+  Request: Response should be able to parse by a below javascript function:
+    function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
+  `
+  const resp = await generateResponse(gptPrompt)
+  // console.log("=====image generation========", resp)
+  let imageGenerationPrompt;
   
-  const response = JSON.parse(gptRawResponse)
+  try {
+    // Try to parse the input directly.
+    imageGenerationPrompt = JSON.parse(resp)
+  } catch(e) {
+    const gptPrompt = `
+      I want you to act as a prompt generator for Midjourney's artificial intelligence program. Your job is to provide realistic examples that will inspire unique and interesting images from the AI. Describe only one concrete idea, don't mix many. It should not be complex, should be clean, choose all real colors, real textures, real objects. The more detailed and realistic your description, the more interesting the resulting image will be. always use hyper realistic descriptions and features for images, is should never has a scene or description which cannot be realistic. Always
+      Use dark themed color pallets. also generate negative prompt: list out most of possible errors AI model cangenerate, for example two faced humans, structures defying gravity, shapes that look like human private parts ..etc
+    
+      Response should be maximum of 60 words, prompt and negative prompt. and response must be in json
+      example output: {"positive_prompt": "", "negative_prompt": ""}
+    
+      Here is your first prompt: "Background image for landing page of user requirement:  ${userRequirement} ${formMattedContextFromWebURL}"
+      Limit your response to 60 words for both prompts, provided in JSON format.
+      Example output: {"positive_prompt": "", "negative_prompt": ""}.
+
+      Response Must be only JSON , no other text should be there.
+
+      Request: Response should be able to parse by a below javascript function:
+        function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
+    `
+    const resp = await generateResponse(gptPrompt)
+
+    try {
+      imageGenerationPrompt = JSON.parse(resp)
+    } catch(e) {
+      imageGenerationPrompt = {"positive_prompt": `Hyper realistic background image for ${userRequirement}, ${formMattedContextFromWebURL}`, "negative_prompt": " flying objects defying gravity, humans with multiple faces, disproportionate body parts such as deformed eyes or limbs, improbable color combinations, and explicit or offensive imagery"}
+    }
+  }
+
+  // console.log("=====image generation========", imageGenerationPrompt)
+
   // // // console.log("===image prompt ====", gptPrompt)
   // Define headers and body for POST request
   const myHeaders = {
@@ -98,11 +136,15 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
     "authorization": "Bearer 2dd1df64-644e-47ab-9f6a-724111b49c9f",
     "content-type": "application/json"
   };
-
+ 
+  if(!imageGenerationPrompt || (imageGenerationPrompt && (!imageGenerationPrompt.negative_prompt || !imageGenerationPrompt.positive_prompt) )){
+    // console.log("==empty==imageGenerationPrompt=====")
+    return;
+  }
   // // console.log("===image prompt resones====", response)
   const raw = JSON.stringify({
-    "prompt": `${response.positive_prompt}. 8K, hyper realistic`,
-    "negative_prompt": response.negative_prompt,
+    "prompt": `${imageGenerationPrompt.positive_prompt}. 8K, hyper realistic`,
+    "negative_prompt": imageGenerationPrompt.negative_prompt,
     "width": 1024,
     "height": 1024,
     "modelId": "291be633-cb24-434f-898f-e662799936ad",
@@ -135,6 +177,8 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
         }
       }
     } catch (error) {
+      console.log("=====err---", error)
+      return;
       // // console.log('Error:', error);
     }
   }
@@ -144,14 +188,19 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
   const generationId = await generateImage();
   // // console.log("===generationId====", generationId)
   if(!generationId){
-    return false;
+    return;
   }
   const imageUrl = await getImageDetails(generationId);
   if(!imageUrl){
-    return false;
+    return;
   }
   // // console.log("===imageUrl====", imageUrl)
   await downloadImage(imageUrl, outputImagePath);
+  }catch(e) {
+    console.log("======eee========", e)
+    return false
+
+  }
   return true;
   }
 

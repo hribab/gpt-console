@@ -53,22 +53,28 @@ renameProjectFolderIfExist
   
 
 async function checkForDesignChange(userRequirement, filePath) {
-    //TODO: we need to save original user request to create the page const createRequirement = `landing page for selling oversized t-shirts`;
     const resp = await generateResponse(
         `
-        Context: I recently created a landing page for a client. Now, the client wants to make some modifications to this page.
+        Context: A client for whom I've recently developed a landing page has requested some modifications.
 
-        Client's Request for Modification: "${userRequirement}"
+        Modification Request: "${userRequirement}"
 
-        Based on the client's request, i want to know if user wants to change entire website completely. If user intention is to change entire website completely, then return true, else return false.
-        
-        note: any kind of user disatisfaction with the existing landing page should be considered as intention is to change entire website completely, hence return true.
+        Given the client's request, please determine if their intention is to recreate the entire website.
+        If the client appears dissatisfied with the existing landing page and seeks significant changes, interpret this as an intention to overhaul the entire website, thus return \`true\`. If the modifications seem minor and don't indicate a complete revamp, return \`false\`.
 
-        just return true or false, no explanation is needed.
+        Note: Please return a simple \`true\` or \`false\` response. No detailed explanation is necessary.
           `,
         false
       );
-    return resp.toLocaleLowerCase().includes("true") ? true : false;
+        if(typeof resp === 'boolean') {
+            return resp;
+        }
+        else if(typeof resp === 'string') {
+            return resp.toLowerCase().includes("true");
+        }
+        else {
+            return false;
+        }
 }
 async function implementDesignChange(userRequirement, alreadySelectedDesignSystemName, existingPrompt, callback) {    
         try {
@@ -208,74 +214,91 @@ async function identifyUpdateSections(userRequirement, originalPrompt) {
       return enabledSections
 
 }
-async function determineSectionsDesignChange(userRequirement, originalPrompt) {
-    const resp = await generateResponse(
-        `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
 
-        Client's Request for Modification: "${userRequirement}"
-    
-        I want you to determine if user wants to change the design of any section headers, features, blogs, teams, projects, pricing, testmonials, contactus
-        If user wants to make design changes to any section, determine what sections user wants to change the design
+async function determineUpdateTypedetermineUpdateType(userRequirement, originalPrompt) {
+    const resp = await generateResponse(
+        `Context: I recently developed a landing page for a client based on their initial requirements: "${originalPrompt}"
+
+        Now, the client has come back with some modification request: "${userRequirement}"
+
+        Landing page has total 8 sections, they are headers, features, blogs, teams, projects, pricing, testimonials, and contactus
         
-        Return list of  sections that user wants to change the design based on user requirement
+        I categorized modification requests into 3 types 1. design update 2. messaging update 3. background image update
+
+
+        If modification request is for messaging update(also known as text replacemnt or text change) or background image update just return empty JSON object {}
+        If modification request is for design update,
         
-        rules are:
-        - If the requirement is not clear, return empty object {}
-        - If the intention is to not change anything, return empty object {}
-          
-        Available sections are:
-        headers, features, blogs, teams, projects, pricing, testmonials, contactus
-    
-        Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
-    
-        Response should be JSON , no other text should be there.
-    
-        Request: Response should be able to parse by a below javascript function:
+        please determine the sections from the list:  headers, features, blogs, teams, projects, pricing, testimonials, contactus.
         
-        function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
-    
+        Response should be in JSON format, with each section represented by a boolean value - \`true\` or \`false\`. A \`true\` value indicates a proposed design change for that specific section.
+        
+        For instance: 
+        {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testimonials": false, "contactus": false}
+        
+        Response must be in JSON, NO other explanation or other text should be there in the response
+        
+        Please adhere to the following rules:
+        - In case the client's intentions are not explicitly clear, return an empty JSON object ({})
+        - If the client does not wish to make any changes, again, return an empty JSON object ({})
+
+        
+        Request: Response is strictly a JSON object devoid of any additional text, as it needs to be parsable by the following JavaScript function:
+        
+        function parseResponse(YourResponse) { return JSON.parse(YourResponse) }        
+        
           `,
         false
       );
-    
+      console.log("=======res1p======", resp)
+
       let enabledSections
       try {
         // Try to parse the input directly.
         enabledSections = JSON.parse(resp);
+        console.log("=======enabledSections1======", enabledSections)
+
       } catch(e) {
         const resp = await generateResponse(
-          `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
-        
-          Now, the client wants to make some modifications to this page.
-  
-          Client's Request for Modification: "${userRequirement}"
-      
-          I want you to determine if user intension to change the design of any section headers, features, blogs, teams, projects, pricing, testmonials, contactus
-          If user wants to make design changes to any section, determine what sections user wants to change the design
-          
-          Return list of  sections that user wants to change the design based on user requirement
+          `Context: I recently developed a landing page for a client based on their initial requirements: "${originalPrompt}"
 
-          rules are:
-          - If the requirement is not clear, return empty object {}
-          - If the intention is to not change anything, return empty object {}
-            
-          Available sections are:
-          headers, features, blogs, teams, projects, pricing, testmonials, contactus
-      
-          Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
-      
-          Response should be JSON , no other text should be there.
-      
-          Request: Response should be able to parse by a below javascript function:
+          Now, the client has come back with some modification request: "${userRequirement}"
+  
+          Landing page has total 8 sections, they are headers, features, blogs, teams, projects, pricing, testimonials, and contactus
           
-          function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
-      
+          I categorized modification requests into 3 types 1. design update 2. messaging update 3. background image update
+  
+  
+          If modification request is for messaging update(also known as text replacemnt or text change) or background image update just return empty JSON object {}
+          If modification request is for design update,
+          
+          please determine the sections from the list:  headers, features, blogs, teams, projects, pricing, testimonials, contactus.
+          
+          Response should be in JSON format, with each section represented by a boolean value - \`true\` or \`false\`. A \`true\` value indicates a proposed design change for that specific section.
+          
+          For instance: 
+          {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testimonials": false, "contactus": false}
+          
+          Response must be in JSON, NO other explanation or other text should be there in the response
+          
+          Please adhere to the following rules:
+          - In case the client's intentions are not explicitly clear, return an empty JSON object ({})
+          - If the client does not wish to make any changes, again, return an empty JSON object ({})
+  
+          
+          Request: Response is strictly a JSON object devoid of any additional text, as it needs to be parsable by the following JavaScript function:
+          
+          function parseResponse(YourResponse) { return JSON.parse(YourResponse) }        
+           
             `,
           false
-        );  
+        ); 
+        console.log("=======respt2======", resp)
         try {
           // Try to parse the input directly.
           enabledSections = JSON.parse(resp);
+          console.log("=======enabledSections2======", enabledSections)
+
         } catch(e) {
             enabledSections = {
                 headers: false,
@@ -294,8 +317,111 @@ async function determineSectionsDesignChange(userRequirement, originalPrompt) {
       return  enabledSections;
 }
 
-async function updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation(sectionsDesignChange, userRequirement, selectedInternalDesignSystem, originalRequirement) {
+
+async function determineSectionsDesignChange(userRequirement, originalPrompt) {
+    const resp = await generateResponse(
+        `Context: I recently developed a landing page for a client based on their initial requirements: "${originalPrompt}"
+
+        Now, the client has come back with some modification request: "${userRequirement}"
+
+        Landing page has total 8 sections, they are headers, features, blogs, teams, projects, pricing, testimonials, and contactus
+        
+        I categorized modification requests into 3 types 1. design update 2. messaging update 3. background image update
+
+
+        If modification request is for messaging update(also known as text replacemnt or text change) or background image update just return empty JSON object {}
+        If modification request is for design update,
+        
+        please determine the sections from the list:  headers, features, blogs, teams, projects, pricing, testimonials, contactus.
+        
+        Response should be in JSON format, with each section represented by a boolean value - \`true\` or \`false\`. A \`true\` value indicates a proposed design change for that specific section.
+        
+        For instance: 
+        {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testimonials": false, "contactus": false}
+        
+        Response must be in JSON, NO other explanation or other text should be there in the response
+        
+        Please adhere to the following rules:
+        - In case the client's intentions are not explicitly clear, return an empty JSON object ({})
+        - If the client does not wish to make any changes, again, return an empty JSON object ({})
+
+        
+        Request: Response is strictly a JSON object devoid of any additional text, as it needs to be parsable by the following JavaScript function:
+        
+        function parseResponse(YourResponse) { return JSON.parse(YourResponse) }        
+        
+          `,
+        false
+      );
+      console.log("=======res1p======", resp)
+
+      let enabledSections
+      try {
+        // Try to parse the input directly.
+        enabledSections = JSON.parse(resp);
+        console.log("=======enabledSections1======", enabledSections)
+
+      } catch(e) {
+        const resp = await generateResponse(
+          `Context: I recently developed a landing page for a client based on their initial requirements: "${originalPrompt}"
+
+          Now, the client has come back with some modification request: "${userRequirement}"
+  
+          Landing page has total 8 sections, they are headers, features, blogs, teams, projects, pricing, testimonials, and contactus
+          
+          I categorized modification requests into 3 types 1. design update 2. messaging update 3. background image update
+  
+  
+          If modification request is for messaging update(also known as text replacemnt or text change) or background image update just return empty JSON object {}
+          If modification request is for design update,
+          
+          please determine the sections from the list:  headers, features, blogs, teams, projects, pricing, testimonials, contactus.
+          
+          Response should be in JSON format, with each section represented by a boolean value - \`true\` or \`false\`. A \`true\` value indicates a proposed design change for that specific section.
+          
+          For instance: 
+          {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testimonials": false, "contactus": false}
+          
+          Response must be in JSON, NO other explanation or other text should be there in the response
+          
+          Please adhere to the following rules:
+          - In case the client's intentions are not explicitly clear, return an empty JSON object ({})
+          - If the client does not wish to make any changes, again, return an empty JSON object ({})
+  
+          
+          Request: Response is strictly a JSON object devoid of any additional text, as it needs to be parsable by the following JavaScript function:
+          
+          function parseResponse(YourResponse) { return JSON.parse(YourResponse) }        
+           
+            `,
+          false
+        ); 
+        console.log("=======respt2======", resp)
+        try {
+          // Try to parse the input directly.
+          enabledSections = JSON.parse(resp);
+          console.log("=======enabledSections2======", enabledSections)
+
+        } catch(e) {
+            enabledSections = {
+                headers: false,
+                features: false,
+                blogs: false,
+                teams: false,
+                projects: false,
+                pricing: false,
+                testmonials: false,
+                contactus: false,
+                footer: false,
+              }
+        }
+      }
     
+      return  enabledSections;
+}
+
+async function updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation(sectionsDesignChange, userRequirement, selectedInternalDesignSystem, originalRequirement, shouldUpdateMessaging, shouldUpdateBackgroundImages) {
+
     const designSystemConfigURL = skeletonAndConfigURL[selectedInternalDesignSystem].config
     
     let designSystemConfig;
@@ -316,7 +442,7 @@ async function updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperatio
           if(designSystemConfig[section]){
             const allSubSections = Object.keys(designSystemConfig[section]); // Extract design names  
 
-            const subSection = allSubSections[Math.floor(Math.random() * allSubSections.length)];
+            const subSection = allSubSections[Math.floor(Math.random() * allSubSections.length)];//ramdomly pick
             const link = designSystemConfig[section][subSection].codefile
             let fileName = `${section.charAt(0).toUpperCase()}${section.slice(1)}`
             if (section === "testmonials") {
@@ -324,16 +450,23 @@ async function updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperatio
             }
             const path = `yourproject/src/components/Landingpage/${fileName}.js`;
             await downloadCodeFile(link, path);
-            // await generateMessaging(
-            //     `Initial prompt: ${originalRequirement}, User update request: ${userRequirement}`,
-            //     path,
-            //     section
-            // );
-            // await updateTheCodeWithImages(
-            //     `Initial prompt: ${originalRequirement}, User update request: ${userRequirement}`,
-            //     path,
-            //     selectedDesignSystemName
-            // );
+            if(shouldUpdateMessaging){
+                await generateMessaging(
+                    `Initial prompt: ${originalRequirement}, User update request: ${userRequirement}`,
+                    path,
+                    section
+                );
+
+            }
+            if(shouldUpdateBackgroundImages){
+                
+                    await updateTheCodeWithImages(
+                        `Initial prompt: ${originalRequirement}, User update request: ${userRequirement}`,
+                        path,
+                        selectedInternalDesignSystem
+                    );
+            
+            }
           }
         }
     }
@@ -341,28 +474,33 @@ async function updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperatio
 
 async function determineUpdateType(userRequirement, originalPrompt) {
     const resp = await generateResponse(
-        `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
+        `Context: I recently crafted a landing page for a client, following their original requirements detailed as: "${originalPrompt}"
 
-        Client's Request for Modification: "${userRequirement}"
-    
-        I want you to return type of update user wants to make based on user requirement
+        Modification Request from the Client: "${userRequirement}"
         
-        rules are:
-        - If the requirement is not clear, return empty object {}
-        - If the intention is to not change anything, return empty object {}
-          
-        Available update types are:
-        messaging, backgroundimage, remove
-    
-        Sample output: {"messaging": true, "backgroundimage": true, "remove": false}
-    
-        Response should be JSON, no other text should be there.
-    
-        Request: Response should be able to parse by a below javascript function:
+        Your task is to ascertain the type of updates the client wishes to apply based on their modification request.
         
+        Here are the rules to guide you:
+        - If the requirement is ambiguous or unclear, return an empty JSON object: \`{}\`
+        - If there is no indication of any changes required, also return an empty JSON object: \`{}\`
         
-        function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
-    
+        The client's modifications can fall under the following categories:
+        1. Design
+        2. Messaging
+        3. Backgroundimage
+        4. Removal
+        
+        Your response should be a JSON object indicating which update categories the client intends to modify. Each category should be associated with a boolean value, where \`true\` represents an intention to modify, and \`false\` indicates no change.
+        
+        example output: \`{"design": false, "messaging": true, "backgroundimage": true, "remove": false}\`
+        
+        Please ensure that the response is strictly a JSON object without any additional text. This is crucial as the response needs to be parseable by the following JavaScript function:
+        \`\`\`
+        function parseResponse(YourResponse) { 
+          return JSON.parse(YourResponse) 
+        }
+        \`\`\`
+        
           `,
         false
       );
@@ -373,29 +511,33 @@ async function determineUpdateType(userRequirement, originalPrompt) {
         updateOperations = JSON.parse(resp);
       } catch(e) {
         const resp = await generateResponse(
-          `Context: I recently created a landing page for a client. Now, the client wants to make some modifications to this page.
+          `Context: I recently crafted a landing page for a client, following their original requirements detailed as: "${originalPrompt}"
 
-          Client's Request for Modification: "${userRequirement}"
-      
-          I want you to return type of update user wants to make based on user requirement
+          Modification Request from the Client: "${userRequirement}"
           
-          rules are:
-          - If the requirement is not clear, return empty object {}
-          - If the intention is to not change anything, return empty object {}
-            
-          Available update types are:
-          messaging: If user requirement is to update the messaging or text of any kind 
-          backgroundimage: If user requirement is to update the image of any kind
-          remove: If user requirement is to remove any thing
-      
-          Sample output: {"messaging": true, "backgroundimage": true, "remove": false}
-      
-          Response should be JSON , no other text should be there.
-      
-          Request: Response should be able to parse by a below javascript function:
-    
-          function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
-      
+          Your task is to ascertain the type of updates the client wishes to apply based on their modification request.
+          
+          Here are the rules to guide you:
+          - If the requirement is ambiguous or unclear, return an empty JSON object: \`{}\`
+          - If there is no indication of any changes required, also return an empty JSON object: \`{}\`
+          
+          The client's modifications can fall under the following categories:
+          1. Design
+          2. Messaging
+          3. Backgroundimage
+          4. Removal
+          
+          Your response should be a JSON object indicating which update categories the client intends to modify. Each category should be associated with a boolean value, where \`true\` represents an intention to modify, and \`false\` indicates no change.
+          
+          example output: \`{"design": false, "messaging": true, "backgroundimage": true, "remove": false}\`
+          
+          Please ensure that the response is strictly a JSON object without any additional text. This is crucial as the response needs to be parseable by the following JavaScript function:
+          \`\`\`
+          function parseResponse(YourResponse) { 
+            return JSON.parse(YourResponse) 
+          }
+          \`\`\`
+          
             `,
           false
         );  
@@ -404,6 +546,7 @@ async function determineUpdateType(userRequirement, originalPrompt) {
           updateOperations = JSON.parse(resp);
         } catch(e) {
             updateOperations = {
+            design: false,
             messaging: false,
             backgroundimage: false,
             remove: false,

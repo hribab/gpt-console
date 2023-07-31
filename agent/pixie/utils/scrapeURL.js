@@ -132,14 +132,18 @@ async function extractContent(url) {
 function extractURLs(text) {
     const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[^\s]+\.[a-zA-Z]{2,})/g;
     let urls = text.match(urlRegex);
-
-    // Add https:// before URLs that don't have http:// or https://
+    if(urls && urls.length>0){
+        // Add https:// before URLs that don't have http:// or https://
     urls = urls.map(url => url.startsWith('http://') || url.startsWith('https://') ? url : 'https://' + url);
 
     // Remove duplicates
     urls = [...new Set(urls)];
 
     return urls;
+    }else{
+      return []
+    }
+  
 }
 
 async function extractTextAndMetaFromURLForEachSection(url) {

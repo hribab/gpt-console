@@ -13,6 +13,8 @@ async function updatePixie(input, callback) {
         
         await updatePixieOperation(input, callback)
         clearInterval(interval);
+        process.stdout.write('\r');
+
         return callback(null, "Completed");
       } catch (error) {
         //TODO: handle exception
