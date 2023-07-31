@@ -41,7 +41,7 @@ async function getImageDetails(generationId) {
           return data.generations_by_pk.generated_images[0].url;
         }
       } catch (error) {
-        //// console.log('Error:', error);
+        //// // console.log('Error:', error);
       }
       
       attemptCount++;
@@ -52,7 +52,7 @@ async function getImageDetails(generationId) {
 async function downloadImage(url, filename) {
     try {
       // Ensure the directory exists
-     // console.log("==creating=filename====", filename)
+     // // console.log("==creating=filename====", filename)
       // Split the path into its parts
       let parts = filename.split(path.sep);
       // Pop the last part of the path array which should be the filename
@@ -72,7 +72,7 @@ async function downloadImage(url, filename) {
       await pipeline(response.body, fs.createWriteStream(filename));
       
     } catch (error) {
-      // console.log('Error:', error);
+      // // console.log('Error:', error);
     }
   }
 
@@ -91,7 +91,7 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
   const gptRawResponse = await generateResponse(gptPrompt)
   
   const response = JSON.parse(gptRawResponse)
-  // // console.log("===image prompt ====", gptPrompt)
+  // // // console.log("===image prompt ====", gptPrompt)
   // Define headers and body for POST request
   const myHeaders = {
     "accept": "application/json",
@@ -99,7 +99,7 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
     "content-type": "application/json"
   };
 
-  // console.log("===image prompt resones====", response)
+  // // console.log("===image prompt resones====", response)
   const raw = JSON.stringify({
     "prompt": `${response.positive_prompt}. 8K, hyper realistic`,
     "negative_prompt": response.negative_prompt,
@@ -135,14 +135,14 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
         }
       }
     } catch (error) {
-      // console.log('Error:', error);
+      // // console.log('Error:', error);
     }
   }
 
 
  
   const generationId = await generateImage();
-  // console.log("===generationId====", generationId)
+  // // console.log("===generationId====", generationId)
   if(!generationId){
     return false;
   }
@@ -150,7 +150,7 @@ async function downloadComponentImages(userRequirement, outputImagePath) {
   if(!imageUrl){
     return false;
   }
-  // console.log("===imageUrl====", imageUrl)
+  // // console.log("===imageUrl====", imageUrl)
   await downloadImage(imageUrl, outputImagePath);
   return true;
   }

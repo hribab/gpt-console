@@ -151,13 +151,13 @@ async function identifyUpdateSections(userRequirement, originalPrompt) {
         false
       );
     
-      // console.log("=====resp=====", resp);
+      // // console.log("=====resp=====", resp);
       let enabledSections
       try {
         // Try to parse the input directly.
         enabledSections = JSON.parse(resp);
       } catch(e) {
-        // console.log("====catch====", e)
+        // // console.log("====catch====", e)
         const resp = await generateResponse(
           `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
         
@@ -186,7 +186,7 @@ async function identifyUpdateSections(userRequirement, originalPrompt) {
             `,
           false
         );
-        // console.log("=====resp2=====", resp);
+        // // console.log("=====resp2=====", resp);
         try {
           // Try to parse the input directly.
           enabledSections = JSON.parse(resp);
@@ -211,8 +211,6 @@ async function identifyUpdateSections(userRequirement, originalPrompt) {
 async function determineSectionsDesignChange(userRequirement, originalPrompt) {
     const resp = await generateResponse(
         `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
-        
-        Now, the client wants to make some design changes to this page.
 
         Client's Request for Modification: "${userRequirement}"
     
@@ -454,7 +452,7 @@ async function executeMessagingUpdate(userRequirement, filePath) {
         `,
         false
     );
-    // console.log("=====first resp=====", resp);
+    // // console.log("=====first resp=====", resp);
     let updates;
     try {
     // Try to parse the input directly.
@@ -545,7 +543,7 @@ async function executeMessagingUpdate(userRequirement, filePath) {
     }
     }
 
-    // console.log("===updates===", updates);
+    // // console.log("===updates===", updates);
     const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
 
     traverse(baseAST, {
@@ -563,7 +561,7 @@ async function executeMessagingUpdate(userRequirement, filePath) {
     });
 
     const { code: newCode } = generator(baseAST);
-    // console.log("--newCode----", newCode);
+    // // console.log("--newCode----", newCode);
 
     let output;
     try {
@@ -574,12 +572,12 @@ async function executeMessagingUpdate(userRequirement, filePath) {
             output,
             "utf8"
         );
-        // console.log("File successfully written!");
+        // // console.log("File successfully written!");
         } catch (err) {
         console.error(err);
         }
     } catch (error) {
-        // console.log("it's catch");
+        // // console.log("it's catch");
         console.error("Syntax error:", error.message);
         console.error("Stack trace:", error.stack);
     }
@@ -594,14 +592,14 @@ async function executeBackgroundImageUpdate(userRequirement, filePath) {
         }
         
         const imagePaths = extractImagePaths(code);
-        // console.log("===replacing======", imagePaths);
+        // // console.log("===replacing======", imagePaths);
     
         const result = {};
         for (let i = 0; i < imagePaths.length; i++) {
             await downloadComponentImages(userRequirement, `yourproject/src/${imagePaths[i].replace("assets/img", "assets/img/aigenerated")}`);
             result[imagePaths[i]] = imagePaths[i].replace("assets/img", "assets/img/aigenerated");
         }
-        // console.log(result);
+        // // console.log(result);
     
         const ast = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
         
@@ -673,7 +671,7 @@ async function removeOperation(userRequirement, filePath) {
             false
         );
         
-        // console.log("=====resp=====", resp);
+        // // console.log("=====resp=====", resp);
         let updates;
         try {
         // Try to parse the input directly.
@@ -767,7 +765,7 @@ async function removeOperation(userRequirement, filePath) {
                 }
         }   
     
-        // console.log("===updates===", updates);
+        // // console.log("===updates===", updates);
 
         if(!updates){
             return;
@@ -800,7 +798,7 @@ async function removeOperation(userRequirement, filePath) {
         let output;
         try {
             output = generate(baseAST).code;
-            // console.log("==syntax checked==cahtgptcode====", output);
+            // // console.log("==syntax checked==cahtgptcode====", output);
         
             try {
             fs.writeFileSync(
@@ -808,12 +806,12 @@ async function removeOperation(userRequirement, filePath) {
                 output,
                 "utf8"
             );
-            // console.log("File successfully written!");
+            // // console.log("File successfully written!");
             } catch (err) {
             console.error(err);
             }
         } catch (error) {
-            // console.log("it's catch");
+            // // console.log("it's catch");
             console.error("Syntax error:", error.message);
             console.error("Stack trace:", error.stack);
         }
@@ -861,7 +859,7 @@ async function removeOperationByClassName(userRequirement, filePath) {
         false
     );
     
-    // console.log("=====resp=====", resp);
+    // // console.log("=====resp=====", resp);
     let updates;
     try {
     // Try to parse the input directly.
@@ -905,13 +903,13 @@ async function removeOperationByClassName(userRequirement, filePath) {
         });
         
         const { code: newCode } = generator(baseAST);
-        // console.log("--newCode----", newCode);
+        // // console.log("--newCode----", newCode);
 
     
     let output;
     try {
         output = generate(baseAST).code;
-        // console.log("==syntax checked==cahtgptcode====", output);
+        // // console.log("==syntax checked==cahtgptcode====", output);
     
         try {
         fs.writeFileSync(
@@ -919,12 +917,12 @@ async function removeOperationByClassName(userRequirement, filePath) {
             output,
             "utf8"
         );
-        // console.log("File successfully written!");
+        // // console.log("File successfully written!");
         } catch (err) {
         console.error(err);
         }
     } catch (error) {
-        // console.log("it's catch");
+        // // console.log("it's catch");
         console.error("Syntax error:", error.message);
         console.error("Stack trace:", error.stack);
     }

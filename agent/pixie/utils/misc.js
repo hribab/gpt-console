@@ -50,7 +50,7 @@
 
 // finalCode = mergeCodes(code, gtpCode);
 
-// console.log("====gtpCode====", finalCode);
+// // console.log("====gtpCode====", finalCode);
 
 
 
@@ -131,7 +131,7 @@
 //     });
     
 //     const { code: newCode } = generator(ast);
-//     console.log("------", newCode);
+//     // console.log("------", newCode);
     
     
     
@@ -142,7 +142,7 @@
 //           enter(path) {
             
 //             if (path.node.arguments.length > 0){
-//               console.log("====value===", path.node.arguments[0].value, path.node);
+//               // console.log("====value===", path.node.arguments[0].value, path.node);
 //             }
             
     
@@ -161,7 +161,7 @@
     
 //     let newCode = generate(ast, { retainLines: true }).code;
     
-//     console.log("=======newcode====", newCode);
+//     // console.log("=======newcode====", newCode);
     
 //     // Split the code into lines
 //     let lines = gtpCode.split('\n');
@@ -177,9 +177,9 @@
       
 //       // Start searching from the specified line
 //       for (let i = update.line; i < lines.length; i++) {
-//         console.log("==>",i,  "--code--", lines[i], "---gptrepso===", update.originaltext);
+//         // console.log("==>",i,  "--code--", lines[i], "---gptrepso===", update.originaltext);
 //         if (regex.test(lines[i])) {
-//           console.log("Found match in line", i, lines[i]);
+//           // console.log("Found match in line", i, lines[i]);
 //           // Replace the text and reassign the modified line back to the array
 //           lines[i] = lines[i].replace(regex, update.updatedtext);
 //           break; // break after replacing in the first matching line
@@ -192,7 +192,7 @@
     
     
 //     Reassemble the code
-//     console.log("=-===nainal code===", updatedCode);
+//     // console.log("=-===nainal code===", updatedCode);
     
 //     const resp = await generateResponse(
 //       `
@@ -222,7 +222,7 @@
     
     
     
-//     console.log("====resp====", resp);
+//     // console.log("====resp====", resp);
     
 //     let actualJson;
 //       try {
@@ -235,16 +235,16 @@
 //         actualJson = match ? JSON.parse(match[1].trim()) : null;
 //       }
     
-//       console.log("====resp====", actualJson);
+//       // console.log("====resp====", actualJson);
     
     
 //     for (const update of actualJson) {
-//       console.log("====update====", update);
+//       // console.log("====update====", update);
     
 //         // Replace all instances of 'originaltext' with 'updatedtext' in the JS code
 //         gtpCode = gtpCode.split(update.originaltext).join(update.updatedtext);
 //     }
-//       console.log("====gtpCode====", gtpCode);
+//       // console.log("====gtpCode====", gtpCode);
     
 //     let ast;
 //     try {
@@ -253,7 +253,7 @@
 //         plugins: ["jsx"],
 //       });
 //     } catch (error) {
-//       console.log("it's parse catch");
+//       // console.log("it's parse catch");
 //       console.error("Syntax error:", error.message, error.stack);
 //       // const resp = await generateResponse(`There is a syntax error in the below javascript code. Please correct the syntax errors only.
 //       // response should has only the code, nothing else should be there in response
@@ -262,7 +262,7 @@
 //       // code: ${code}
 //       // `, false)
     
-//       // console.log("----res[====", resp)
+//       // // console.log("----res[====", resp)
 //       // ast = parser.parse(resp, {
 //       //   sourceType: "module",
 //       //   plugins: ["jsx"],
@@ -273,7 +273,7 @@
 //     let output;
 //     try {
 //       output = generate(ast).code;
-//       console.log("==syntax checked==cahtgptcode====", output);
+//       // console.log("==syntax checked==cahtgptcode====", output);
     
 //       try {
 //         fs.writeFileSync(
@@ -281,12 +281,12 @@
 //           output,
 //           "utf8"
 //         );
-//         console.log("File successfully written!");
+//         // console.log("File successfully written!");
 //       } catch (err) {
 //         console.error(err);
 //       }
 //     } catch (error) {
-//       console.log("it's catch");
+//       // console.log("it's catch");
 //       console.error("Syntax error:", error.message);
 //       console.error("Stack trace:", error.stack);
 //     }

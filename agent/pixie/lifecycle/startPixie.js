@@ -12,11 +12,12 @@ async function startPixie(req, callback) {
       process.stdout.write(`\r${spinner.frames[spinner.interval % spinner.frames.length]}`);
       spinner.interval++;
     }, spinner.frameLength);
-    const result = await initPixie(req);
+    const result = await initPixie(req, callback);
     clearInterval(interval);
-    return callback(null, `Completed, ${result}`);
+    return callback(null, `${result}`);
   } catch (error) {
     //TODO: handle exception
+    // console.log("error", error);
     clearInterval(interval);
     return callback(null, "Error Occured, Please try again");
   }

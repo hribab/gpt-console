@@ -8,6 +8,7 @@ const {
   generateMessaging,
   updateTheCodeWithImages,
   runTheApp,
+  formatContextFromURL
 } = require("./utils/createSkeleton");
 const {
   createPixieConfigFile,
@@ -34,11 +35,24 @@ const {
   determineSectionsDesignChange,
   updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation
 } = require("./utils/updateOperation");
+const { 
+  extractTextAndMetaFromURLForEachSection,
+  extractURLs
+} = require("./utils/scrapeURL");
 
-const initPixie = async (userRequirement) => {
+const initPixie = async (userRequirement, callback) => {
   try {
+    
+    const listOfURLFromRequirement = extractURLs(userRequirement)
+    let contentFromFirstURL;
+    if(listOfURLFromRequirement.length > 0){
+      process.stdout.write(`\x1b[32m Extracting text for reference from ${listOfURLFromRequirement[0]} \x1b[0m \n`);
+      contentFromFirstURL = await extractTextAndMetaFromURLForEachSection(listOfURLFromRequirement[0])
+    }
+    process.stdout.write(`\x1b[32m Moving existing pixie projects from current directory, they will be renamed to yourproject-old-currentDate-currentTime  \x1b[0m \n`);
     renameProjectFolderIfExist()
-    const {designSystemZipURL, designSystemConfig, selectedDesignSystemName} = await pickRightDesignSystem(userRequirement);
+    const {designSystemZipURL, designSystemConfig, selectedDesignSystemName} = await pickRightDesignSystem(userRequirement, contentFromFirstURL);
+    process.stdout.write(`\x1b[32m Grab your coffee and relax. I'm crafting your site, one pixel at a time.  \x1b[0m \n`);
     await downloadAndUnzip(designSystemZipURL);
     createPixieConfigFile({
       prompt: userRequirement,
@@ -49,7 +63,7 @@ const initPixie = async (userRequirement) => {
       status: 'progress'
     })
     const enabledSectionsForRequirement = await identifyEnabledSections(userRequirement);
-
+    
     const codeFilesForEnabledSections = await identifySpecificSectionCodeFilesForEnabledSections(userRequirement, enabledSectionsForRequirement, designSystemConfig);
 
     await updateLandingPage(enabledSectionsForRequirement);
@@ -65,10 +79,15 @@ const initPixie = async (userRequirement) => {
         }
         const path = `yourproject/src/components/Landingpage/${fileName}.js`;
         await downloadCodeFile(link, path);
+        let formMattedContextFromWebURL;
+        if(contentFromFirstURL){
+          formMattedContextFromWebURL = formatContextFromURL(section, contentFromFirstURL)
+        }
         await generateMessaging(
           userRequirement,
           path,
-          section
+          section,
+          formMattedContextFromWebURL
         );
         await updateTheCodeWithImages(
           userRequirement,
@@ -78,9 +97,12 @@ const initPixie = async (userRequirement) => {
       }
     }
     updatePixieConfigStatus(`completed`);
+    process.stdout.write(`\x1b[32m Finally! It's finished, and I'm running the app.  \x1b[0m \n`);
+    
     const result = await runTheApp();
     return result;
   } catch (error) {
+    // console.log("error", error);
     return `Error Occured, Please try again: ${error}`;
   }
 };
@@ -91,6 +113,7 @@ function capitalizeFirstLetter(string) {
 
 const updatePixieOperation = async (userRequirement, callback) => {
     let isFullDesignChange = await checkForDesignChange(userRequirement);
+    console.log("----isFullDesignChange------", isFullDesignChange)
     let data = fs.readFileSync('yourproject/pixieconfig.json', 'utf-8');
     let jsonData = JSON.parse(data);
     const selectedInternalDesignSystem = Object.keys(themeNames).find(key => themeNames[key] === jsonData.design);
@@ -99,6 +122,8 @@ const updatePixieOperation = async (userRequirement, callback) => {
         return;
     }
     let sectionsDesignChange = await determineSectionsDesignChange(userRequirement, jsonData.prompt);
+    console.log("===determineSectionsDesignChange====", sectionsDesignChange)
+    
     await updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation(sectionsDesignChange, userRequirement, selectedInternalDesignSystem, jsonData.prompt)
 
     let sectionsToUpdate = await identifyUpdateSections(userRequirement, jsonData.prompt);
@@ -119,7 +144,7 @@ const updatePixieOperation = async (userRequirement, callback) => {
       }
     }
     
-    // console.log("=====codeFilePaths=====", codeFilePaths, updateOperationType);
+    // // console.log("=====codeFilePaths=====", codeFilePaths, updateOperationType);
 
     for (let section in codeFilePaths) {
       if (updateOperationType.messaging) {

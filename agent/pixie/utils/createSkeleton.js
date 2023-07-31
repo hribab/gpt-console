@@ -83,8 +83,9 @@ async function runTheApp() {
     const installCommand = yarnInstalled ? 'yarn start' : 'npm start';
     const result = await runStartCommand(installCommand, './yourproject');
     return `App is running at ${result}`
-    // console.log(result);
+    // // console.log(result);
   } catch (error) {
+    return `Got it! It seems there's a hiccup. Just head over to 'yourproject' folder and kick things off with 'yarn start' or 'npm start'. Let's get rolling!`
     // console.error(error);
   }
 }
@@ -94,7 +95,7 @@ async function executeCommand() {
     const yarnInstalled = await isYarnInstalled();
     const installCommand = yarnInstalled ? 'yarn install' : 'npm install';
     const result = await runCommand(installCommand, './yourproject');
-    // console.log(result);
+    // // console.log(result);
   } catch (error) {
     // console.error(error);
   }
@@ -110,13 +111,13 @@ async function downloadAndUnzip(url) {
   // Remove the __MACOSX directory
   // try {
   //   await exec("rm -rf __MACOSX");
-  //   console.log(`__MACOSX directory removed.`);
+  //   // console.log(`__MACOSX directory removed.`);
   // } catch (err) {
   //   console.error(`exec error: ${err}`);
   // }
 
   await executeCommand();
-  // console.log("Extraction complete.");
+  // // console.log("Extraction complete.");
 }
 
 async function updateLandingPage(sections) {
@@ -223,7 +224,7 @@ async function updateLandingPage(sections) {
       output,
       "utf8"
     );
-    // console.log("File successfully written!");
+    // // console.log("File successfully written!");
   } catch (err) {
     // console.error(err);
   }
@@ -238,10 +239,10 @@ async function downloadCodeFile(url, destinationPath) {
   await fse.ensureDir(path.dirname(destinationPath));
 
   await streamPipeline(response.body, fs.createWriteStream(destinationPath));
-  // console.log(`File downloaded to ${destinationPath}`);
+  // // console.log(`File downloaded to ${destinationPath}`);
 }
 
-async function generateMessaging(userRequirement, filePath, section) {
+async function generateMessaging(userRequirement, filePath, section, formMattedContextFromWebURL) {
     let code, gtpCode, finalCode;
     try {
       code = fs.readFileSync(
@@ -256,7 +257,7 @@ async function generateMessaging(userRequirement, filePath, section) {
     const resp = await generateResponse(
       `
       Given the User Requirement: “ ${userRequirement} “, 
-            
+      ${formMattedContextFromWebURL}
       Return me messaging updates to JSX code for section ${section} of landing page.
 
       rules are: 
@@ -274,8 +275,6 @@ async function generateMessaging(userRequirement, filePath, section) {
       Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
       
       Here is the JSX code to modify:
-
-    \`\`\`jsx
 
     ${code}
         `,
@@ -316,8 +315,7 @@ async function generateMessaging(userRequirement, filePath, section) {
               Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
               
               Here is the JSX code to modify:
-            
-            \`\`\`jsx
+          
             
             ${code}
                 `,
@@ -368,7 +366,7 @@ async function generateMessaging(userRequirement, filePath, section) {
       if(!updates){
         return;
       }
-      // console.log("===updates===", updates);
+      // // console.log("===updates===", updates);
       const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
 
       traverse(baseAST, {
@@ -406,7 +404,7 @@ async function generateMessaging(userRequirement, filePath, section) {
     //     plugins: ["jsx"],
     //   });
     // } catch (error) {
-    //   console.log("it's parse catch");
+    //   // console.log("it's parse catch");
     //   console.error("Syntax error:", error.message, error.stack);
     //   // const resp = await generateResponse(`There is a syntax error in the below javascript code. Please correct the syntax errors only.
     //   // response should has only the code, nothing else should be there in response
@@ -415,7 +413,7 @@ async function generateMessaging(userRequirement, filePath, section) {
     //   // code: ${code}
     //   // `, false)
 
-    //   // console.log("----res[====", resp)
+    //   // // console.log("----res[====", resp)
     //   // ast = parser.parse(resp, {
     //   //   sourceType: "module",
     //   //   plugins: ["jsx"],
@@ -466,7 +464,7 @@ async function updateTheCodeWithImages(userRequirement, filePath, selectedDesign
           result[imagePaths[i]] = newPath
         }
     }
-    // console.log("======images replacement pahts===", result);
+    // // console.log("======images replacement pahts===", result);
 
     const ast = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
     
@@ -583,20 +581,21 @@ async function identifyEnabledSections(userRequirement) {
 
     I want you to return list of  sections that I can include in landing page for the above user requirement
     
-    rules are:
-    - If the requirement is not clear, return all only headers sections true
+    Rules are:
+    - If the requirement is not clear, return only headers section as true
       
     Available sections are:
     headers, features, blogs, teams, projects, pricing, testmonials, contactus
 
     Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
 
-    Response should be JSON , no other text should be there.
-
+    Response Must be only JSON , no other text should be there.
+    Never skip and return string like // Additional or // Similar entries for others, return full
+    Never return output format as  this example: some explationation \`\`\` output, i want pure json 
+   
     Request: Response should be able to parse by a below javascript function:
     
-    
-    function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+    function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
 
       `,
     false
@@ -617,8 +616,10 @@ async function identifyEnabledSections(userRequirement) {
   
       Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
   
-      Response should be JSON , no other text should be there.
-  
+      Response Must be only JSON , no other text should be there.
+      Never skip and return string like // Additional or // Similar entries for others, return full
+      Never return output format as  this example: some explationation \`\`\` output, i want pure json 
+     
       Request: Response should be able to parse by a below javascript function:
       
       
@@ -700,60 +701,198 @@ async function identifySpecificSectionCodeFilesForEnabledSections(userRequiremen
     groupedSectionConfig.push(group);
   }
 
-let finalResult = {};
-for (let index = 0; index < groupedSectionConfig.length; index++) {
-  const element = groupedSectionConfig[index];
-  const prompt =  `Given the User Requirement: ${userRequirement}
+  let finalResult = {};
+  for (let index = 0; index < groupedSectionConfig.length; index++) {
+    const element = groupedSectionConfig[index];
+    const prompt =  `Given User Needs: ${userRequirement}
 
-  Context: We already identified landing for above requirement has sections ${Object.keys(element).join(",")}
-  
-  Under each section we multiple sectionname with suitability field.
-
-  I want you to pick the top most sectionname  for the above user requirement and return the sectionname
-  
-  rules are:
-  - If the requirement is not clear, guess probable top sectionname for user requirement and return the sectionname, no other text should be there.
+    In the context of: Our analysis has determined the landing page for the above requirements includes these sections: ${Object.keys(element).join(",")}
     
-  Available sections and sectionname are :
-  ${JSON.stringify(element)}
+    Please review the following sections, their names, and suitability fields:
+    
+    I would like you to select the most suitable section name for the given user requirements.
+    
+    Guidelines are:
+    
+    If the requirement isn't explicit, make an educated guess to choose the most probable section name.
+    
+    The available sections and their names are:
+    ${JSON.stringify(element)}
+    
+    A sample output format can be seen here: ${getSampleOutputformat(element)}
+    
+    Please ensure your response is in JSON format only. Do not include any explanations or extraneous text in the response. Stick strictly to the JSON format.
+    
+    It's imperative that your response can be parsed by the following JavaScript function:
+    
+    function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+      `
+    const resp = await generateResponse(
+      prompt,
+      false
+    );
 
-  Sample output: ${getSampleOutputformat(element)}
+    let  codefileLinks = {};
+    let selectedSectionNameConfig;
+    try {
+      // Try to parse the input directly.
+      selectedSectionNameConfig = JSON.parse(resp);
+    } catch(e) {
+      const prompt =  `Given User Needs: ${userRequirement}
 
-  Response should be JSON , no other text should be there. never include any explanation or other text in response, strictly only above JSON
+      In the context of: Our analysis has determined the landing page for the above requirements includes these sections: ${Object.keys(element).join(",")}
+      
+      Please review the following sections, their names, and suitability fields:
+      
+      I would like you to select the most suitable section name for the given user requirements.
+      
+      Guidelines are:
+      
+      If the requirement isn't explicit, make an educated guess to choose the most probable section name.
+      
+      The available sections and their names are:
+      ${JSON.stringify(element)}
+      
+      A sample output format can be seen here: ${getSampleOutputformat(element)}
+      
+      Please ensure your response is in JSON format only. Do not include any explanations or extraneous text in the response. Stick strictly to the JSON format.
+      
+      It's imperative that your response can be parsed by the following JavaScript function:
+      
+      function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+        `
+      const resp = await generateResponse(
+        prompt,
+        false
+      );
+      try {
+        // Try to parse the input directly.
+        selectedSectionNameConfig = JSON.parse(resp);
+      } catch(e) {
+        selectedSectionNameConfig = null
+      }
+    }
+    if(!selectedSectionNameConfig){
+      const prompt =  `Given User Needs: ${userRequirement}
 
-  Request: Response should be able to parse by a below javascript function:
-  
-  function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
-
-    `
-  const resp = await generateResponse(
-    prompt,
-    false
-  );
-
-  let  codefileLinks = {};
-  try {
-    // Try to parse the input directly.
-    const selectedSectionNameConfig = JSON.parse(resp);
-    for (let key in selectedSectionNameConfig) {
-      if(enabledSectionConfig[key] && enabledSectionConfig[key][selectedSectionNameConfig[key]]){
-        codefileLinks[key] = enabledSectionConfig[key][selectedSectionNameConfig[key]].codefile;
-      }else{
-        const values = Object.values(enabledSectionConfig[key]);
-        codefileLinks[key] = values[0].codefile;
+      In the context of: Our analysis has determined the landing page for the above requirements includes these sections: ${Object.keys(element).join(",")}
+      
+      Please review the following sections, their names, and suitability fields:
+      
+      I would like you to select the most suitable section name for the given user requirements.
+      
+      Guidelines are:
+      
+      If the requirement isn't explicit, make an educated guess to choose the most probable section name.
+      
+      The available sections and their names are:
+      ${JSON.stringify(element)}
+      
+      A sample output format can be seen here: ${getSampleOutputformat(element)}
+      
+      Please ensure your response is in JSON format only. Do not include any explanations or extraneous text in the response. Stick strictly to the JSON format.
+      
+      It's imperative that your response can be parsed by the following JavaScript function:
+      
+      function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+        `
+      const resp = await generateResponse(
+        prompt,
+        false
+      );
+      try {
+        // Try to parse the input directly.
+        selectedSectionNameConfig = JSON.parse(resp);
+      } catch(e) {
+        selectedSectionNameConfig = null
       }
     }
 
-  } catch(e) {
-    codefileLinks = getFirstCodefile(element)
+    if(selectedSectionNameConfig){
+      for (let key in selectedSectionNameConfig) {
+        if(enabledSectionConfig[key] && enabledSectionConfig[key][selectedSectionNameConfig[key]]){
+          codefileLinks[key] = enabledSectionConfig[key][selectedSectionNameConfig[key]].codefile;
+        }else{
+          const values = Object.values(enabledSectionConfig[key]);
+          codefileLinks[key] = values[0].codefile;
+        }
+      } 
+    }else{
+      codefileLinks = getFirstCodefile(element)
+    }
+
+    finalResult = {...finalResult, ...codefileLinks}
+  }
+  return finalResult;
+}
+
+
+function formatContextFromURL(section, rawTextFromURL){
+  let referenceTextFromURL;
+
+  switch (section) {
+    case "headers":
+      if(rawTextFromURL['header']){
+       referenceTextFromURL = `${rawTextFromURL['header'].title}, ${rawTextFromURL['header'].description}`
+      }
+      break;
+    case "features":
+      if(rawTextFromURL[section]){
+        if (Array.isArray(rawTextFromURL[section]) && rawTextFromURL[section].length) {
+          referenceTextFromURL = rawTextFromURL[section].map(item => item.name);
+        }
+      }
+      break;
+    case "blogs":
+      if(rawTextFromURL[section]){
+        if (Array.isArray(rawTextFromURL[section]) && rawTextFromURL[section].length) {
+          referenceTextFromURL = rawTextFromURL[section].map(item => item.title);
+        }
+      }
+      break;
+    case "teams":
+      if(rawTextFromURL[section]){
+        if (Array.isArray(rawTextFromURL[section]) && rawTextFromURL[section].length) {
+          referenceTextFromURL = rawTextFromURL[section].map(item => item.name);
+        }
+      }
+      break;
+    case "projects":
+      if(rawTextFromURL[section]){
+        if (Array.isArray(rawTextFromURL[section]) && rawTextFromURL[section].length) {
+          referenceTextFromURL = rawTextFromURL[section].map(item => item.title);
+        }
+      }
+      break;
+    case "pricing":
+      if(rawTextFromURL[section]){
+        if (Array.isArray(rawTextFromURL[section]) && rawTextFromURL[section].length) {
+          referenceTextFromURL = rawTextFromURL[section]
+        }
+      }
+      break;
+    case "testimonials":
+      if(rawTextFromURL[section]){
+        if (Array.isArray(rawTextFromURL[section]) && rawTextFromURL[section].length) {
+          referenceTextFromURL = rawTextFromURL[section]
+        }
+      }
+      break;
+    default:
+      break;
   }
 
-  finalResult = {...finalResult, ...codefileLinks}
-}
-return finalResult;
-
-}
-
+  if(referenceTextFromURL){
+    if(section == "headers"){
+      return `Website Inspiration: ${referenceTextFromURL}
+      Leverage this material and the user's specific needs to craft an irresistible call-to-action.
+      Remember, our goal is to captivate the audience and entice them to click that button!
+      `
+    }
+    return `Reference string from website: ${referenceTextFromURL}`
+  }
+  return null;
+}        
 
 module.exports = {
   runTheApp,
@@ -766,4 +905,5 @@ module.exports = {
   pickRightDesignSystemForUpdate,
   identifyEnabledSections,
   identifySpecificSectionCodeFilesForEnabledSections,
+  formatContextFromURL
 };

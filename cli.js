@@ -18,6 +18,7 @@ const { startPixie } = require("./agent/pixie/lifecycle/startPixie");
 const { updatePixie } = require("./agent/pixie/lifecycle/updatePixie");
 const { stopPixie } = require("./agent/pixie/lifecycle/stopPixie");
 const { statusPixie } = require("./agent/pixie/lifecycle/statusPixie");
+const { extractTextAndMetaFromURL } = require("./agent/pixie/utils/scrapeURL")
 
 
 // const { stopBird } = require('./agent/bird/stopBird')
@@ -52,9 +53,13 @@ const gptCli = repl.start({
 gptCli.eval = async (input, context, filename, callback) => {
   if (!input.trim()) {
     callback(null);
+    gptCli.displayPrompt();
+    return;
   }
   const tokens = input.trim().toLowerCase().split(" ");
+
   const command = tokens[0];
+
   switch (command.trim()) {
     case "bird":
       if (tokens[1] && tokens[1].trim() == "start") {
@@ -91,10 +96,13 @@ gptCli.eval = async (input, context, filename, callback) => {
 
         if (extractedText) {
           extractedText = extractedText.replace(/^['"]|['"]$/g, "");
+          gptCli.prompt = "";
           await startPixie(extractedText, callback);
           process.stdout.write('\r');
+          gptCli.prompt = "gpt-console>";
         }
         callback(null);
+        gptCli.displayPrompt();  // Display the prompt after the callback
         break;
       }
       if (tokens[1] && tokens[1].trim() == "update") {
@@ -103,7 +111,9 @@ gptCli.eval = async (input, context, filename, callback) => {
 
         if (extractedText) {
           extractedText = extractedText.replace(/^['"]|['"]$/g, "");
+          gptCli.prompt = "";  // Hide the prompt
           await updatePixie(extractedText, callback);
+          gptCli.prompt = "gpt-console>"; 
         }
         callback(null);
         break;

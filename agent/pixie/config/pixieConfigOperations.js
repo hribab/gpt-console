@@ -14,11 +14,11 @@ function renameProjectFolderIfExist() {
             if (err) {
                 console.error(`Error renaming directory: ${err}`);
             } else {
-                console.log('Directory renamed successfully');
+                // console.log('Directory renamed successfully');
             }
         });
     } else {
-        // console.log('Directory does not exist');
+        // // console.log('Directory does not exist');
     }
 }
 
@@ -32,7 +32,7 @@ const updatePixieConfigStatus = (status) => {
 
     jsonData.status = status;
 
-    fs.writeFileSync('pixieconfig.json', JSON.stringify(jsonData, null, 2), 'utf-8');
+    fs.writeFileSync('yourproject/pixieconfig.json', JSON.stringify(jsonData, null, 2), 'utf-8');
 }
 
 module.exports = {
