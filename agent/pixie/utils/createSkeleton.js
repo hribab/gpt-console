@@ -629,10 +629,10 @@ async function updateTheCodeWithImages(userRequirement, filePath, selectedDesign
         let newPath = selectedDesignSystemName === 'material' ? 
         imagePaths[i].replace("assets/images", "assets/images/aigenerated") : 
         imagePaths[i].replace("assets/img", "assets/img/aigenerated");
-        console.log("========downloadComponentImages==========started==")
+        // console.log("========downloadComponentImages==========started==")
 
         const isSuccess = await downloadComponentImages(userRequirement, `yourproject/src/${newPath}`, formMattedContextFromWebURL);
-        console.log("========downloadComponentImages==========done==")
+        // console.log("========downloadComponentImages==========done==")
         if(isSuccess){
           result[imagePaths[i]] = newPath
         }
@@ -689,7 +689,7 @@ async function pickRightDesignSystem(userRequirement) {
     false
   );
 
-  console.log("====resp=====", resp)
+  // console.log("====resp=====", resp)
   let selectedDesignSystem;
   if(resp){
     const available = Object.keys(designSystems); 
@@ -705,7 +705,7 @@ async function pickRightDesignSystem(userRequirement) {
   }else{
     selectedDesignSystem = findDesignInResponse(designSystems);
   }
-  console.log("====resp=====", selectedDesignSystem)
+  // console.log("====resp=====", selectedDesignSystem)
 
   return {designSystemZipURL: skeletonAndConfigURL[selectedDesignSystem].skeleton, designSystemConfig:skeletonAndConfigURL[selectedDesignSystem].config, selectedDesignSystemName: selectedDesignSystem}
 }
