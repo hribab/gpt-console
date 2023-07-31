@@ -456,30 +456,31 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
 
       traverse(baseAST, {
         enter(path) {
-            if (path.isJSXText()) {
-                const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.trim().toLowerCase());
+          if (path.isJSXText()) {
+            const lineUpdate = updates.find(u => u?.originaltext?.toLowerCase() === path.node.value.trim().toLowerCase());
+            if(lineUpdate) {
+              path.node.value = path.node.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+            }
+          }
+      
+          if (path.isJSXAttribute()) {
+            if (path.node.name.name === 'title' || path.node.name.name === 'description' || path.node.name.name === 'review' ||  path.node.name.name === 'label' ||  path.node.name.name === 'position') {
+              if (path.node.value.type === 'StringLiteral') {
+                const lineUpdate = updates.find(u => u?.originaltext?.toLowerCase() === path.node.value.value.trim().toLowerCase());
                 if(lineUpdate) {
-                    path.node.value = path.node.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+                  path.node.value.value = path.node.value.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
                 }
-            }
-
-            if (path.isJSXAttribute()) {
-                if (path.node.name.name === 'title' || path.node.name.name === 'description' || path.node.name.name === 'review' ||  path.node.name.name === 'label' ||  path.node.name.name === 'position') {
-                    if (path.node.value.type === 'StringLiteral') {
-                        const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.value.trim().toLowerCase());
-                        if(lineUpdate) {
-                            path.node.value.value = path.node.value.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
-                        }
-                    } else if (path.node.value.type === 'JSXExpressionContainer' && path.node.value.expression.type === 'StringLiteral') {
-                        const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.expression.value.trim().toLowerCase());
-                        if(lineUpdate) {
-                            path.node.value.expression.value = path.node.value.expression.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
-                        }
-                    }
+              } else if (path.node.value.type === 'JSXExpressionContainer' && path.node.value.expression.type === 'StringLiteral') {
+                const lineUpdate = updates.find(u => u?.originaltext?.toLowerCase() === path.node.value.expression.value.trim().toLowerCase());
+                if(lineUpdate) {
+                  path.node.value.expression.value = path.node.value.expression.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
                 }
+              }
             }
+          }
         },
       });
+      
 
       // const { code: newCode } = generator(baseAST);
     // let ast;

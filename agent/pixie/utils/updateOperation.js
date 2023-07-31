@@ -127,6 +127,8 @@ async function implementDesignChange(userRequirement, alreadySelectedDesignSyste
 }
 async function identifyUpdateSections(userRequirement, originalPrompt) {
 
+    // userRequirement, to which code file has text ?
+    
     const resp = await generateResponse(
         `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
         
@@ -686,45 +688,54 @@ async function executeMessagingUpdate(userRequirement, filePath) {
     }
     }
 
-    // // console.log("===updates===", updates);
-    const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
+    if(updates && updates.length > 0){
+          // // console.log("===updates===", updates);
+        try{
 
-    traverse(baseAST, {
-        enter(path) {
+        
+        const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
 
-            if (
-                t.isJSXText(path.node)
-            ) {
-                const lineUpdate = updates.find(u => u.originaltext.toLowerCase() === path.node.value.trim().toLowerCase());
-                if(lineUpdate) {
-                path.node.value = path.node.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+
+        traverse(baseAST, {
+            enter(path) {
+
+                if (
+                    t.isJSXText(path.node)
+                ) {
+                    const lineUpdate = updates.find(u => u?.originaltext?.toLowerCase() === path.node.value.trim().toLowerCase());
+                    if(lineUpdate) {
+                    path.node.value = path.node.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+                    }
                 }
-            }
-        },
-    });
+            },
+        });
 
-    const { code: newCode } = generator(baseAST);
-    // // console.log("--newCode----", newCode);
+        const { code: newCode } = generator(baseAST);
+        // // console.log("--newCode----", newCode);
 
-    let output;
-    try {
-        output = generate(baseAST).code;
+        let output;
         try {
-        fs.writeFileSync(
-            filePath,
-            output,
-            "utf8"
-        );
-        // // console.log("File successfully written!");
-        } catch (err) {
-        console.error(err);
+            output = generate(baseAST).code;
+            try {
+            fs.writeFileSync(
+                filePath,
+                output,
+                "utf8"
+            );
+            // // console.log("File successfully written!");
+            } catch (err) {
+            console.error(err);
+            }
+        } catch (error) {
+            // // console.log("it's catch");
+            console.error("Syntax error:", error.message);
+            console.error("Stack trace:", error.stack);
         }
-    } catch (error) {
-        // // console.log("it's catch");
-        console.error("Syntax error:", error.message);
-        console.error("Stack trace:", error.stack);
+        }catch (error) {
+            console.log("======errr====", error)
+            return;
+        }
     }
-
 }
 async function executeBackgroundImageUpdate(userRequirement, filePath) {
         let code;

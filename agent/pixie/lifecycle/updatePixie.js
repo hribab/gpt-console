@@ -18,7 +18,7 @@ async function updatePixie(input, callback) {
         return callback(null, "Completed");
       } catch (error) {
         //TODO: handle exception
-        return callback(null, "Error Occured, Please try again");
+        return callback(null, `Error Occured, Please try again ${error}`);
       }    
 }
   

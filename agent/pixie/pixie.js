@@ -133,39 +133,66 @@ const updatePixieOperation = async (userRequirement, callback) => {
     
     let sectionsToUpdate = await identifyUpdateSections(userRequirement, jsonData.prompt);
     let updateOperationType = await determineUpdateType(userRequirement);
-    let codeFilePaths = {};
-    
     if(updateOperationType.design){
       await updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation(sectionsToUpdate, userRequirement, selectedInternalDesignSystem, jsonData.prompt, !updateOperationType.messaging, !updateOperationType.backgroundimage)
+      return;
     }
 
-      
-    for (let section in sectionsToUpdate) {
-      if (sectionsToUpdate[section]) {
-        let fileName = `${section.charAt(0).toUpperCase()}${section.slice(1)}`
-        if (section === "testmonials") {
-            fileName = "Testimonials";
+    if (updateOperationType.messaging) {
+      const enabledSections = {
+        headers: true,
+        features: true,
+        blogs: true,
+        teams: true,
+        projects: true,
+        pricing: true,
+        testmonials: true,
+        contactus: true,
+        footer: false,
+      }
+      let codeFilePathsForMessaging = {};
+
+      for (let section in enabledSections) {
+        if (enabledSections[section]) {
+          let fileName = `${section.charAt(0).toUpperCase()}${section.slice(1)}`
+          if (section === "testmonials") {
+              fileName = "Testimonials";
+          }
+          const filePath = `yourproject/src/components/Landingpage/${fileName}.js`;
+          if (fs.existsSync(filePath)) {
+            codeFilePathsForMessaging[section] = filePath;
+          }
         }
-        const filePath = `yourproject/src/components/Landingpage/${fileName}.js`;
-        if (fs.existsSync(filePath)) {
-          codeFilePaths[section] = filePath;
-        }
+      }
+      for (let section in codeFilePathsForMessaging) {
+        await executeMessagingUpdate(userRequirement, codeFilePathsForMessaging[section]);
       }
     }
-    
-  
-    for (let section in codeFilePaths) {
-     
-      if (updateOperationType.messaging) {
-        await executeMessagingUpdate(userRequirement, codeFilePaths[section]);
+
+    if (updateOperationType.backgroundimage) {
+      let codeFilePathsForBackgroundImage = {};
+
+      for (let section in sectionsToUpdate) {
+        if (sectionsToUpdate[section]) {
+          let fileName = `${section.charAt(0).toUpperCase()}${section.slice(1)}`
+          if (section === "testmonials") {
+              fileName = "Testimonials";
+          }
+          const filePath = `yourproject/src/components/Landingpage/${fileName}.js`;
+          if (fs.existsSync(filePath)) {
+            codeFilePathsForBackgroundImage[section] = filePath;
+          }
+        }
       }
-      if (updateOperationType.backgroundimage) {
-        await executeBackgroundImageUpdate(userRequirement, codeFilePaths[section]);
-      }
-      if (updateOperationType.remove) {
-        await removeOperation(userRequirement, codeFilePaths[section]);
+      for (let section in codeFilePathsForBackgroundImage) {
+        await executeBackgroundImageUpdate(userRequirement, codeFilePathsForBackgroundImage[section]);
       }
     }
+
+    if (updateOperationType.remove) {
+      process.stdout.write(`\x1b[32m I'm sorry, but version 1 only supports design changes, messaging updates, and background image generation. Please stay tuned for additions and deletions in version 2! \x1b[0m \n`);
+    }
+
     return;
     // await executeMessagingUpdate(userRequirement, "yourproject/src/components/Landingpage/Header.js");
     // await executeBackgroundImageUpdate(userRequirement, "yourproject/src/components/Landingpage/Header.js")
