@@ -62,18 +62,27 @@ async function killIfAlreadyRunning() {
     } else {
         // Mac / Linux command
         try {
-            const { stdout: output } = await exec('lsof -i tcp:3000');
-            const lines = output.split('\n');
-            for (let line of lines) {
-                const p = line.trim().split(/\s+/);
-                const address = p[1];
-                if (address !== undefined && !isNaN(address)) {
-                    await exec('kill -9 ' + p[1]);
-                }
-            }
+          const { stdout: output } = await exec('lsof -i tcp:3000');
+          const lines = output.split('\n');
+          for (let line of lines) {
+              const p = line.trim().split(/\s+/);
+              const processId = p[1];
+              if (processId !== undefined && !isNaN(processId)) {
+                  try {
+                      // Check if the process is running
+                      await exec('kill -0 ' + processId);
+                      // If the above command didn't throw an error, the process is running and we can kill it
+                      await exec('kill -9 ' + processId);
+                  } catch (err) {
+                      // If the 'kill -0' command failed, the process is not running
+                      // console.error(`Process ${processId} is not running`);
+                  }
+              }
+          }
         } catch (err) {
-            console.error(`exec error: ${err}`);
+          console.error(`exec error: ${err}`);
         }
+
     }
 }
 
@@ -112,6 +121,16 @@ async function runStartCommand(command, directory) {
     const [cmd, ...args] = command.split(' ');
     const proc = spawn(cmd, args, { cwd: directory });
 
+    proc.stderr.on('data', async (data) => {
+    //  console.log(`stderr: ${data}`);
+    });
+
+    proc.on('error', (error) => {
+      // console.log(`errorerrorerrorerror: ${error}`);
+      // console.error(`exec error: ${error}`);
+      // reject(error);
+    });
+
     return proc.stdout.on('data', async (data) => {
       if (data.includes("Something is already running on port 3000")) {
         await killIfAlreadyRunning();
@@ -132,17 +151,6 @@ async function runStartCommand(command, directory) {
       //   resolve(matches[0]);
       // }
     });
-
-    // proc.stderr.on('data', async (data) => {
-    //   if (data.includes("Something is already running on port 3000")) {
-    //     await killIfAlreadyRunning();
-    //   }
-    // });
-
-    // proc.on('error', (error) => {
-    //   console.error(`exec error: ${error}`);
-    //   reject(error);
-    // });
   });
 }
 
@@ -167,6 +175,7 @@ async function runTheApp() {
     return `App is running at ${result}`
     // // console.log(result);
   } catch (error) {
+    // console.log("============error==========", error)
     return `Got it! It seems there's a hiccup. Just head over to 'yourproject' folder and kick things off with 'yarn start' or 'npm start'. Let's get rolling!`
     // console.error(error);
   }
@@ -689,7 +698,6 @@ async function pickRightDesignSystem(userRequirement) {
       `,
     false
   );
-
   // console.log("====resp=====", resp)
   let selectedDesignSystem;
   if(resp){
