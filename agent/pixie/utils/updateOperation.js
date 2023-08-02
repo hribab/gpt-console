@@ -52,10 +52,10 @@ renameProjectFolderIfExist
 } = require("../config/pixieConfigOperations");
   
 
-async function checkForDesignChange(userRequirement, filePath) {
+async function checkForDesignChange(userRequirement, originalPrompt) {
     const resp = await generateResponse(
         `
-        Context: A client for whom I've recently developed a landing page has requested some modifications.
+        Context: A client for whom I've recently developed a landing page for requirement ${originalPrompt}, has requested some modifications.
 
         Modification Request: "${userRequirement}"
 
@@ -83,7 +83,7 @@ async function implementDesignChange(userRequirement, alreadySelectedDesignSyste
         
           await downloadAndUnzip(designSystemZipURL);
           createPixieConfigFile({
-            prompt: userRequirement,
+            prompt: existingPrompt,
             mode: 'madmax',
             design: themeNames[selectedDesignSystemName],
             pixieversion: 1,
@@ -125,30 +125,31 @@ async function implementDesignChange(userRequirement, alreadySelectedDesignSyste
           return callback(null, `Error Occured, Please try again: ${error}`);
         }
 }
-async function identifyUpdateSections(userRequirement, originalPrompt) {
+async function determineDesignUpdateSections(userRequirement, originalPrompt) {
 
     // userRequirement, to which code file has text ?
     
     const resp = await generateResponse(
         `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
         
-        Now, the client wants to make some modifications to this page.
+        Now, the client wants to make some design(I mean the way landing page looks) modifications to this page.
 
         Client's Request for Modification: "${userRequirement}"
     
-        I want you to determine probable sections that user wants to make changes based on Request for Modification
+        I want you to determine probable sections that user wants to make changes to the design(I mean the way it looks) based on Request for Modification
         based on Request for Modification, Try to guess most likely sections headers, features, blogs, teams, projects, pricing, testmonials, contactus that user wants to make changes
         
         rules are:
         - If the requirement is not clear, return empty object {}
-        - If the intention is to not change anything, return empty object {}
+        - If the intention is to not change any section, set false for that section
+        - If the user wants to change any section, set true for that section
           
         Available sections are:
         headers, features, blogs, teams, projects, pricing, testmonials, contactus
     
         Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
     
-        Response should be JSON , no other text should be there.
+        Response should be json and Strictly NO explanation should be there in the response
     
         Request: Response should be able to parse by a below javascript function:
         
@@ -159,32 +160,34 @@ async function identifyUpdateSections(userRequirement, originalPrompt) {
         false
       );
     
-      // // console.log("=====resp=====", resp);
+      // // // console.log("=====resp=====", resp);
       let enabledSections
       try {
         // Try to parse the input directly.
         enabledSections = JSON.parse(resp);
       } catch(e) {
-        // // console.log("====catch====", e)
+        // // // console.log("====catch====", e)
         const resp = await generateResponse(
           `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
         
-          Now, the client wants to make some modifications to this page.
+          Now, the client wants to make some design(I mean the way landing page looks) modifications to this page.
   
           Client's Request for Modification: "${userRequirement}"
       
-          I want you to return list of  sections that user wants to make changes based on user requirement
+          I want you to determine probable sections that user wants to make changes to the design(I mean the way it looks) based on Request for Modification
+          based on Request for Modification, Try to guess most likely sections headers, features, blogs, teams, projects, pricing, testmonials, contactus that user wants to make changes
           
           rules are:
           - If the requirement is not clear, return empty object {}
-          - If the intention is to not change anything, return empty object {}
+          - If the intention is to not change any section, set false for that section
+          - If the user wants to change any section, set true for that section
             
           Available sections are:
           headers, features, blogs, teams, projects, pricing, testmonials, contactus
       
           Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
       
-          Response should be JSON , no other text should be there.
+          Response should be json and Strictly NO explanation should be there in the response
       
           Request: Response should be able to parse by a below javascript function:
           
@@ -194,7 +197,7 @@ async function identifyUpdateSections(userRequirement, originalPrompt) {
             `,
           false
         );
-        // // console.log("=====resp2=====", resp);
+        // // // console.log("=====resp2=====", resp);
         try {
           // Try to parse the input directly.
           enabledSections = JSON.parse(resp);
@@ -217,107 +220,202 @@ async function identifyUpdateSections(userRequirement, originalPrompt) {
 
 }
 
-async function determineUpdateTypedetermineUpdateType(userRequirement, originalPrompt) {
+
+async function determineBackgroundImageUpdateSections(userRequirement, originalPrompt) {
+
+    // userRequirement, to which code file has text ?
+    
     const resp = await generateResponse(
-        `Context: I recently developed a landing page for a client based on their initial requirements: "${originalPrompt}"
+        `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
+        
+        Now, the client wants to change background image to this page.
 
-        Now, the client has come back with some modification request: "${userRequirement}"
-
-        Landing page has total 8 sections, they are headers, features, blogs, teams, projects, pricing, testimonials, and contactus
+        Client's Request for Modification: "${userRequirement}"
+    
+        I want you to determine probable sections that user wants to make changes to background image based on Request for Modification
+        based on Request for Modification, Try to guess most likely sections headers, features, blogs, teams, projects, pricing, testmonials, contactus that user wants to make changes
         
-        I categorized modification requests into 3 types 1. design update 2. messaging update 3. background image update
-
-
-        If modification request is for messaging update(also known as text replacemnt or text change) or background image update just return empty JSON object {}
-        If modification request is for design update,
+        rules are:
+        - If the requirement is not clear, return empty object {}
+        - If the intention is to not change any section, set false for that section
+        - If the user wants to change any section, set true for that section
+          
+        Available sections are:
+        headers, features, blogs, teams, projects, pricing, testmonials, contactus
+    
+        Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
+    
+        Response should be json and Strictly NO explanation should be there in the response
+    
+        Request: Response should be able to parse by a below javascript function:
         
-        please determine the sections from the list:  headers, features, blogs, teams, projects, pricing, testimonials, contactus.
         
-        Response should be in JSON format, with each section represented by a boolean value - \`true\` or \`false\`. A \`true\` value indicates a proposed design change for that specific section.
-        
-        For instance: 
-        {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testimonials": false, "contactus": false}
-        
-        Response must be in JSON, NO other explanation or other text should be there in the response
-        
-        Please adhere to the following rules:
-        - In case the client's intentions are not explicitly clear, return an empty JSON object ({})
-        - If the client does not wish to make any changes, again, return an empty JSON object ({})
-
-        
-        Request: Response is strictly a JSON object devoid of any additional text, as it needs to be parsable by the following JavaScript function:
-        
-        function parseResponse(YourResponse) { return JSON.parse(YourResponse) }        
-        
+        function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+    
           `,
         false
       );
-      console.log("=======res1p======", resp)
-
+    
+      // // // console.log("=====resp=====", resp);
       let enabledSections
       try {
         // Try to parse the input directly.
         enabledSections = JSON.parse(resp);
-        console.log("=======enabledSections1======", enabledSections)
-
       } catch(e) {
+        // // // console.log("====catch====", e)
         const resp = await generateResponse(
-          `Context: I recently developed a landing page for a client based on their initial requirements: "${originalPrompt}"
+          `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
+        
+          Now, the client wants to change background image to this page.
+  
+          Client's Request for Modification: "${userRequirement}"
+      
+          I want you to determine probable sections that user wants to make changes to background image based on Request for Modification
+          based on Request for Modification, Try to guess most likely sections headers, features, blogs, teams, projects, pricing, testmonials, contactus that user wants to make changes
+          
+          rules are:
+          - If the requirement is not clear, return empty object {}
+          - If the intention is to not change any section, set false for that section
+          - If the user wants to change any section, set true for that section
+            
+          Available sections are:
+          headers, features, blogs, teams, projects, pricing, testmonials, contactus
+      
+          Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
+      
+          Response should be json and Strictly NO explanation should be there in the response
+      
+          Request: Response should be able to parse by a below javascript function:
 
-          Now, the client has come back with some modification request: "${userRequirement}"
-  
-          Landing page has total 8 sections, they are headers, features, blogs, teams, projects, pricing, testimonials, and contactus
-          
-          I categorized modification requests into 3 types 1. design update 2. messaging update 3. background image update
-  
-  
-          If modification request is for messaging update(also known as text replacemnt or text change) or background image update just return empty JSON object {}
-          If modification request is for design update,
-          
-          please determine the sections from the list:  headers, features, blogs, teams, projects, pricing, testimonials, contactus.
-          
-          Response should be in JSON format, with each section represented by a boolean value - \`true\` or \`false\`. A \`true\` value indicates a proposed design change for that specific section.
-          
-          For instance: 
-          {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testimonials": false, "contactus": false}
-          
-          Response must be in JSON, NO other explanation or other text should be there in the response
-          
-          Please adhere to the following rules:
-          - In case the client's intentions are not explicitly clear, return an empty JSON object ({})
-          - If the client does not wish to make any changes, again, return an empty JSON object ({})
-  
-          
-          Request: Response is strictly a JSON object devoid of any additional text, as it needs to be parsable by the following JavaScript function:
-          
-          function parseResponse(YourResponse) { return JSON.parse(YourResponse) }        
-           
+          function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+              
             `,
           false
-        ); 
-        console.log("=======respt2======", resp)
+        );
+        // // // console.log("=====resp2=====", resp);
         try {
           // Try to parse the input directly.
           enabledSections = JSON.parse(resp);
-          console.log("=======enabledSections2======", enabledSections)
-
         } catch(e) {
-            enabledSections = {
-                headers: false,
-                features: false,
-                blogs: false,
-                teams: false,
-                projects: false,
-                pricing: false,
-                testmonials: false,
-                contactus: false,
-                footer: false,
-              }
+          enabledSections = {
+            headers: false,
+            features: false,
+            blogs: false,
+            teams: false,
+            projects: false,
+            pricing: false,
+            testmonials: false,
+            contactus: false,
+            footer: false,
+          }
         }
       }
     
-      return  enabledSections;
+      return enabledSections
+
 }
+
+// async function determineUpdateTypedetermineUpdateType(userRequirement, originalPrompt) {
+//     const resp = await generateResponse(
+//         `Context: I recently developed a landing page for a client based on their initial requirements: "${originalPrompt}"
+
+//         Now, the client has come back with some modification request: "${userRequirement}"
+
+//         Landing page has total 8 sections, they are headers, features, blogs, teams, projects, pricing, testimonials, and contactus
+        
+//         I categorized modification requests into 3 types 1. design update 2. messaging update 3. background image update
+
+
+//         If modification request is for messaging update(also known as text replacemnt or text change) or background image update just return empty JSON object {}
+//         If modification request is for design update,
+        
+//         please determine the sections from the list:  headers, features, blogs, teams, projects, pricing, testimonials, contactus.
+        
+//         Response should be in JSON format, with each section represented by a boolean value - \`true\` or \`false\`. A \`true\` value indicates a proposed design change for that specific section.
+        
+//         For instance: 
+//         {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testimonials": false, "contactus": false}
+        
+//         Response must be in JSON, NO other explanation or other text should be there in the response
+        
+//         Please adhere to the following rules:
+//         - In case the client's intentions are not explicitly clear, return an empty JSON object ({})
+//         - If the client does not wish to make any changes, again, return an empty JSON object ({})
+
+        
+//         Request: Response is strictly a JSON object devoid of any additional text, as it needs to be parsable by the following JavaScript function:
+        
+//         function parseResponse(YourResponse) { return JSON.parse(YourResponse) }        
+        
+//           `,
+//         false
+//       );
+//       // console.log("=======res1p======", resp)
+
+//       let enabledSections
+//       try {
+//         // Try to parse the input directly.
+//         enabledSections = JSON.parse(resp);
+//         // console.log("=======enabledSections1======", enabledSections)
+
+//       } catch(e) {
+//         const resp = await generateResponse(
+//           `Context: I recently developed a landing page for a client based on their initial requirements: "${originalPrompt}"
+
+//           Now, the client has come back with some modification request: "${userRequirement}"
+  
+//           Landing page has total 8 sections, they are headers, features, blogs, teams, projects, pricing, testimonials, and contactus
+          
+//           I categorized modification requests into 3 types 1. design update 2. messaging update 3. background image update
+  
+  
+//           If modification request is for messaging update(also known as text replacemnt or text change) or background image update just return empty JSON object {}
+//           If modification request is for design update,
+          
+//           please determine the sections from the list:  headers, features, blogs, teams, projects, pricing, testimonials, contactus.
+          
+//           Response should be in JSON format, with each section represented by a boolean value - \`true\` or \`false\`. A \`true\` value indicates a proposed design change for that specific section.
+          
+//           For instance: 
+//           {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testimonials": false, "contactus": false}
+          
+//           Response must be in JSON, NO other explanation or other text should be there in the response
+          
+//           Please adhere to the following rules:
+//           - In case the client's intentions are not explicitly clear, return an empty JSON object ({})
+//           - If the client does not wish to make any changes, again, return an empty JSON object ({})
+  
+          
+//           Request: Response is strictly a JSON object devoid of any additional text, as it needs to be parsable by the following JavaScript function:
+          
+//           function parseResponse(YourResponse) { return JSON.parse(YourResponse) }        
+           
+//             `,
+//           false
+//         ); 
+//         // console.log("=======respt2======", resp)
+//         try {
+//           // Try to parse the input directly.
+//           enabledSections = JSON.parse(resp);
+//           // console.log("=======enabledSections2======", enabledSections)
+
+//         } catch(e) {
+//             enabledSections = {
+//                 headers: false,
+//                 features: false,
+//                 blogs: false,
+//                 teams: false,
+//                 projects: false,
+//                 pricing: false,
+//                 testmonials: false,
+//                 contactus: false,
+//                 footer: false,
+//               }
+//         }
+//       }
+    
+//       return  enabledSections;
+// }
 
 
 async function determineSectionsDesignChange(userRequirement, originalPrompt) {
@@ -355,13 +453,13 @@ async function determineSectionsDesignChange(userRequirement, originalPrompt) {
           `,
         false
       );
-      console.log("=======res1p======", resp)
+    //   // console.log("=======res1p======", resp)
 
       let enabledSections
       try {
         // Try to parse the input directly.
         enabledSections = JSON.parse(resp);
-        console.log("=======enabledSections1======", enabledSections)
+        // // console.log("=======enabledSections1======", enabledSections)
 
       } catch(e) {
         const resp = await generateResponse(
@@ -398,11 +496,11 @@ async function determineSectionsDesignChange(userRequirement, originalPrompt) {
             `,
           false
         ); 
-        console.log("=======respt2======", resp)
+        // // console.log("=======respt2======", resp)
         try {
           // Try to parse the input directly.
           enabledSections = JSON.parse(resp);
-          console.log("=======enabledSections2======", enabledSections)
+        //   // console.log("=======enabledSections2======", enabledSections)
 
         } catch(e) {
             enabledSections = {
@@ -558,184 +656,449 @@ async function determineUpdateType(userRequirement, originalPrompt) {
     
       return updateOperations
 }
-async function executeMessagingUpdate(userRequirement, filePath) {
 
-    let code;
-    try {
+
+async function executeMessagingUpdate(userRequirement, filePath, section, originalPrompt, formMattedContextFromWebURL=null) {
+    // // console.log("---generateMessaging ====", section, userRequirement, originalPrompt );
+  
+      let code, gtpCode, finalCode;
+      try {
         code = fs.readFileSync(
-        filePath,
-        "utf8"
+          filePath,
+          "utf8"
         );
-    } catch (err) {
-        console.error(err);
-    }
-
-    const resp = await generateResponse(
+        gtpCode = code;
+      } catch (err) {
+        return;
+        // console.error(err);
+      }
+  
+      const resp = await generateResponse(
         `
-        Given the User Requirement: “ ${userRequirement} “, 
-            
-        return me messaging updates to JSX code
+        Given the User Orinal Requirement: “ ${originalPrompt} “, ${formMattedContextFromWebURL}
+        Update request: ${userRequirement}
 
-        rules are: 
-        1. The messaging should cover all the text in the JSX code
-        2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
-        3. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
-        4. Buttons text should be updated as well if any
+        Return me messaging updates to JSX code for section ${section} of landing page for  Update request: ${userRequirement}
+        
+        Rules are: 
+        1. Most importantly, it should match user update request: ${userRequirement}
+        2. The messaging should cover all the text in the JSX code
+        3. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
+        4. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
+        5. Buttons text should be updated as well if any
         
         Output should be json object with the following format:
         [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
         
         In the response no other text should be there, it must be only JSON. 
         
-        Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
+        Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
         
         Here is the JSX code to modify:
-
-    \`\`\`jsx
-
-    ${code}
-        `,
+        
+        \`\`\`jsx
+  
+      ${code}
+          `,
         false
-    );
-    // // console.log("=====first resp=====", resp);
-    let updates;
-    try {
-    // Try to parse the input directly.
-        updates = JSON.parse(resp);
-    } catch(e) {
-    // If that fails, find the first valid JSON string within the input.
-    const regex = /```json?([\s\S]*?)```/g;
-    const match = regex.exec(resp);
-    if(match) {
-        try{
-            updates = JSON.parse(match[1].trim())
-        } catch(e) {
-            const resp = await generateResponse(
-                `
-                Given the User Requirement: “ ${userRequirement} “, 
-                    
-                return me messaging updates to JSX code
-        
-                rules are: 
-                1. The messaging should cover all the text in the JSX code
-                2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
-                3. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
-                4. Buttons text should be updated as well if any
-                
-                Output should be json object with the following format:
-                [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
-                
-                In the response no other text should be there, it must be only JSON. 
-                
-                Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
-                
-                Here is the JSX code to modify:
-        
-            \`\`\`jsx
-        
-            ${code}
-                `,
-                false
-            );
-            try {
-            // Try to parse the input directly.
-                updates = JSON.parse(resp);
-            } catch(e) {
-            // If that fails, find the first valid JSON string within the input.
-            const regex = /```json?([\s\S]*?)```/g;
-            const match = regex.exec(resp);
-            updates = match ? JSON.parse(match[1].trim()) : null;
-            }
+      );
+  
+    //   // console.log("---resp ====", resp);
 
-        }
-    }else{
-            const resp = await generateResponse(
-                `
-                Given the User Requirement: “ ${userRequirement} “, 
-                    
-                return me messaging updates to JSX code
-        
-                rules are: 
-                1. The messaging should cover all the text in the JSX code
-                2. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
-                3. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
-                4. Buttons text should be updated as well if any
-                
-                Output should be json object with the following format:
-                [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
-                
-                In the response no other text should be there, it must be only JSON. 
-                
-                Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
-                
-                Here is the JSX code to modify:
-        
-            \`\`\`jsx
-        
-            ${code}
-                `,
-                false
-            );
-            try {
-            // Try to parse the input directly.
-                updates = JSON.parse(resp);
-            } catch(e) {
-            // If that fails, find the first valid JSON string within the input.
-            const regex = /```json?([\s\S]*?)```/g;
-            const match = regex.exec(resp);
-            updates = match ? JSON.parse(match[1].trim()) : null;
-            }
-    }
-    }
-
-    if(updates && updates.length > 0){
-          // // console.log("===updates===", updates);
-        try{
-
-        
-        const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
-
-
-        traverse(baseAST, {
-            enter(path) {
-
-                if (
-                    t.isJSXText(path.node)
-                ) {
-                    const lineUpdate = updates.find(u => u?.originaltext?.toLowerCase() === path.node.value.trim().toLowerCase());
-                    if(lineUpdate) {
-                    path.node.value = path.node.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
-                    }
-                }
-            },
-        });
-
-        const { code: newCode } = generator(baseAST);
-        // // console.log("--newCode----", newCode);
-
-        let output;
+      let updates;
         try {
-            output = generate(baseAST).code;
-            try {
-            fs.writeFileSync(
-                filePath,
-                output,
-                "utf8"
-            );
-            // // console.log("File successfully written!");
-            } catch (err) {
-            console.error(err);
+          // Try to parse the input directly.
+          updates = JSON.parse(resp);
+        } catch(e) {
+          // If that fails, find the first valid JSON string within the input.
+          const regex = /```json?([\s\S]*?)```/g;
+          const match = regex.exec(resp);
+          if(match && match[1]){
+            try{
+              updates = JSON.parse(match[1].trim())
+            }catch(e) {
+              const resp = await generateResponse(
+                `
+                Given the User Orinal Requirement: “ ${originalPrompt} “, ${formMattedContextFromWebURL}
+                Update request: ${userRequirement}
+
+                Return me messaging updates to JSX code for section ${section} of landing page for  Update request: ${userRequirement}
+                
+                Rules are: 
+                1. Most importantly, it should match user update request: ${userRequirement}
+                2. The messaging should cover all the text in the JSX code
+                3. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
+                4. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
+                5. Buttons text should be updated as well if any
+                
+                Output should be json object with the following format:
+                [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
+                
+                In the response no other text should be there, it must be only JSON. 
+                
+                Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
+                
+                Here is the JSX code to modify:
+        
+                
+                \`\`\`jsx
+              
+              ${code}
+                  `,
+                false
+              );
+            //   // console.log("---resp2 ====", resp);
+            
+              try{
+                updates = JSON.parse(resp);  
+              }catch(e) {
+                // // console.log("---resp2error ====", e);
+                updates = null
+              }
+             
             }
-        } catch (error) {
-            // // console.log("it's catch");
-            console.error("Syntax error:", error.message);
-            console.error("Stack trace:", error.stack);
+          }
         }
-        }catch (error) {
-            console.log("======errr====", error)
+        if(!updates){
+          const resp = await generateResponse(
+            `
+            Given the User Orinal Requirement: “ ${originalPrompt} “, ${formMattedContextFromWebURL}
+            Update request: ${userRequirement}
+
+            Return me messaging updates to JSX code for section ${section} of landing page for  Update request: ${userRequirement}
+            
+            Rules are: 
+            1. Most importantly, it should match user update request: ${userRequirement}
+            2. The messaging should cover all the text in the JSX code
+            3. Top text should be less than the text below it, for example branding text should be less than title text, title text should be less than description text
+            4. Branding text should be less than 3 words, Title text should be less than 5 words, Description should be more than 10 words and less than 20 words
+            5. Buttons text should be updated as well if any
+            
+            Output should be json object with the following format:
+            [{"line": The line number on the code that got updated, "originaltext": the original text as it is, dont include any html tags, "updatedtext": update text based on user requirement and SEO friendly},{},{}]
+            
+            In the response no other text should be there, it must be only JSON. 
+            
+            Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
+            
+            Here is the JSX code to modify:   
+            
+            \`\`\`jsx
+  
+          ${code}
+              `,
+            false
+          );
+        
+          // console.log("---resp3 ====", resp);
+
+          try {
+            // Try to parse the input directly.
+            updates = JSON.parse(resp);
+          } catch(e) {
             return;
+          }
+  
         }
-    }
+        if(!updates){
+          return;
+        }
+        // console.log("===updates===", updates);
+        const baseAST = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
+  
+        try {
+           
+        traverse(baseAST, {
+          enter(path) {
+            if (path.isJSXText()) {
+              const lineUpdate = updates.find(u => u?.originaltext?.toLowerCase() === path.node.value.trim().toLowerCase());
+              if(lineUpdate) {
+                path.node.value = path.node.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+              }
+            }
+        
+            if (path.isJSXAttribute()) {
+              if (path.node.name.name === 'title' || path.node.name.name === 'description' || path.node.name.name === 'review' ||  path.node.name.name === 'label' ||  path.node.name.name === 'position') {
+                if (path.node.value.type === 'StringLiteral') {
+                  const lineUpdate = updates.find(u => u?.originaltext?.toLowerCase() === path.node.value.value.trim().toLowerCase());
+                  if(lineUpdate) {
+                    path.node.value.value = path.node.value.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+                  }
+                } else if (path.node.value.type === 'JSXExpressionContainer' && path.node.value.expression.type === 'StringLiteral') {
+                  const lineUpdate = updates.find(u => u?.originaltext?.toLowerCase() === path.node.value.expression.value.trim().toLowerCase());
+                  if(lineUpdate) {
+                    path.node.value.expression.value = path.node.value.expression.value.replace(lineUpdate.originaltext, lineUpdate.updatedtext);
+                  }
+                }
+              }
+            }
+          },
+        });
+        } catch(e) {
+            // console.log("===error===", e);
+        }
+  
+        // const { code: newCode } = generator(baseAST);
+      // let ast;
+      // try {
+      //   ast = parser.parse(gtpCode, {
+      //     sourceType: "module",
+      //     plugins: ["jsx"],
+      //   });
+      // } catch (error) {
+      //   // // console.log("it's parse catch");
+      //   console.error("Syntax error:", error.message, error.stack);
+      //   // const resp = await generateResponse(`There is a syntax error in the below javascript code. Please correct the syntax errors only.
+      //   // response should has only the code, nothing else should be there in response
+      //   // error: ${error.message}
+      //   // stacktrace : ${error.stack.split('\n')[0]}
+      //   // code: ${code}
+      //   // `, false)
+  
+      //   // // // console.log("----res[====", resp)
+      //   // ast = parser.parse(resp, {
+      //   //   sourceType: "module",
+      //   //   plugins: ["jsx"],
+      //   // });
+      //   console.error("Major part of stack trace:", error.stack.split("\n")[0]);
+      // }
+  
+      let output;
+      try {
+        output = generate(baseAST).code;
+        // console.log("=====output===", output)
+        const regex = /strings:\s*\[([\s\S]*?)\]/;
+        const match = output.match(regex);
+        if(match && match[1]){
+            const arrayString = match[1];
+            const subStringArray = JSON.parse(`[${arrayString}]`);
+            // console.log("=========subStringArray====", subStringArray)
+            let lines;
+            if(section.toLowerCase().includes("header") && subStringArray.length === 3){
+            let allSubstringsPresent = subStringArray.every(subString => output.includes(subString));
+            if(allSubstringsPresent){
+                // console.log("=====lines ===", output)
+
+                const resp = await generateResponse(
+                `
+                Given the User Orinal Requirement: “ ${originalPrompt} “
+                New Update request: "${userRequirement}"
+
+                In the New Update request, is user asking for NOT changing one of ${match} or any small intenstion to NOT changing  header dynamic text or scrolling text or moving text or changing the text..etc,
+
+                if Yes, then you need to return empty json object {}
+
+                if No, then you need to generate three succinct and compelling header lines, with a maximum of three words each, for a dynamic scrolling text display.
+                These lines, serving as the primary points of attraction, should effectively encourage the user to take action by clicking the button
+                
+                example output: 
+                {
+                    headers:  ["line1", "line2", "line3"]
+                }
+
+                
+                Response should be json and Strictly NO explanation should be there in the response
+                
+                Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
+    
+                    `,
+                false
+                );
+                // console.log("=====lines resp===", resp)
+
+                try {
+                // Try to parse the input directly.
+                lines = JSON.parse(resp);
+                } catch(e) {
+                const resp = await generateResponse(
+                    `
+                    Given the User Orinal Requirement: “ ${originalPrompt} “
+                New Update request: "${userRequirement}"
+
+                In the New Update request, is user asking for NOT changing one of ${match} or any small intenstion to NOT changing  header dynamic text or scrolling text or moving text or changing the text..etc,
+
+                if Yes, then you need to return empty json object {}
+
+                if No, then you need to generate three succinct and compelling header lines, with a maximum of three words each, for a dynamic scrolling text display.
+                These lines, serving as the primary points of attraction, should effectively encourage the user to take action by clicking the button
+                
+                example output: 
+                {
+                    headers:  ["line1", "line2", "line3"]
+                }
+
+                
+                Response should be json and Strictly, NO explanation should be there in the response
+                
+                Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
+    
+                    `,
+                    false
+                );
+                try {
+                    // Try to parse the input directly.
+                    lines = JSON.parse(resp);
+                } catch(e) {
+                    lines = null;
+                }
+                }
+        
+            
+            }
+            if(!lines){
+                const resp = await generateResponse(
+                `
+                Given the User Orinal Requirement: “ ${originalPrompt} “
+                New Update request: "${userRequirement}"
+
+                In the New Update request, is user asking for NOT changing one of ${match} or any small intenstion to NOT changing  header dynamic text or scrolling text or moving text or changing the text..etc,
+
+                if Yes, then you need to return empty json object {}
+
+                if No, then you need to generate three succinct and compelling header lines, with a maximum of three words each, for a dynamic scrolling text display.
+                These lines, serving as the primary points of attraction, should effectively encourage the user to take action by clicking the button
+                
+                example output: 
+                {
+                    headers:  ["line1", "line2", "line3"]
+                }
+
+                
+                Response should be json and Strictly, NO explanation should be there in the response
+                
+                Request: Response should be able to parse by javascript function => function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
+    
+                `,
+                false
+                );
+                try {
+                // Try to parse the input directly.
+                lines = JSON.parse(resp);
+                } catch(e) {
+                //   lines = ["Scrollingfeature1", "Scrollingfeature1", "Scrollingfeature1"]
+                }
+            }
+    
+            // console.log("---lines ====", lines );
+    
+            if(lines && lines.headers && lines.headers.length > 0){
+                for (let i = 0; i < subStringArray.length; i++) {
+                output = output.split(subStringArray[i]).join(lines.headers[i]);
+                }
+            }
+            }
+        }
+
+        try {
+            // console.log("------final outoutp=====", output);
+          fs.writeFileSync(
+            filePath,
+            output,
+            "utf8"
+          );
+        } catch (err) {
+          // console.log("------write eror=====", err);
+        }
+      } catch (error) {
+        // console.log("------update error====", error);
+
+        // console.error("Syntax error:", error.message);
+        // console.error("Stack trace:", error.stack);
+        return;
+      }
+  
+  }
+
+async function determineMessagingUpdateSections(userRequirement, originalPrompt){
+
+        // userRequirement, to which code file has text ?
+        
+        const resp = await generateResponse(
+            `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
+            
+            Now, the client wants to make some modifications to this page.
+    
+            Client's Request for Modification: "${userRequirement}"
+        
+            I want you to determine probable sections that user wants to make changes based on Request for Modification
+            based on Request for Modification, Try to guess most likely sections headers, features, blogs, teams, projects, pricing, testmonials, contactus that user wants to make changes
+            
+            rules are:
+            - If the requirement is not clear, return empty object {}
+            - If the intention is to not change any section, set false for that section
+            - If the user wants to change any section, set true for that section
+              
+            Available sections are:
+            headers, features, blogs, teams, projects, pricing, testmonials, contactus
+        
+            Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
+        
+            Response should be json and Strictly NO explanation should be there in the response
+        
+            Request: Response should be able to parse by a below javascript function:
+            
+            function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+        
+              `,
+            false
+          );
+        
+          // // // console.log("=====resp=====", resp);
+          let enabledSections
+          try {
+            // Try to parse the input directly.
+            enabledSections = JSON.parse(resp);
+          } catch(e) {
+            // // // console.log("====catch====", e)
+            const resp = await generateResponse(
+              `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
+            
+              Now, the client wants to make some modifications to this page.
+      
+              Client's Request for Modification: "${userRequirement}"
+          
+              I want you to determine probable sections that user wants to make changes based on Request for Modification
+              based on Request for Modification, Try to guess most likely sections headers, features, blogs, teams, projects, pricing, testmonials, contactus that user wants to make changes
+              
+              rules are:
+              - If the requirement is not clear, return empty object {}
+              - If the intention is to not change any section, set false for that section
+              - If the user wants to change any section, set true for that section
+                
+              Available sections are:
+              headers, features, blogs, teams, projects, pricing, testmonials, contactus
+          
+              Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
+          
+              Response should be json and Strictly NO explanation should be there in the response
+          
+              Request: Response should be able to parse by a below javascript function:
+              
+              function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
+          
+                `,
+              false
+            );
+            // // // console.log("=====resp2=====", resp);
+            try {
+              // Try to parse the input directly.
+              enabledSections = JSON.parse(resp);
+            } catch(e) {
+              enabledSections = {
+                headers: true,
+                features: true,
+                blogs: true,
+                teams: true,
+                projects: true,
+                pricing: true,
+                testmonials: true,
+                contactus: true,
+                footer: false,
+              }
+            }
+          }
+        
+          return enabledSections
 }
 async function executeBackgroundImageUpdate(userRequirement, filePath) {
         let code;
@@ -746,14 +1109,14 @@ async function executeBackgroundImageUpdate(userRequirement, filePath) {
         }
         
         const imagePaths = extractImagePaths(code);
-        // // console.log("===replacing======", imagePaths);
+        // // // console.log("===replacing======", imagePaths);
     
         const result = {};
         for (let i = 0; i < imagePaths.length; i++) {
             await downloadComponentImages(userRequirement, `yourproject/src/${imagePaths[i].replace("assets/img", "assets/img/aigenerated")}`);
             result[imagePaths[i]] = imagePaths[i].replace("assets/img", "assets/img/aigenerated");
         }
-        // // console.log(result);
+        // // // console.log(result);
     
         const ast = parser.parse(code, {sourceType: "module", plugins: ["jsx"]});
         
@@ -825,7 +1188,7 @@ async function removeOperation(userRequirement, filePath) {
             false
         );
         
-        // // console.log("=====resp=====", resp);
+        // // // console.log("=====resp=====", resp);
         let updates;
         try {
         // Try to parse the input directly.
@@ -919,7 +1282,7 @@ async function removeOperation(userRequirement, filePath) {
                 }
         }   
     
-        // // console.log("===updates===", updates);
+        // // // console.log("===updates===", updates);
 
         if(!updates){
             return;
@@ -952,7 +1315,7 @@ async function removeOperation(userRequirement, filePath) {
         let output;
         try {
             output = generate(baseAST).code;
-            // // console.log("==syntax checked==cahtgptcode====", output);
+            // // // console.log("==syntax checked==cahtgptcode====", output);
         
             try {
             fs.writeFileSync(
@@ -960,12 +1323,12 @@ async function removeOperation(userRequirement, filePath) {
                 output,
                 "utf8"
             );
-            // // console.log("File successfully written!");
+            // // // console.log("File successfully written!");
             } catch (err) {
             console.error(err);
             }
         } catch (error) {
-            // // console.log("it's catch");
+            // // // console.log("it's catch");
             console.error("Syntax error:", error.message);
             console.error("Stack trace:", error.stack);
         }
@@ -1013,7 +1376,7 @@ async function removeOperationByClassName(userRequirement, filePath) {
         false
     );
     
-    // // console.log("=====resp=====", resp);
+    // // // console.log("=====resp=====", resp);
     let updates;
     try {
     // Try to parse the input directly.
@@ -1057,13 +1420,13 @@ async function removeOperationByClassName(userRequirement, filePath) {
         });
         
         const { code: newCode } = generator(baseAST);
-        // // console.log("--newCode----", newCode);
+        // // // console.log("--newCode----", newCode);
 
     
     let output;
     try {
         output = generate(baseAST).code;
-        // // console.log("==syntax checked==cahtgptcode====", output);
+        // // // console.log("==syntax checked==cahtgptcode====", output);
     
         try {
         fs.writeFileSync(
@@ -1071,12 +1434,12 @@ async function removeOperationByClassName(userRequirement, filePath) {
             output,
             "utf8"
         );
-        // // console.log("File successfully written!");
+        // // // console.log("File successfully written!");
         } catch (err) {
         console.error(err);
         }
     } catch (error) {
-        // // console.log("it's catch");
+        // // // console.log("it's catch");
         console.error("Syntax error:", error.message);
         console.error("Stack trace:", error.stack);
     }
@@ -1085,13 +1448,15 @@ async function removeOperationByClassName(userRequirement, filePath) {
 module.exports = {
     checkForDesignChange,
     implementDesignChange,
-    identifyUpdateSections,
+    determineDesignUpdateSections,
     determineUpdateType,
     executeMessagingUpdate,
     executeBackgroundImageUpdate,
     determineSectionsDesignChange,
     updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation,
     removeOperation,
+    determineMessagingUpdateSections,
+    determineBackgroundImageUpdateSections
 };
 
 

@@ -27,13 +27,15 @@ const path = require("path");
 const { 
   checkForDesignChange,
   implementDesignChange,
-  identifyUpdateSections,
+  determineDesignUpdateSections,
+  determineBackgroundImageUpdateSections,
   determineUpdateType,
   executeMessagingUpdate,
   executeBackgroundImageUpdate,
   removeOperation,
   determineSectionsDesignChange,
-  updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation
+  updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation,
+  determineMessagingUpdateSections
 } = require("./utils/updateOperation");
 const { 
   extractTextAndMetaFromURLForEachSection,
@@ -117,9 +119,10 @@ function capitalizeFirstLetter(string) {
 }
 
 const updatePixieOperation = async (userRequirement, callback) => {
-    let isFullDesignChange = await checkForDesignChange(userRequirement);
     let data = fs.readFileSync('yourproject/pixieconfig.json', 'utf-8');
     let jsonData = JSON.parse(data);
+
+    let isFullDesignChange = await checkForDesignChange(userRequirement, jsonData.prompt);
     const selectedInternalDesignSystem = Object.keys(themeNames).find(key => themeNames[key] === jsonData.design);
     if(isFullDesignChange){ 
         process.stdout.write(`\x1b[32m Sit back, enjoy your coffee, and relax. I'm starting from scratch to craft a brand-new site for you.  \x1b[0m \n`);
@@ -128,28 +131,16 @@ const updatePixieOperation = async (userRequirement, callback) => {
     }
     process.stdout.write(`\x1b[32m Alright, I got what you need. Please give me a few moments to implement the updates. \x1b[0m \n`);
 
-    // let sectionsDesignChange = await determineSectionsDesignChange(userRequirement, jsonData.prompt);
-    // console.log("===determineSectionsDesignChange====", sectionsDesignChange)
-    
-    let sectionsToUpdate = await identifyUpdateSections(userRequirement, jsonData.prompt);
     let updateOperationType = await determineUpdateType(userRequirement);
+
+    // let sectionsToUpdate = await identifyUpdateSections(userRequirement, jsonData.prompt);
     if(updateOperationType.design){
-      await updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation(sectionsToUpdate, userRequirement, selectedInternalDesignSystem, jsonData.prompt, !updateOperationType.messaging, !updateOperationType.backgroundimage)
+      const enabledSections = await determineDesignUpdateSections(userRequirement, jsonData.prompt)
+      await updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation(enabledSections, userRequirement, selectedInternalDesignSystem, jsonData.prompt, !updateOperationType.messaging, !updateOperationType.backgroundimage)
       return;
     }
-
     if (updateOperationType.messaging) {
-      const enabledSections = {
-        headers: true,
-        features: true,
-        blogs: true,
-        teams: true,
-        projects: true,
-        pricing: true,
-        testmonials: true,
-        contactus: true,
-        footer: false,
-      }
+      const enabledSections = await determineMessagingUpdateSections(userRequirement, jsonData.prompt)
       let codeFilePathsForMessaging = {};
 
       for (let section in enabledSections) {
@@ -165,15 +156,17 @@ const updatePixieOperation = async (userRequirement, callback) => {
         }
       }
       for (let section in codeFilePathsForMessaging) {
-        await executeMessagingUpdate(userRequirement, codeFilePathsForMessaging[section]);
+        await executeMessagingUpdate(userRequirement, codeFilePathsForMessaging[section], section, jsonData.prompt);
       }
     }
 
     if (updateOperationType.backgroundimage) {
+      const enabledSections = await determineBackgroundImageUpdateSections(userRequirement, jsonData.prompt)
+
       let codeFilePathsForBackgroundImage = {};
 
-      for (let section in sectionsToUpdate) {
-        if (sectionsToUpdate[section]) {
+      for (let section in enabledSections) {
+        if (enabledSections[section]) {
           let fileName = `${section.charAt(0).toUpperCase()}${section.slice(1)}`
           if (section === "testmonials") {
               fileName = "Testimonials";
