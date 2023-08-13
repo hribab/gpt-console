@@ -1,12 +1,15 @@
-async function stopBird(input, callback) {
-    try {      
-       console.log("=====stop====")
-    
-      } catch (err) {
-        return `An error occurred during API call: ${err}`;
-      }
+const { stopBird } = require("../bird.js");
+
+async function stopBirdOperation(callback) {
+
+  try {
+      await stopBird(callback)
+  } catch (error) {
+    return;
+    // console.log("=====errror===", error);
+  }
 }
-    
+
 module.exports = {
-    stopBird
+  stopBirdOperation
 }

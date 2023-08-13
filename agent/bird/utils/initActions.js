@@ -1,10 +1,13 @@
 const puppeteer = require("puppeteer-core");
 const os = require("os");
 const fs = require('fs');
-const { tweet, tweetWithImage, reply } = require("./twitterActions.js");
+const { tweet, tweetWithImage, reply, replyWithImage } = require("./twitterActions.js");
 
-const launchBrowser = async () => {
+
+const launchBrowser = async (browserInstances) => {
+    //TODO: Browser error when already launched.
     const username = os.userInfo().username;
+    // console.log("it's launching");
     let userDataDir, executablePath, profileName;
     if (os.platform() === "darwin") {
         userDataDir = `/Users/${username}/Library/Application Support/Google/Chrome/`;
@@ -27,8 +30,9 @@ const launchBrowser = async () => {
     } else {
         profileName = "Default"
     }
+    // console.log("profileName", profileName)
 
-    browser = await puppeteer.launch({
+    const browser = await puppeteer.launch({
         executablePath: executablePath,
         userDataDir: `${userDataDir}${profileName}`,
         slowMo: 1000,
@@ -39,45 +43,49 @@ const launchBrowser = async () => {
         ignoreDefaultArgs: ["--enable-automation"],
     });
 
-    let page = await browser.newPage();
-    const pages = await browser.pages();
+    browserInstances.push(browser);
 
-    // If there are open pages, close the first one
-    if (pages.length > 0) {
-        await pages[0].close();
+    try{
+        // console.log("opening the page");
+        let page = await browser.newPage();
+        const pages = await browser.pages();
+        // console.log("pages:",pages);
+        // If there are open pages, close the first one
+        if (pages.length > 0) {
+            await pages[0].close();
+        }
+        await page.goto("https://twitter.com/home");
+        await page.waitForTimeout(10000);
+        await page.waitForSelector("div.public-DraftStyleDefault-block span", {
+            timeout: 180000,
+        });
+        // console.log("twitter logged");
+        return page;
     }
-    await page.goto("https://twitter.com/home");
-    //await page.waitForTimeout(10000);
-    await page.waitForSelector("div.public-DraftStyleDefault-block span", {
-        timeout: 180000,
-    });
+    catch(err){
+        // // console.log("error-------", err);
+        return
+    }
 }
 
-const getRandomAction = async () => {
-    const options = ['tweet', 'reply', 'tweetWithImage', 'replyWithImage'];//, 'follow'];
-    const randomIndex = Math.floor(Math.random() * options.length);
-    return options[randomIndex];    
-}
-
-const performAction = async (action) => {
+const performAction = async (page, action, userRequirement, contentFromURLIfAny) => {
     switch (action) {
         case "tweet":
-            await tweet();
+            await tweet(page, userRequirement, contentFromURLIfAny);
             break;
         case "tweetWithImage":
-            await tweetWithImage();
+            await tweetWithImage(page, userRequirement,contentFromURLIfAny);
             break
         case "reply":
-            await reply();
+            await reply(page, userRequirement, contentFromURLIfAny);
             break
         case "replyWithImage":
-            await replyWithImage();
+            await replyWithImage(page, userRequirement, contentFromURLIfAny);
             break;   
     }
 }
 
 module.exports = {
     launchBrowser, 
-    getRandomAction,
     performAction,
 }

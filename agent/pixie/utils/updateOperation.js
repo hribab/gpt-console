@@ -122,7 +122,7 @@ async function implementDesignChange(userRequirement, alreadySelectedDesignSyste
           updatePixieConfigStatus('completed');
           
         } catch (error) {
-          return callback(null, `Error Occured, Please try again: ${error}`);
+          return;  //callback(null, `Error Occured, Please try again: ${error}`);
         }
 }
 async function determineDesignUpdateSections(userRequirement, originalPrompt) {

@@ -58,9 +58,7 @@ function welcomeMessage() {
 function birdHelpMessage() {
     console.log(`     
         ${consoleFormat('How to use Bird?:', 'red')}
-        ${consoleFormat('bird start', 'blue')}
-        ${consoleFormat('bird stop', 'blue')}
-        ${consoleFormat('bird status', 'blue')}
+        ${consoleFormat('bird start "your requirement"', 'blue')} 
     `);
 }
 

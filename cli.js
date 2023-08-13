@@ -12,17 +12,13 @@ const {
   pixieHelpMessage,
 } = require("./utils/helper/cliHelpers");
 const { handleDefaultCase } = require("./commands/defaultCommand");
-const { pauseBird } = require("./agent/bird/lifecycle/pauseBird");
-// const { startBird } = require('./agent/bird/lifecycle/startBird')
 const { startPixie } = require("./agent/pixie/lifecycle/startPixie");
 const { updatePixie } = require("./agent/pixie/lifecycle/updatePixie");
 const { stopPixie } = require("./agent/pixie/lifecycle/stopPixie");
 const { statusPixie } = require("./agent/pixie/lifecycle/statusPixie");
-const { extractTextAndMetaFromURL } = require("./agent/pixie/utils/scrapeURL")
+const { startBird } = require('./agent/bird/lifecycle/startBird')
+const { stopBirdOperation } = require('./agent/bird/lifecycle/stopBird')
 
-
-// const { stopBird } = require('./agent/bird/stopBird')
-// const { statusBird } = require('./agent/bird/statusBird')
 const fetch = require("node-fetch");
 const stream = require("stream");
 const fs = require("fs");
@@ -62,22 +58,16 @@ gptCli.eval = async (input, context, filename, callback) => {
   switch (command.trim()) {
     case "bird":
       if (tokens[1] && tokens[1].trim() == "start") {
-        startBird();
-        callback(null);
-        break;
-      }
-      if (tokens[1] && tokens[1].trim() == "pause") {
-        pauseBird();
+        let matches = input.match(/bird start ['"]?(.*)['"]?/);
+        let extractedText = matches && matches[1] ? matches[1] : null;
+        extractedText = extractedText && extractedText.replace(/^['"]|['"]$/g, "");
+        await startBird(extractedText, callback);
+        process.stdout.write('\r');
         callback(null);
         break;
       }
       if (tokens[1] && tokens[1].trim() == "stop") {
-        stopBird();
-        callback(null);
-        break;
-      }
-      if (tokens[1] && tokens[1].trim() == "status") {
-        statusBird();
+        await stopBirdOperation();
         callback(null);
         break;
       }
