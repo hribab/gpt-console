@@ -684,18 +684,19 @@ function findDesignInResponse(designs) {
   return designNames[Math.floor(Math.random() * designNames.length)];
 }
 
-async function pickRightDesignSystem(userRequirement) {
+async function pickRightDesignSystem(userRequirement, contentFromFirstURL) {
 
   const resp = await generateResponse(
     `Given the User Requirement: ${userRequirement}
+    ${contentFromFirstURL ? `Web context: ${JSON.stringify(contentFromFirstURL)}` : ""}
 
     I want you to pick the right design system that suits for the above user requirement
     
     Available desings are:
     ${JSON.stringify(designSystems)}
 
-    Response should be one of the names ${Object.keys(designSystems).join(",")}, no other text should be there.
-      `,
+    Response should be one of the names ${Object.keys(designSystems).join(",")}, no other text should be there. No explanation is required.
+    `,
     false
   );
   // console.log("====resp=====", resp)
@@ -1077,7 +1078,30 @@ function formatContextFromURL(section, rawTextFromURL){
     return `Reference string from website: ${referenceTextFromURL}`
   }
   return null;
-}        
+}
+
+async function isRequirementForOnlyDocumentation(userRequirement) {
+ // console.log("userRequirement", userRequirement)
+  let isOnlyDocumentation = false;
+  const prompt =  `Given User Needs: ${userRequirement}  
+  Please determine if user wants to create documentation page
+  
+  Response Must be only true or false. No other text should be there in response. No explanation is required. 
+  `
+  const resp = await generateResponse(
+    prompt,
+    false
+  );
+
+  //console.log("========resp", resp)
+  if(resp){
+    if(resp.toLowerCase().includes("true")){ isOnlyDocumentation = true }
+  }
+  // console.log("isOnlyDocumentation", isOnlyDocumentation)
+  return isOnlyDocumentation;
+}
+
+
 
 module.exports = {
   runTheApp,
@@ -1090,5 +1114,6 @@ module.exports = {
   pickRightDesignSystemForUpdate,
   identifyEnabledSections,
   identifySpecificSectionCodeFilesForEnabledSections,
-  formatContextFromURL
+  formatContextFromURL,
+  isRequirementForOnlyDocumentation
 };

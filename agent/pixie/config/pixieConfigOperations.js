@@ -9,6 +9,7 @@ function renameProjectFolderIfExist() {
 
     // Check if folder exists
     if (fs.existsSync(dir)) {
+        process.stdout.write(`\x1b[32m Moving existing pixie projects from current directory, they will be renamed to yourproject-old-currentDate-currentTime  \x1b[0m \n`);
         // Rename the folder
         fs.renameSync(dir, path.join('./', `yourproject-old-${currentDate}-${currentTime}`), err => {
             if (err) {

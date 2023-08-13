@@ -2,6 +2,7 @@
   "name": "gpt-console",
   "version": "8.0.0",
   "description": "Command line tool using ChatGPT",
+  "private": true,
   "bin": {
     "gpt-console": "./cli.js"
   },
@@ -48,7 +49,9 @@
     "linguist-languages": "^7.21.0",
     "madge": "^6.0.0",
     "minimatch": "^9.0.0",
+    "moment": "^2.29.4",
     "natural": "^6.5.0",
+    "open": "8",
     "openai": "^3.2.1",
     "path": "^0.12.7",
     "pm2": "^5.3.0",

@@ -8,7 +8,8 @@ const {
   generateMessaging,
   updateTheCodeWithImages,
   runTheApp,
-  formatContextFromURL
+  formatContextFromURL,
+  isRequirementForOnlyDocumentation
 } = require("./utils/createSkeleton");
 const {
   createPixieConfigFile,
@@ -39,24 +40,58 @@ const {
 } = require("./utils/updateOperation");
 const { 
   extractTextAndMetaFromURLForEachSection,
-  extractURLs
+  extractURLs,
+  buildHTMLDocumentationFile,
+  downloadFromWebURL,
+  formatContextFromRawData
 } = require("./utils/scrapeURL");
 
 const initPixie = async (userRequirement, callback) => {
   try {
     const listOfURLFromRequirement = extractURLs(userRequirement)
+    renameProjectFolderIfExist() 
+
+    if(listOfURLFromRequirement && listOfURLFromRequirement.length > 0){
+      const documentationOnly = await isRequirementForOnlyDocumentation(userRequirement)
+      // console.log("documentationOnly", documentationOnly)
+      if(documentationOnly){
+        try{
+          process.stdout.write(`\x1b[32mOk, I got it. I'm working on building the documentation page.\x1b[0m\n`);
+          process.stdout.write(`\x1b[32mExtracting text for reference from ${listOfURLFromRequirement[0]}.\x1b[0m\n`);
+          const rawData = await downloadFromWebURL(listOfURLFromRequirement[0])
+          const projectName = new URL(listOfURLFromRequirement[0]).hostname.split('.')[0];
+          const upto30KCharecters = rawData.substring(0, 30000);
+          const formattedData = await formatContextFromRawData(upto30KCharecters)
+          if(formattedData){
+            await buildHTMLDocumentationFile(formattedData, projectName, listOfURLFromRequirement[0])
+          }
+          
+        }catch(e){
+          return;
+          // console.log("e-----", e)
+        }
+       
+        return;
+      }
+    }  
+
     let contentFromFirstURL;
     if(listOfURLFromRequirement.length > 0){
       process.stdout.write(`\x1b[32m Extracting text for reference from ${listOfURLFromRequirement[0]} \x1b[0m \n`);
       contentFromFirstURL = await extractTextAndMetaFromURLForEachSection(listOfURLFromRequirement[0])
     }
-    process.stdout.write(`\x1b[32m Moving existing pixie projects from current directory, they will be renamed to yourproject-old-currentDate-currentTime  \x1b[0m \n`);
-    renameProjectFolderIfExist()
-    const {designSystemZipURL, designSystemConfig, selectedDesignSystemName} = await pickRightDesignSystem(userRequirement, contentFromFirstURL);
+    // console.log("contentFromFirstURL", contentFromFirstURL)
+    let longerPromptForConfigFile = userRequirement;
+    if(contentFromFirstURL && contentFromFirstURL["header"]){
+      longerPromptForConfigFile = `${longerPromptForConfigFile} ${contentFromFirstURL["header"]["title"]}: ${contentFromFirstURL["header"]["description"]} `
+    }
+    // console.log("longerPromptForConfigFile", longerPromptForConfigFile)
+ 
+    const {designSystemZipURL, designSystemConfig, selectedDesignSystemName} = await pickRightDesignSystem(userRequirement, longerPromptForConfigFile);
     process.stdout.write(`\x1b[32m Grab your coffee and relax. I'm crafting your site, one pixel at a time.  \x1b[0m \n`);
     await downloadAndUnzip(designSystemZipURL);
     createPixieConfigFile({
-      prompt: userRequirement,
+      prompt: longerPromptForConfigFile,
       mode: 'madmax',
       design: themeNames[selectedDesignSystemName],
       pixieversion: 1,

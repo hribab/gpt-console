@@ -10,7 +10,11 @@ const designSystems = {
     },   
     "nowui": {
         "description": "The Now UI Kit PRO brings a refreshingly clean and vibrant look to your project. Its use of bold colors, beautiful typography, and clear user interface components creates a visually pleasing experience. This could be an excellent choice for marketing or advertising agencies, lifestyle blogs, e-commerce platforms with a fun and vibrant aesthetic, or even travel and tourism websites. It might be particularly effective for any businesses aiming to project a contemporary, innovative brand image."
+    },
+    "documentation": {
+        "description": "The Now UI Kit PRO brings a refreshingly clean and vibrant look to your project. Its use of bold colors, beautiful typography, and clear user interface components creates a visually pleasing experience. This could be an excellent choice for marketing or advertising agencies, lifestyle blogs, e-commerce platforms with a fun and vibrant aesthetic, or even travel and tourism websites. It might be particularly effective for any businesses aiming to project a contemporary, innovative brand image."
     }
+
 }
 
 
@@ -31,7 +35,7 @@ const skeletonAndConfigURL = {
     "nowui": {
         "skeleton": "https://firebasestorage.googleapis.com/v0/b/gptconsole.appspot.com/o/templatecodefiles%2Fv2designs%2Fnowui%2Fyourproject.zip?alt=media&token=c60cdbc2-31ce-4ced-b31a-09565bd7d8ce",
         "config": "https://firebasestorage.googleapis.com/v0/b/gptconsole.appspot.com/o/templatecodefiles%2Fv2designs%2Fnowui%2Fnowui.json?alt=media&token=0c2afe20-3181-4de7-a01c-de930ef71891"
-    }
+    },
 };
 
 const themeNames = {
