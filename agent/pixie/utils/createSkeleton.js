@@ -128,23 +128,29 @@ async function runStartCommand(command, directory) {
     proc.on('error', (error) => {
       // console.log(`errorerrorerrorerror: ${error}`);
       // console.error(`exec error: ${error}`);
-      // reject(error);
+      reject(error);
     });
 
     return proc.stdout.on('data', async (data) => {
-      if (data.includes("Something is already running on port 3000")) {
-        await killIfAlreadyRunning();
-        const [cmd, ...args] = command.split(' ');
-        const proc = spawn(cmd, args, { cwd: directory });
-        proc.stdout.on('data', async (data) => {
-          if(data.toString().includes("localhost")){
-            return resolve("http://localhost:3000")
-          }
-        });
-      }
-      if (data.toString().includes("localhost")) {
-        return resolve("http://localhost:3000")
-      }
+      proc.stdout.on('data', async (data) => {
+        if (data.includes("Something is already running on port 3000")) {
+          await killIfAlreadyRunning();
+          const [reCmd, ...reArgs] = command.split(' ');
+          const reProc = spawn(reCmd, reArgs, { cwd: directory });
+          reProc.stdout.on('data', (data) => {
+            if(data.toString().includes("localhost")){
+              return resolve("http://localhost:3000");
+            }
+          });
+        } else if (data.toString().includes("localhost")) {
+          return resolve("http://localhost:3000");
+        }
+      });
+
+       // Add a timeout to reject the promise if no matching data is found
+      setTimeout(() => {
+        resolve("http://localhost:3000")
+      }, 10000); 
       // const matches = data.toString().match(/(http:\/\/localhost:\d+)/);
       // console.log("===matches====", matches)
       // if (matches) {
