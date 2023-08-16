@@ -33,9 +33,6 @@ async function getValidResponse(prompt, retryCount = 0) {
     }
 }
 
-
-
-
 async function tweet(page, userRequirement, contentFromURLIfAny) {
     // console.log("inside tweet ----", contentFromURLIfAny);
     await page.waitForTimeout(3000);
@@ -45,15 +42,20 @@ async function tweet(page, userRequirement, contentFromURLIfAny) {
     const prompt = `
     ${userRequirement ? "For givne user requirement "+ userRequirement : ''}
 
-    ${contentFromURLIfAny && contentFromURLIfAny.plainText ? "Text content from the URL "+ contentFromURLIfAny.plainText : ''}
+    ${contentFromURLIfAny && contentFromURLIfAny.plainText ? "And Text content from the URL "+ contentFromURLIfAny.plainText : ''}
     
-    Please generate a tweet that make people LAUGH, then THINK
+    ${userRequirement ? "Compose a tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, clearly represents what brand embodies, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name." : "Please generate a tweet that provides deeper insight and make people LAUGH, then THINK"}
+    
     Requirements are
     1. Maximum allowed characters are 280,
     3. the maximum character length of tweet is 250 characters including the text after #,
     no other text should there in response
     4. The text must contain #
     5. It should be ready to post tweet, text should not be enclosed in doubles quotes, no other text should be there in the response, only tweet should be there
+
+    note: It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
+
+    Its important you get above right
     `
 
     // console.log("----prompt : ", prompt);
@@ -371,15 +373,18 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
     const prompt = `
     ${userRequirement ? "For givne user requirement "+ userRequirement : ''}
 
-    ${contentFromURLIfAny && contentFromURLIfAny.plainText ? "Text content from the URL "+ contentFromURLIfAny.plainText : ''}
+    ${userRequirement ? "Compose a tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, clearly represents what brand embodies, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name." : "Please generate a tweet that provides deeper insight and make people LAUGH, then THINK"}
     
-    Please generate a tweet that make people LAUGH, then THINK
     Requirements are
     1. Maximum allowed characters are 280,
     3. the maximum character length of tweet is 250 characters including the text after #,
     no other text should there in response
     4. The text must contain #
     5. It should be ready to post tweet, text should not be enclosed in doubles quotes, no other text should be there in the response, only tweet should be there
+
+    note: It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
+
+    Its important you get above right
     `
     try{
         let chatgptresponse = await getValidResponse(prompt);

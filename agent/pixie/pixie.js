@@ -145,7 +145,7 @@ const initPixie = async (userRequirement, callback) => {
     return result;
   } catch (error) {
     // console.log("error", error);
-    return `Error Occured, Please try again: ${error}`;
+    return;// `Error Occured, Please try again: ${error}`;
   }
 };
 

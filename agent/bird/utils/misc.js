@@ -2,6 +2,7 @@ const {
     extractTextAndMetaFromURLForEachSection,
     extractURLs
   } = require("./scrapeURL");
+  const { generateResponse } = require("../../../utils/api/apiCall");
 
   const moment = require('moment');
 
@@ -73,9 +74,58 @@ async function whatsappAutoComplete(page){
       // console.log('No matching div found.');
     }
 }
+
+async function getTheOperationFromPrompt(userRequirement, contentFromURLIfAny) {
+    const prompt = `
+    ${userRequirement ? "For givne user requirement: "+ userRequirement : ''}
+
+    ${contentFromURLIfAny && contentFromURLIfAny.plainText ? "Text content from the URL "+ contentFromURLIfAny.plainText : ''}
+   
+    I want you to act as a prompt parser. Your job is to determine the action to be taken based on the user requirement.
+    
+    Available actions are tweet, reply. You need to return the action and the number of times the action to be performed.
+    If the requirement is not one of the above actions, you need to return the action as "none" and the count as 0.
+
+    example output: {"action": tweet or reply, "count": the number of times the action to be performed}
+    
+    Response Must be only JSON , no other text should be there. Explanation is NOT required.
+    
+    Request: Response should be able to parse by a below javascript function:
+    function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
+    `
+
+    // console.log("----prompt : ", prompt);
+
+    const chatgptresponse = await generateResponse(prompt, false);
+    // console.log("----chatgptresponse : ", chatgptresponse);
+    let operationObject;
+    try {
+        // Try to parse the input directly.
+        operationObject = JSON.parse(chatgptresponse);
+    } catch(e) {
+        const chatgptresponse2 = await generateResponse(prompt, false);
+        try {
+            // Try to parse the input directly.
+            operationObject = JSON.parse(chatgptresponse2);
+        } catch(e) {
+            operationObject = {"action": "none", "count": 0}
+            
+        }
+    }
+    if(!operationObject){
+        operationObject = {"action": "none", "count": 0}
+    }
+    if(operationObject && !operationObject.action){
+        operationObject = {"action": "none", "count": 0}
+    }
+    return operationObject;
+}
+
+
 module.exports = {
     getTwitterAction,
-    extractContentFromFirstURL
+    extractContentFromFirstURL,
+    getTheOperationFromPrompt
 };
 
 
