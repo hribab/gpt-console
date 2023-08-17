@@ -13,7 +13,8 @@ function renameProjectFolderIfExist() {
         // Rename the folder
         fs.renameSync(dir, path.join('./', `yourproject-old-${currentDate}-${currentTime}`), err => {
             if (err) {
-                console.error(`Error renaming directory: ${err}`);
+                // console.error(`Error renaming directory: ${err}`);
+                process.stdout.write(`\x1b[32m Error renaming directory: ${err}  \x1b[0m \n`);
             } else {
                 // console.log('Directory renamed successfully');
             }

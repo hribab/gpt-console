@@ -40,31 +40,40 @@ async function tweet(page, userRequirement, contentFromURLIfAny) {
     await page.waitForTimeout(3000);
     // console.log("Generating GPT response: ");
     const prompt = `
-    ${userRequirement ? "For givne user requirement "+ userRequirement : ''}
+    ${userRequirement ? "For givne user requirement: "+ userRequirement : ''}
 
-    ${contentFromURLIfAny && contentFromURLIfAny.plainText ? "And Text content from the URL "+ contentFromURLIfAny.plainText : ''}
+    ${contentFromURLIfAny && contentFromURLIfAny.plainText ? "And Text content from the URL: "+ contentFromURLIfAny.plainText : ''}
     
-    ${userRequirement ? "Compose a tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, clearly represents what brand embodies, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name." : "Please generate a tweet that provides deeper insight and make people LAUGH, then THINK"}
+    ${userRequirement ? "Compose a tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name, using marketing tone. Should be short and crisp" : "Please generate a tweet that provides deeper insight and make people LAUGH, then THINK"}
     
     Requirements are
     1. Maximum allowed characters are 280,
-    3. the maximum character length of tweet is 250 characters including the text after #,
-    no other text should there in response
-    4. The text must contain #
-    5. It should be ready to post tweet, text should not be enclosed in doubles quotes, no other text should be there in the response, only tweet should be there
+    2. The text must contain #
+    3. It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
 
-    note: It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
-
-    Its important you get above right
+    Its important you get above requirements right
     `
 
     // console.log("----prompt : ", prompt);
 
     try {
-        let chatgptresponse = await getValidResponse(prompt);
-        if (!chatgptresponse) {
-            throw new Error("Failed to get valid response");
+        let chatgptresponse;
+        let attempts = 0;
+      
+        while (attempts < 3) {
+          chatgptresponse = await getValidResponse(prompt);
+      
+          if (chatgptresponse && chatgptresponse.length <= 280) {
+            break;
+          }
+      
+          attempts++;
         }
+      
+        if (attempts >= 3 || !chatgptresponse || chatgptresponse.length > 280) {
+          return;
+        }
+
         // console.log("----prompt results: ", chatgptresponse);
             
         const firstTwoCharacters = chatgptresponse.substring(0, 2);
@@ -108,6 +117,7 @@ async function tweet(page, userRequirement, contentFromURLIfAny) {
             const button = document.querySelector('div[data-testid="tweetButtonInline"]');
             button.click();
         });
+        return;
         // // console.log("the tweet button is clicked");
 
 
@@ -193,6 +203,7 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
         
         
             const prompt = `
+            ${userRequirement ? "For givne user requirement: "+ userRequirement : ''}
             Imagine you are a decision maker tasked with deciding whether to respond to a tweet or not.
             Given a list of tweets, select the top tweet that meets the following criteria: 
             - it is cool, easy-going, fun
@@ -209,13 +220,12 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
             *actual Tweet is the value of key 'tweetText'.
             
             After you pick the top tweet, generate a reply that meets the following criteria:
-            - the maximum character length of reply tweet is 250 characters including the text after #.
+            - the maximum character length of reply tweet is 230 characters including the text after #.
             - The tweet should have genuine humor
             - The reply tweet should be positive and thought provoking
             - The reply tweet should be relatable to people
 
             Its important that tweetText should have full context, dont pick the tweet that you dont have full context.
-            If all are not meeting the criteria, then pick a random one and generate a reply that meets the criteria.
         
         
             Example Output: {
@@ -235,7 +245,7 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
             ${JSON.stringify(tweetsData)}
             `
                 
-            // console.log("----prompt: ", prompt);
+            // console.log("----prompt: ", prompt)
         
             let chatgptresponse1 = await generateResponse(prompt, false);
         
@@ -275,6 +285,15 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
             if(replyTweet && !replyTweet.reply){
                 return;
             }
+
+            if(replyTweet && replyTweet.reply && replyTweet.reply.length > 250){
+                return;
+            }
+
+            if(replyTweet && replyTweet.reply && replyTweet.reply.indexOf(disclaimer[0]) !== -1){
+                return;
+            }
+
             await page.waitForTimeout(2000);
             // await page.click('.css-1dbjc4n.r-1awozwy.r-onrtq4.r-18kxxzh.r-1b7u577');
             await page.click(`#${replyTweet.tweetBoxID}`);
@@ -360,6 +379,7 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
                 const button = document.querySelector('div[data-testid="tweetButtonInline"]');
                 button.click();
             });
+            return;
         // console.log("the tweet button is clicked");
 }
 
@@ -371,25 +391,35 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
     // console.log("Generating GPT response: ");
 
     const prompt = `
-    ${userRequirement ? "For givne user requirement "+ userRequirement : ''}
+    ${userRequirement ? "For givne user requirement: "+ userRequirement : ''}
 
-    ${userRequirement ? "Compose a tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, clearly represents what brand embodies, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name." : "Please generate a tweet that provides deeper insight and make people LAUGH, then THINK"}
+    ${contentFromURLIfAny && contentFromURLIfAny.plainText ? "And Text content from the URL: "+ contentFromURLIfAny.plainText : ''}
+    
+    ${userRequirement ? "Compose a tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name, using marketing tone. Should be short and crisp" : "Please generate a tweet that provides deeper insight and make people LAUGH, then THINK"}
     
     Requirements are
     1. Maximum allowed characters are 280,
-    3. the maximum character length of tweet is 250 characters including the text after #,
-    no other text should there in response
-    4. The text must contain #
-    5. It should be ready to post tweet, text should not be enclosed in doubles quotes, no other text should be there in the response, only tweet should be there
+    2. The text must contain #
+    3. It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
 
-    note: It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
-
-    Its important you get above right
+    Its important you get above requirements right
     `
     try{
-        let chatgptresponse = await getValidResponse(prompt);
-        if (!chatgptresponse) {
-            throw new Error("Failed to get valid response");
+        let chatgptresponse;
+        let attempts = 0;
+      
+        while (attempts < 3) {
+          chatgptresponse = await getValidResponse(prompt);
+      
+          if (chatgptresponse && chatgptresponse.length <= 280) {
+            break;
+          }
+      
+          attempts++;
+        }
+      
+        if (attempts >= 3 || !chatgptresponse || chatgptresponse.length > 280) {
+          return;
         }
         // console.log("----prompt results: ", chatgptresponse);
             
@@ -436,11 +466,11 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
         Response should be maximum of 60 words, prompt and negative prompt. and response must be in json
         example output: {"positive_prompt": "", "negative_prompt": ""}
     
-        Here is your first prompt: "Most realistic image that convey the idea ${chatgptresponse}"
+        Here is your first prompt: "Most realistic image that convey the idea: ${chatgptresponse}"
         Limit your response to 60 words for both prompts, provided in JSON format.
         Example output: {"positive_prompt": "", "negative_prompt": ""}.
     
-        Response Must be only JSON , no other text should be there.
+        Response Must be only JSON , no other text should be there in the response. also, explanation is NOT required in the response
     
         Request: Response should be able to parse by a below javascript function:
         function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
@@ -452,16 +482,16 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
         // console.log("----ijmage prompt----", resp)
         try {
         // Try to parse the input directly.
-        imageGenerationPrompt = JSON.parse(resp)
+         imageGenerationPrompt = JSON.parse(resp)
         } catch(e) {
             // console.log("=====errr----", e)
             const resp2 = await generateResponse(gptPrompt)
     
-        try {
-            imageGenerationPrompt = JSON.parse(resp2)
-        } catch(e) {
-            imageGenerationPrompt = {"positive_prompt": `Hyper realistic background image for ${userRequirement}, ${formMattedContextFromWebURL}`, "negative_prompt": " flying objects defying gravity, humans with multiple faces, disproportionate body parts such as deformed eyes or limbs, improbable color combinations, and explicit or offensive imagery"}
-        }
+            try {
+                imageGenerationPrompt = JSON.parse(resp2)
+            } catch(e) {
+                imageGenerationPrompt = {"positive_prompt": `Hyper realistic background image for ${userRequirement}, ${formMattedContextFromWebURL}`, "negative_prompt": " flying objects defying gravity, humans with multiple faces, disproportionate body parts such as deformed eyes or limbs, improbable color combinations, and explicit or offensive imagery"}
+            }
         }
 
     
@@ -537,14 +567,13 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
             const button = document.querySelector('div[data-testid="tweetButtonInline"]');
             button.click();
         });
+        return;
         // console.log("the tweet button is clicked");
         } catch (err) {
             return;
             // console.log("error occured calling tweet function again", err);
         }
 }
-
-
 
 
 async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
@@ -622,6 +651,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
         
         
             const prompt = `
+            ${userRequirement ? "For givne user requirement: "+ userRequirement : ''}
             Imagine you are a decision maker tasked with deciding whether to respond to a tweet or not.
             Given a list of tweets, select the top tweet that meets the following criteria: 
             - it is cool, easy-going, fun
@@ -702,6 +732,13 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
             }
 
             if(replyTweet && !replyTweet.reply){
+                return;
+            }
+            if(replyTweet && replyTweet.reply && replyTweet.reply.length > 250){
+                return;
+            }
+
+            if(replyTweet && replyTweet.reply && replyTweet.reply.indexOf(disclaimer[0]) !== -1){
                 return;
             }
             await page.waitForTimeout(2000);
@@ -855,6 +892,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
                 const button = document.querySelector('div[data-testid="tweetButtonInline"]');
                 button.click();
             });
+            return;
         // console.log("the tweet button is clicked");
 }
 

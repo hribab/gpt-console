@@ -95,46 +95,42 @@ const initBird = async (userRequirement, callback) => {
             await performAction(page, "tweetWithImage", userRequirement, contentFromFirstURL);
         }
         let counter = 0;
-        while(true){
-            twitterActions = getTwitterAction();
-            // console.log("twitterActions===---------", twitterActions);
+        while (counter < MAX_ACTIONS) {
+            try {
+            const twitterActions = getTwitterAction();
             switch (twitterActions) {
                 case 'tweet':
-                    // console.log('Selected Action is tweet.');
-                    await performAction(page, "tweet", userRequirement, contentFromFirstURL);
-                    break;
+                await performAction(page, "tweet", userRequirement, contentFromFirstURL);
+                break;
                 case 'tweetWithImage':
-                    // console.log('Selected Action is tweet with image');
-                    await performAction(page, "tweetWithImage", userRequirement, contentFromFirstURL);
-                    break;
+                await performAction(page, "tweetWithImage", userRequirement, contentFromFirstURL);
+                break;
                 case 'reply':
-                    // console.log('Selected Action is reply');
-                    await performAction(page, "reply", userRequirement, contentFromFirstURL);
-                    break;
+                await performAction(page, "reply", userRequirement, contentFromFirstURL);
+                break;
                 case 'replyWithImage':
-                    // console.log('Selected Action is reply with image');
-                    await performAction(page, "replyWithImage", userRequirement, contentFromFirstURL);
-                    break;
+                await performAction(page, "replyWithImage", userRequirement, contentFromFirstURL);
+                break;
                 default:
-                    // console.log('Selected Action is unknown.');
+                break;
             }
-            counter = counter + 1;
-            // console.log("the count of actions is: ",counter);
-            if(counter === MAX_ACTIONS){
-                try {
-                    for (const browser of browserInstances) {
-                        await browser.close();
-                    }
-                    browserInstances.length = 0; // Clear the array
-                    callback(null);
-                } catch (err) {
-                    // console.log("error-------", err);
-                    return `An error occurred during API call: ${err}`;
-                }
-                return;
+            counter += 1;
+            } catch (e) {
+            return;
             }
         }
+
+        try {
+            for (const browser of browserInstances) {
+                await browser.close();
+            }
+            browserInstances.length = 0; // Clear the array
+            callback(null);
+        } catch (err) {
+            return;
+        }
         return;
+
     } catch (err) {
         // // console.log("error-------", err);
         return;// `An error occurred during API call: ${err}`;
