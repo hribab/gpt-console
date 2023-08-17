@@ -38,7 +38,7 @@ const launchBrowser = async (browserInstances) => {
         slowMo: 1000,
         headless: false,
         defaultViewport: null,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        args: ["--no-sandbox", "--disable-setuid-sandbox", "--no-restore-session-state", "--disable-session-crashed-bubble"],
         permissions: ["clipboard-read", "clipboard-write"],
         ignoreDefaultArgs: ["--enable-automation"],
     });

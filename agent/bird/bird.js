@@ -59,7 +59,7 @@ const initBird = async (userRequirement, callback) => {
                     if (typeof theOperationObject.count === "string") {
                         theTweetCount = 5;
                     }
-                    process.stdout.write(`\x1b[32mOk, I got it. I'm replying.\x1b[0m\n`);
+                    process.stdout.write(`\n\x1b[32mOk, I got it. I'm replying.\x1b[0m\n`);
 
                     if(theOperationObject.count > 10){
                         process.stdout.write(`\n\x1b[32m Sorry, I can only do maximum of 10 replies \x1b[0m \n`);

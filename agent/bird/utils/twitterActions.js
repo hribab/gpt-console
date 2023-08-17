@@ -76,7 +76,8 @@ async function tweet(page, userRequirement, contentFromURLIfAny) {
         }
 
         // console.log("----prompt results: ", chatgptresponse);
-            
+        
+        chatgptresponse = chatgptresponse.replace(/^"+|"+$/g, '');
         const firstTwoCharacters = chatgptresponse.substring(0, 2);
 
         // Extract the last two characters
@@ -424,7 +425,7 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
           return;
         }
         // console.log("----prompt results: ", chatgptresponse);
-            
+        chatgptresponse = chatgptresponse.replace(/^"+|"+$/g, '');
         
         const firstTwoCharacters = chatgptresponse.substring(0, 2);
 
