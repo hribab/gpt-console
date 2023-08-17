@@ -49,7 +49,8 @@ async function tweet(page, userRequirement, contentFromURLIfAny) {
     Requirements are
     1. Maximum allowed characters are 280,
     2. The text must contain #
-    3. It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
+    3. Tweet should not be enclosed in doubles quotes
+    4. It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
 
     Its important you get above requirements right
     `
@@ -400,7 +401,8 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
     Requirements are
     1. Maximum allowed characters are 280,
     2. The text must contain #
-    3. It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
+    3. Tweet should not be enclosed in doubles quotes
+    4. It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
 
     Its important you get above requirements right
     `

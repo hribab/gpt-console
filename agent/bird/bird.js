@@ -11,7 +11,7 @@ const initBird = async (userRequirement, callback) => {
     try {
      
         process.stdout.write(`\x1b[32mBird started\x1b[0m\n`);
-
+        callback(null);
         // get the content if there is a website
         const contentFromFirstURL = await extractContentFromFirstURL(userRequirement)
         // console.log("------contentFromFirstURL------------", contentFromFirstURL);
