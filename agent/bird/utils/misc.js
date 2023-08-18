@@ -16,6 +16,7 @@ async function extractContentFromFirstURL(userRequirement) {
     let listOfURLFromRequirement, contentFromFirstURL;
     if(userRequirement){
         listOfURLFromRequirement = extractURLs(userRequirement)
+        // console.log("=================", listOfURLFromRequirement)
         if(listOfURLFromRequirement.length > 0){
             contentFromFirstURL = await extractTextAndMetaFromURLForEachSection(listOfURLFromRequirement[0])
         }     

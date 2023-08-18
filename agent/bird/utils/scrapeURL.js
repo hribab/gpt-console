@@ -20,26 +20,38 @@ function extractURLs(text) {
 }
 
 async function extractTextAndMetaFromURLForEachSection(url) {
-    // Launch a new browser instance
-    const browser = await puppeteer.launch({ headless: "new" });
-    // Create a new page
-    const page = await browser.newPage();
-    // Go to the URL
-    await page.goto(url);
-    // Extract the text content of the body
-    const textContent = await page.evaluate(() => {
-        let plainText = '';
-        plainText = document.body.innerText
-        
-        if (plainText.length > 30000) {
-          plainText = plainText.substring(0, 30000);
-        }
-  
-        return { plainText };
-    });
-    // Close the browser
-    await browser.close();
-    return textContent;
+  // Launch a new browser instance
+  const browser = await puppeteer.launch({ headless: "new" });
+  // Create a new page
+  const page = await browser.newPage();
+  let textContent;
+  try {
+      // Go to the URL
+      await page.goto(url, { timeout: 30000 });
+      // Extract the text content of the body
+      textContent = await page.evaluate(() => {
+          let plainText = '';
+          plainText = document.body.innerText;
+          // console.log("====plainText=======", plainText)
+          if (plainText.length > 30000) {
+              plainText = plainText.substring(0, 30000);
+          }
+
+          return { plainText };
+      });
+  } catch (error) {
+      // console.log("========errro===", error)
+      if (error instanceof puppeteer.errors.TimeoutError) {
+          // Close the browser
+          await browser.close();
+          return {}; // Return null if a timeout occurs
+      }
+      //throw error; // Re-throw any other errors
+      return {};
+  }
+  // Close the browser
+  await browser.close();
+  return textContent;
 }
 
 module.exports = {

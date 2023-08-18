@@ -1,5 +1,6 @@
-const { launchBrowser,  performAction} = require("./utils/initActions.js");
+const { launchBrowser,  performAction, isValidURL} = require("./utils/initActions.js");
 const { getBrowserInstances } = require("./utils/stopActions.js");
+const spinners = require("cli-spinners");
 
 const { getTwitterAction, extractContentFromFirstURL, getTheOperationFromPrompt } = require("./utils/misc.js");
 let twitterActions;
@@ -8,18 +9,26 @@ const browserInstances = [];
 
 const initBird = async (userRequirement, callback) => {
     // console.log("userRequirement", userRequirement);
+    const spinner = spinners.dots;
+    let interval;
     try {
-     
-        process.stdout.write(`\x1b[32mBird started\x1b[0m\n`);
-        callback(null);
+        process.stdout.write('\r');
+        interval = setInterval(() => {
+        process.stdout.write(`\r${spinner.frames[spinner.interval % spinner.frames.length]}`);
+        spinner.interval++;
+        }, spinner.frameLength);
+        // callback(null);
         // get the content if there is a website
         const contentFromFirstURL = await extractContentFromFirstURL(userRequirement)
         // console.log("------contentFromFirstURL------------", contentFromFirstURL);
         const page = await launchBrowser(browserInstances);
         await page.waitForTimeout(1000);
-    
+        clearInterval(interval);
+        process.stdout.write('\r');
 
-        if(userRequirement){
+        const isURLOnly = isValidURL(userRequirement)
+        // console.log("=====isURLOnly========", isURLOnly)
+        if(userRequirement && !isURLOnly){
             const theOperationObject = await getTheOperationFromPrompt(userRequirement)
             // console.log("documentationOnly", documentationOnly)
             if(theOperationObject && theOperationObject.action && theOperationObject.action.toLowerCase() == 'tweet'){
@@ -83,9 +92,7 @@ const initBird = async (userRequirement, callback) => {
                 }
             return;
             }
-        }
-        
-
+        }         
         process.stdout.write(`\n\x1b[32m I'll handle tweeting and replying responsibly. Stay relaxed, I've got this \x1b[0m \n`);
         process.stdout.write(`\x1b[32m I'll do 5 actions (tweets and replies) and stop automatically \x1b[0m \n`);
         process.stdout.write(`\x1b[31m To stop Bird at any time, run 'bird stop'. \x1b[0m \n`);
@@ -132,6 +139,9 @@ const initBird = async (userRequirement, callback) => {
         return;
 
     } catch (err) {
+        // console.log("====errr---", err)
+        clearInterval(interval);
+        // process.stdout.write('\r');
         // // console.log("error-------", err);
         return;// `An error occurred during API call: ${err}`;
     }
