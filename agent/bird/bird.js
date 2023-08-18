@@ -29,11 +29,12 @@ const initBird = async (userRequirement, callback) => {
         const isURLOnly = isValidURL(userRequirement)
         // console.log("=====isURLOnly========", isURLOnly)
         if(userRequirement && !isURLOnly){
+
             const theOperationObject = await getTheOperationFromPrompt(userRequirement)
             // console.log("documentationOnly", documentationOnly)
             if(theOperationObject && theOperationObject.action && theOperationObject.action.toLowerCase() == 'tweet'){
                 try{
-                    process.stdout.write(`\x1b[32mOk, I got it. I'm tweeting.\x1b[0m\n`);
+                    process.stdout.write(`\x1b[32mSure thing! 😎 I'm gearing up to tweet\x1b[0m\n`);
                    
                     
                     let theTweetCount;
@@ -41,13 +42,13 @@ const initBird = async (userRequirement, callback) => {
                         theTweetCount = 5;
                     }
                     if(theOperationObject.count > 10){
-                        process.stdout.write(`\n\x1b[32m Sorry, I can only do maximum of 10 tweets \x1b[0m \n`);
+                        process.stdout.write(`\n\x1b[32mJust so you know, I'm limited to 10 tweets at a time right now\x1b[0m \n`);
                         theTweetCount = 10;
                     }
                     if(typeof theOperationObject.count === "number" && theOperationObject.count < 10){
                         theTweetCount = theOperationObject.count;
                     }
-                    process.stdout.write(`\x1b[32m I'll do ${theTweetCount} tweets and stop automatically \x1b[0m \n`);
+                    process.stdout.write(`\x1b[32mI'll fire off ${theTweetCount} tweets and then take a breather. 🚀\x1b[0m \n`);
                     process.stdout.write(`\x1b[31m To stop Bird at any time, run 'bird stop'. \x1b[0m \n`);
               
                     callback(null);
@@ -55,8 +56,14 @@ const initBird = async (userRequirement, callback) => {
                         let actionType = Math.random() < 0.7 ? "tweetWithImage" : "tweet";
                         await performAction(page, actionType, userRequirement, contentFromFirstURL);
                     }
+                    for (const browser of browserInstances) {
+                        await browser.close();
+                    }
                                     
                 }catch(e){
+                    for (const browser of browserInstances) {
+                        await browser.close();
+                    }
                     return;
                     // console.log("e-----", e)
                 }
@@ -68,22 +75,26 @@ const initBird = async (userRequirement, callback) => {
                     if (typeof theOperationObject.count === "string") {
                         theTweetCount = 5;
                     }
-                    process.stdout.write(`\n\x1b[32mOk, I got it. I'm replying.\x1b[0m\n`);
+                    process.stdout.write(`\x1b[32mSure thing! 😎 I'm gearing up to reply\x1b[0m\n`);
 
                     if(theOperationObject.count > 10){
-                        process.stdout.write(`\n\x1b[32m Sorry, I can only do maximum of 10 replies \x1b[0m \n`);
+                        process.stdout.write(`\n\x1b[32mJust so you know, I'm limited to 10 replies at a time right now\x1b[0m \n`);
                         theTweetCount = 10;
                     }
                     if(typeof theOperationObject.count === "number" && theOperationObject.count < 10){
                         theTweetCount = theOperationObject.count;
                     }
-                    process.stdout.write(`\x1b[32m I'll do ${theTweetCount} replies and stop automatically \x1b[0m \n`);
+                    process.stdout.write(`\x1b[32mI'll fire off ${theTweetCount} tweets and then take a breather. 🚀\x1b[0m \n`);
                     process.stdout.write(`\x1b[31m To stop Bird at any time, run 'bird stop'. \x1b[0m \n`);
               
                     callback(null);
                     for (let index = 0; index < theTweetCount; index++) {
                         let actionType = Math.random() < 0.7 ? "replyWithImage" : "reply";
                         await performAction(page, actionType, userRequirement, contentFromFirstURL);
+                    }
+
+                    for (const browser of browserInstances) {
+                        await browser.close();
                     }
                                     
                 }catch(e){
@@ -93,8 +104,8 @@ const initBird = async (userRequirement, callback) => {
             return;
             }
         }         
-        process.stdout.write(`\n\x1b[32m I'll handle tweeting and replying responsibly. Stay relaxed, I've got this \x1b[0m \n`);
-        process.stdout.write(`\x1b[32m I'll do 5 actions (tweets and replies) and stop automatically \x1b[0m \n`);
+        process.stdout.write(`\n\x1b[32m I'll handle tweeting and replying responsibly 😎. Stay relaxed, I've got this \x1b[0m \n`);
+        process.stdout.write(`\x1b[32m I'll do 5 actions (tweets and replies) and stop automatically 🚀\x1b[0m \n`);
         process.stdout.write(`\x1b[31m To stop Bird at any time, run 'bird stop'. \x1b[0m \n`);
   
         callback(null);
@@ -104,7 +115,7 @@ const initBird = async (userRequirement, callback) => {
         let counter = 0;
         while (counter < MAX_ACTIONS) {
             try {
-            const twitterActions = getTwitterAction();
+            twitterActions = getTwitterAction();
             switch (twitterActions) {
                 case 'tweet':
                 await performAction(page, "tweet", userRequirement, contentFromFirstURL);

@@ -132,8 +132,8 @@ async function tweet(page, userRequirement, contentFromURLIfAny) {
 
 async function reply(page, userRequirement, contentFromURLIfAny) {
     // console.log("=====reply====")
-
-            const randomScrolls = Math.floor(Math.random() * 10) + 1;
+    try {
+            const randomScrolls = Math.floor(Math.random() * 10) + 4;
             // console.log("randomScrolls===>", randomScrolls)
             // Scroll down three times
             for (let i = 0; i < randomScrolls; i++) {
@@ -175,10 +175,9 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
                 if (parentDivElement && parentDivElement.nextElementSibling && parentDivElement.nextElementSibling.hasAttribute('aria-labelledby')) {
                   return null;
                 }
-              
                 const tweetText = tweetTextElement ? tweetTextElement.textContent : null;
                 const tweetBoxID = tweetTextElement ? tweetTextElement.id : null; // Grabbing the id attribute
-              
+
                 const urlElement = rootElement.querySelector('a[href]');
                 const urlIfAny = urlElement ? urlElement.href : null;
               
@@ -198,6 +197,7 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
                          
             });
           
+            // console.log("tweetsData===>", tweetsData)
             if (tweetsData.length === 0) {
                 return;
             }
@@ -258,7 +258,7 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
                 // console.log("replyTweet------- ", replyTweet);
 
             }catch(err){
-                let chatgptresponse1 = await generateResponse(prompt, false);
+                chatgptresponse1 = await generateResponse(prompt, false);
         
                 // console.log("chatgptresponse2------- ", chatgptresponse1);
                 try{
@@ -274,6 +274,7 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
                 
                 // console.log("error occured calling tweet function again", err);
             }
+            // console.log("replyTweet------- ", replyTweet);
             if(!replyTweet){
                 return;
             }
@@ -292,19 +293,24 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
                 return;
             }
 
-            if(replyTweet && replyTweet.reply && replyTweet.reply.indexOf(disclaimer[0]) !== -1){
+            if(replyTweet && replyTweet.reply && replyTweet.reply.indexOf(disclaimers[0]) !== -1){
                 return;
             }
 
-            await page.waitForTimeout(2000);
-            // await page.click('.css-1dbjc4n.r-1awozwy.r-onrtq4.r-18kxxzh.r-1b7u577');
-            await page.click(`#${replyTweet.tweetBoxID}`);
+            //console.log("replying------- ", replyTweet);
+            const idSelector = `#${replyTweet.tweetBoxID}`
+            await page.waitForSelector(idSelector);
+
+            // Then click the element
+            await page.click(idSelector);
+            // // await page.click('.css-1dbjc4n.r-1awozwy.r-onrtq4.r-18kxxzh.r-1b7u577');
+            // await page.click(`#${replyTweet.tweetBoxID}`);
             // Extract the text from the tweet
             await page.waitForTimeout(3000);
-            let textContent = await page.evaluate(() => {
-                const div = document.querySelector('div[data-testid="tweetText"]');
-                return div.textContent;
-            });
+            // let textContent = await page.evaluate(() => {
+            //     const div = document.querySelector('div[data-testid="tweetText"]');
+            //     return div.textContent;
+            // });
             
             let chatgptresponse = replyTweet.reply;
             // let callcount = 0;
@@ -383,6 +389,10 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
             });
             return;
         // console.log("the tweet button is clicked");
+    }catch(err){
+        return;
+        // console.log("====errr-----", err)
+    }
 }
 
 async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
@@ -463,13 +473,11 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
         // console.log("it's pasted");
         await page.keyboard.type(lastTwoCharacters);
 
-        const gptPrompt = `I want you to act as a prompt generator for Midjourney's artificial intelligence program. Your job is to provide realistic examples that will inspire unique and interesting images from the AI. Describe only one concrete idea, don't mix many. It should not be complex, should be clean, choose all real colors, real textures, real objects. The more detailed and realistic your description, the more interesting the resulting image will be. always use hyper realistic descriptions and features for images, is should never has a scene or description which cannot be realistic. Always
-        Use dark themed color pallets. also generate negative prompt: list out most of possible errors AI model cangenerate, for example two faced humans, structures defying gravity, shapes that look like human private parts ..etc
+        const gptPrompt = `For a given tweet: ${chatgptresponse}.
+
+        Act as a prompt generator for Midjourney's AI program, focusing mainly on describing the subject matter of a tweet with hyper-realistic details. Use genuine colors, tangible textures, and real objects in dark-themed color palettes. Ensure the description is as specific as possible about the main subject, avoiding any unrealistic scenes or features.
+        Additionally, generate a negative prompt listing potential errors the AI model might create, such as two-faced human figures, gravity-defying structures, or shapes resembling inappropriate human forms.
     
-        Response should be maximum of 60 words, prompt and negative prompt. and response must be in json
-        example output: {"positive_prompt": "", "negative_prompt": ""}
-    
-        Here is your first prompt: "Most realistic image that convey the idea: ${chatgptresponse}"
         Limit your response to 60 words for both prompts, provided in JSON format.
         Example output: {"positive_prompt": "", "negative_prompt": ""}.
     
@@ -582,7 +590,7 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
 async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
     // console.log("=====reply====")
 
-            const randomScrolls = Math.floor(Math.random() * 10) + 1;
+            const randomScrolls = Math.floor(Math.random() * 10) + 4;
             // console.log("randomScrolls===>", randomScrolls)
             // Scroll down three times
             for (let i = 0; i < randomScrolls; i++) {
@@ -708,7 +716,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
                 // console.log("replyTweet------- ", replyTweet);
 
             }catch(err){
-                let chatgptresponse1 = await generateResponse(prompt, false);
+                chatgptresponse1 = await generateResponse(prompt, false);
         
                 // console.log("chatgptresponse2------- ", chatgptresponse1);
                 try{
@@ -741,12 +749,21 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
                 return;
             }
 
-            if(replyTweet && replyTweet.reply && replyTweet.reply.indexOf(disclaimer[0]) !== -1){
+            if(replyTweet && replyTweet.reply && replyTweet.reply.indexOf(disclaimers[0]) !== -1){
                 return;
             }
-            await page.waitForTimeout(2000);
+            // await page.waitForTimeout(2000);
+            const idSelector = `#${replyTweet.tweetBoxID}`
+            await page.waitForSelector(idSelector);
+
+            // Then click the element
+            await page.click(idSelector);
+            // // await page.click('.css-1dbjc4n.r-1awozwy.r-onrtq4.r-18kxxzh.r-1b7u577');
+            // await page.click(`#${replyTweet.tweetBoxID}`);
+            // Extract the text from the tweet
+            await page.waitForTimeout(3000);
             // await page.click('.css-1dbjc4n.r-1awozwy.r-onrtq4.r-18kxxzh.r-1b7u577');
-            await page.click(`#${replyTweet.tweetBoxID}`);
+            //await page.click(`#${replyTweet.tweetBoxID}`);
             // Extract the text from the tweet
             await page.waitForTimeout(3000);
             let textContent = await page.evaluate(() => {
@@ -792,17 +809,14 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
 
             await page.keyboard.type(lastTwoCharacters);
 
-            const gptPrompt = `I want you to act as a prompt generator for Midjourney's artificial intelligence program. Your job is to provide realistic examples that will inspire unique and interesting images from the AI. Describe only one concrete idea, don't mix many. It should not be complex, should be clean, choose all real colors, real textures, real objects. The more detailed and realistic your description, the more interesting the resulting image will be. always use hyper realistic descriptions and features for images, is should never has a scene or description which cannot be realistic. Always
-            Use dark themed color pallets. also generate negative prompt: list out most of possible errors AI model cangenerate, for example two faced humans, structures defying gravity, shapes that look like human private parts ..etc
+            const gptPrompt = `For a given tweet: ${chatgptresponse}
+            Act as a prompt generator for Midjourney's AI program, focusing mainly on describing the subject matter of a tweet with hyper-realistic details. Use genuine colors, tangible textures, and real objects in dark-themed color palettes. Ensure the description is as specific as possible about the main subject, avoiding any unrealistic scenes or features.
+            Additionally, generate a negative prompt listing potential errors the AI model might create, such as two-faced human figures, gravity-defying structures, or shapes resembling inappropriate human forms.
         
-            Response should be maximum of 60 words, prompt and negative prompt. and response must be in json
-            example output: {"positive_prompt": "", "negative_prompt": ""}
-        
-            Here is your first prompt: "Most realistic image that convey the idea ${chatgptresponse}"
             Limit your response to 60 words for both prompts, provided in JSON format.
             Example output: {"positive_prompt": "", "negative_prompt": ""}.
         
-            Response Must be only JSON , no other text should be there.
+            Response Must be only JSON , no other text should be there. No explanation is required.
         
             Request: Response should be able to parse by a below javascript function:
             function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
@@ -822,7 +836,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
             try {
                 imageGenerationPrompt = JSON.parse(resp2)
             } catch(e) {
-                imageGenerationPrompt = {"positive_prompt": `Hyper realistic background image for ${userRequirement}, ${formMattedContextFromWebURL}`, "negative_prompt": " flying objects defying gravity, humans with multiple faces, disproportionate body parts such as deformed eyes or limbs, improbable color combinations, and explicit or offensive imagery"}
+                imageGenerationPrompt = {"positive_prompt": `${userRequirement}`, "negative_prompt": " flying objects defying gravity, humans with multiple faces, disproportionate body parts such as deformed eyes or limbs, improbable color combinations, and explicit or offensive imagery"}
             }
             }
     
