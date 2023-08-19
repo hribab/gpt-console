@@ -113,7 +113,7 @@ async function tweet(page, userRequirement, contentFromURLIfAny) {
         }, inputElement, textToPaste);
         // console.log("it's pasted");
         await page.keyboard.type(lastTwoCharacters);
-        await page.waitForTimeout(100000);
+        await page.waitForTimeout(1000);
         await page.click('[data-testid="tweetButtonInline"]');
         await page.evaluate(() => {
             const button = document.querySelector('div[data-testid="tweetButtonInline"]');
@@ -397,7 +397,7 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
 
 async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
     // console.log("inside tweet image ");
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(3000);
     await page.click('svg.r-1nao33i');
     await page.waitForTimeout(3000);
     // console.log("Generating GPT response: ");
@@ -572,7 +572,7 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
 
 
         // console.log("it's pasted");
-        await page.waitForTimeout(10000);
+        await page.waitForTimeout(1000);
         await page.click('[data-testid="tweetButtonInline"]');
         await page.evaluate(() => {
             const button = document.querySelector('div[data-testid="tweetButtonInline"]');
@@ -902,7 +902,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
         
 
             
-            await page.waitForTimeout(10000);
+            await page.waitForTimeout(1000);
 
             await page.click('[data-testid="tweetButtonInline"]');
             await page.evaluate(() => {

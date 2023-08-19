@@ -64,7 +64,7 @@ const launchBrowser = async (browserInstances) => {
             await pages[0].close();
         }
         await page.goto("https://twitter.com/home");
-        await page.waitForTimeout(10000);
+        await page.waitForTimeout(1000);
         await page.waitForSelector("div.public-DraftStyleDefault-block span", {
             timeout: 180000,
         });
