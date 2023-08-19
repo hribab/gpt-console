@@ -4,6 +4,9 @@ function consoleFormat(message, color) {
     return chalk[color].bold(message);
 }
 
+function consoleFormatPlain(message, color) {
+  return chalk[color](message);
+}
 function getContentType(response) {
     if (response) {
       const dataString = response.toString().trim();
@@ -59,5 +62,6 @@ function formatResponseForConsole(response) {
 
 module.exports = {
     consoleFormat,
-    formatResponseForConsole
+    formatResponseForConsole,
+    consoleFormatPlain
 }
