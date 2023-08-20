@@ -85,7 +85,7 @@ async function getTheOperationFromPrompt(userRequirement, contentFromURLIfAny) {
     I want you to act as a prompt parser. Your job is to determine the action to be taken based on the user requirement.
     
     Available actions are tweet, reply. You need to return the action and the number of times the action to be performed.
-    If the requirement is not one of the above actions, you need to return the action as "none" and the count as 0.
+    If the requirement is not clear, you need to return the action as "tweet" and the count as 1.
 
     example output: {"action": tweet or reply, "count": the number of times the action to be performed}
     

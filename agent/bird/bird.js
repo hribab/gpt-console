@@ -103,6 +103,14 @@ const initBird = async (userRequirement, callback) => {
                 }
             return;
             }
+            if(theOperationObject && theOperationObject.action && (theOperationObject.action.toLowerCase() != 'reply' || theOperationObject.action.toLowerCase() != 'tweet')){
+                process.stdout.write(`\n\x1b[32mApologies, unable to process prompt. Closing the browser. Please try again. \x1b[0m \n`);
+                for (const browser of browserInstances) {
+                    await browser.close();
+                }
+                callback(null);
+                return;
+            }
         }         
         process.stdout.write(`\n\x1b[32m I'll handle tweeting and replying responsibly 😎. Stay relaxed, I've got this \x1b[0m \n`);
         process.stdout.write(`\x1b[32m I'll do 5 actions (tweets and replies) and stop automatically 🚀\x1b[0m \n`);
