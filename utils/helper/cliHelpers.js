@@ -50,13 +50,13 @@ function welcomeMessage() {
     console.log(`     
         ${consoleFormat('Your Personal Autonomous Agents:', 'green')}
         ${consoleFormat('- Bird: Seamlessly manages your Twitter, engaging in Tweets and Replies', 'blue')}
-        ${consoleFormat('- Pixie: Crafts sophisticated landing pages using ReactJS tailored to your needs', 'blue')}
+        ${consoleFormat('- Pixie: Generates sophisticated landing pages using ReactJS based on your prompts.', 'blue')}
         ${consoleFormat('- Chip: Capable of answering any code-related questions in your stack:', 'blue')}${consoleFormat('Coming soon..', 'yellow')}
         
-        ${consoleFormat('Raw, unfinished, and alive with potential. 🛠️ Dive in, play, but remember, we\'re still in the lab!', 'red')}
+        ${consoleFormat('Raw, unfinished, and alive with potential. Dive in, play, but remember, we\'re still in the lab!', 'red')}
         
         ${consoleFormatPlain('To quit GPT Console, just type q or press Ctrl+C.', 'gray')}
-        ${consoleFormatPlain("Not into agents? No worries, just type your prompt. Let's chat! 💬", 'gray')}
+        ${consoleFormatPlain("Not into agents? No worries, just type your prompt.", 'gray')}
     `);
 }
 
