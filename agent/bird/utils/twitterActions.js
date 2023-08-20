@@ -515,7 +515,7 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
 
         const raw = JSON.stringify({
             "prompt": `${imageGenerationPrompt.positive_prompt}. 8K, hyper realistic`,
-            "negative_prompt": imageGenerationPrompt.negative_prompt,
+            "negative_prompt": `${imageGenerationPrompt.negative_prompt}, Mountains, Clouds, Lake`,
             "width": 1024,
             "height": 1024,
             "modelId": "291be633-cb24-434f-898f-e662799936ad",
@@ -850,7 +850,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
     
             const raw = JSON.stringify({
                 "prompt": `${imageGenerationPrompt.positive_prompt}. 8K, hyper realistic`,
-                "negative_prompt": imageGenerationPrompt.negative_prompt,
+                "negative_prompt":  `${imageGenerationPrompt.negative_prompt}, Mountains, Clouds, Lake`,
                 "width": 1024,
                 "height": 1024,
                 "modelId": "291be633-cb24-434f-898f-e662799936ad",
