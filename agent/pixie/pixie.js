@@ -21,6 +21,7 @@ const {
   themeNames
 } = require("./config/designSystems");
 
+const semver = require('semver'); // Use the 'semver' package to handle version comparison
 
 const fs = require("fs");
 const path = require("path");
@@ -36,7 +37,8 @@ const {
   removeOperation,
   determineSectionsDesignChange,
   updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation,
-  determineMessagingUpdateSections
+  determineMessagingUpdateSections,
+  checkForAddOrRemoveOperation
 } = require("./utils/updateOperation");
 const { 
   extractTextAndMetaFromURLForEachSection,
@@ -59,13 +61,15 @@ const initPixie = async (userRequirement, callback) => {
           process.stdout.write(`\x1b[32mOk, I got it. I'm working on building the documentation page.\x1b[0m\n`);
           process.stdout.write(`\x1b[32mExtracting text for reference from ${listOfURLFromRequirement[0]}.\x1b[0m\n`);
           const rawData = await downloadFromWebURL(listOfURLFromRequirement[0])
+          if(!rawData){
+            return;
+          }
           const projectName = new URL(listOfURLFromRequirement[0]).hostname.split('.')[0];
           const upto30KCharecters = rawData.substring(0, 30000);
           const formattedData = await formatContextFromRawData(upto30KCharecters)
           if(formattedData){
             await buildHTMLDocumentationFile(formattedData, projectName, listOfURLFromRequirement[0])
           }
-          
         }catch(e){
           return;
           // console.log("e-----", e)
@@ -73,7 +77,14 @@ const initPixie = async (userRequirement, callback) => {
        
         return;
       }
-    }  
+    }
+
+    const currentNodeVersion = process.versions.node;
+
+    if (semver.lt(currentNodeVersion, '19.2.0')) {
+        process.stdout.write(`\x1b[32mError: The current Node.js version is less than 19.2. Please update to a newer version.\x1b[0m \n`);
+        return;
+    }
 
     let contentFromFirstURL;
     if(listOfURLFromRequirement.length > 0){
@@ -154,14 +165,32 @@ function capitalizeFirstLetter(string) {
 }
 
 const updatePixieOperation = async (userRequirement, callback) => {
-    let data = fs.readFileSync('yourproject/pixieconfig.json', 'utf-8');
-    let jsonData = JSON.parse(data);
+    let jsonData;
+    try {
+      let data = fs.readFileSync('yourproject/pixieconfig.json', 'utf-8');
+      jsonData = JSON.parse(data);
+    } catch (err) {
+      process.stdout.write(`\x1b[32mApologies, Can't update the doc page. How about we create a new site instead?\x1b[0m \n`);
+      return;
+      // console.error("File not found. Please ensure 'pixieconfig.json' is in the correct location.");
+      // Handle error as needed, e.g., exit the process or throw a custom error
+    }
+
+    let isRemoveOperation = await checkForAddOrRemoveOperation(userRequirement);
+
+    if(isRemoveOperation){ 
+      process.stdout.write(`\x1b[32mApologies, but I can only update messaging, images, or designs.\x1b[0m \n`);
+      process.stdout.write(`\x1b[32mFor additions or deletions, please do it manually: https://gptconsole.ai/guides.\x1b[0m \n`);
+      return;
+    }
 
     let isFullDesignChange = await checkForDesignChange(userRequirement, jsonData.prompt);
     const selectedInternalDesignSystem = Object.keys(themeNames).find(key => themeNames[key] === jsonData.design);
     if(isFullDesignChange){ 
         process.stdout.write(`\x1b[32m Sit back, enjoy your coffee, and relax. I'm starting from scratch to craft a brand-new site for you.  \x1b[0m \n`);
         await implementDesignChange(userRequirement, selectedInternalDesignSystem, jsonData.prompt, callback);
+        const result = await runTheApp();
+        process.stdout.write(`\x1b[32m ${result}  \x1b[0m \n`);
         return;
     }
     process.stdout.write(`\x1b[32m Alright, I got what you need. Please give me a few moments to implement the updates. \x1b[0m \n`);
@@ -216,10 +245,9 @@ const updatePixieOperation = async (userRequirement, callback) => {
         await executeBackgroundImageUpdate(userRequirement, codeFilePathsForBackgroundImage[section]);
       }
     }
-
-    if (updateOperationType.remove) {
-      process.stdout.write(`\x1b[32m I'm sorry, but version 1 only supports design changes, messaging updates, and background image generation. Please stay tuned for additions and deletions in version 2! \x1b[0m \n`);
-    }
+    // if (updateOperationType.remove) {
+    //   process.stdout.write(`\x1b[32m I'm sorry, but version 1 only supports design changes, messaging updates, and background image generation. Please stay tuned for additions and deletions in version 2! \x1b[0m \n`);
+    // }
 
     return;
     // await executeMessagingUpdate(userRequirement, "yourproject/src/components/Landingpage/Header.js");

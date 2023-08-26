@@ -74,13 +74,15 @@ async function killIfAlreadyRunning() {
                       // If the above command didn't throw an error, the process is running and we can kill it
                       await exec('kill -9 ' + processId);
                   } catch (err) {
+                    return;
                       // If the 'kill -0' command failed, the process is not running
                       // console.error(`Process ${processId} is not running`);
                   }
               }
           }
         } catch (err) {
-          console.error(`exec error: ${err}`);
+          return;
+          //console.error(`exec error: ${err}`);
         }
 
     }
@@ -709,7 +711,7 @@ async function pickRightDesignSystem(userRequirement, contentFromFirstURL) {
   let selectedDesignSystem;
   if(resp){
     const available = Object.keys(designSystems); 
-    let selected = 'material'; // default to 'material'
+    let selected = 'material'; // default to 'material'//make it random out of 4
   
     for(let i = 0; i < available.length; i++) {
         if (resp.includes(available[i])) {

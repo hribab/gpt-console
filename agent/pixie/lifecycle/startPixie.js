@@ -1,8 +1,16 @@
 const { initPixie } = require("../pixie.js");
 const spinners = require("cli-spinners");
+const semver = require('semver'); // Use the 'semver' package to handle version comparison
 
     
 async function startPixie(req, callback) {
+  const currentNodeVersion = process.versions.node;
+
+  if (!semver.eq(currentNodeVersion, '19.2.0')) {
+    process.stdout.write(`\x1b[32mError: The current Node.js version is not 19.2. Please update to a newer version.\x1b[0m \n`);
+    return callback(null);
+  }
+
   const spinner = spinners.dots;
   let interval;
   try {

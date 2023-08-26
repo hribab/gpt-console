@@ -59,6 +59,8 @@ function shouldIgnoreUrl(url) {
 
 
 async function extractContent(url) {
+  try{
+
     // Create a new browser instance
     const browser = await puppeteer.launch({ headless: "new" });
 
@@ -70,7 +72,7 @@ async function extractContent(url) {
         let currentUrl = normalizeUrl(url.split('#')[0]);
 
 
-        if (visitedUrls.has(currentUrl) || visitedCount >= 1000) return {};
+        if (visitedUrls.has(currentUrl) || visitedCount >= 10) return {};
         
         if (isTrackingUrl(url)) {
             return;
@@ -129,6 +131,9 @@ async function extractContent(url) {
     await browser.close();
 
     return content;
+  }catch(e) {
+    return;
+  }
 }
 
 function extractURLs(text) {
@@ -331,6 +336,9 @@ function isInternalLink(link, baseUrl) {
 }
 async function downloadFromWebURL(url) {
     const content = await extractContent(url);
+    if(!content){
+      return;
+    }
     const scarappedURL = Object.keys(content);
     let finalTextOnlyContent = ""
     for (let i = 0; i < scarappedURL.length; i++) {

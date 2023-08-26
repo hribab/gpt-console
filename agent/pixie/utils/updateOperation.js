@@ -52,6 +52,31 @@ renameProjectFolderIfExist
 } = require("../config/pixieConfigOperations");
   
 
+async function checkForAddOrRemoveOperation(userRequirement, originalPrompt) {
+  return false;
+  // const resp = await generateResponse(
+  //     `
+  //     Context: A client for whom I've recently developed a landing page for requirement ${originalPrompt}, has requested some modifications.
+
+  //     Modification Request: "${userRequirement}"
+
+  //     Given the client's request, please determine if their intention is to recreate the entire website.
+  //     If the client appears dissatisfied with the existing landing page and seeks significant changes, interpret this as an intention to overhaul the entire website, thus return \`true\`. If the modifications seem minor and don't indicate a complete revamp, return \`false\`.
+
+  //     Note: Please return a simple \`true\` or \`false\` response. No detailed explanation is necessary.
+  //       `,
+  //     false
+  //   );
+  //     if(typeof resp === 'boolean') {
+  //         return resp;
+  //     }
+  //     else if(typeof resp === 'string') {
+  //         return resp.toLowerCase().includes("true");
+  //     }
+  //     else {
+  //         return false;
+  //     }
+}
 async function checkForDesignChange(userRequirement, originalPrompt) {
     const resp = await generateResponse(
         `
@@ -1456,7 +1481,8 @@ module.exports = {
     updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperation,
     removeOperation,
     determineMessagingUpdateSections,
-    determineBackgroundImageUpdateSections
+    determineBackgroundImageUpdateSections,
+    checkForAddOrRemoveOperation
 };
 
 
