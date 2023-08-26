@@ -1,6 +1,10 @@
 const spinners = require("cli-spinners");
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const { LocalStorage } = require('node-localstorage');
+const localStorage = new LocalStorage('./scratch');
+const open = require('open');
 
 const { generateResponse } = require("../api/apiCall");
 const { saveResponseToNewFile } = require("../scripts/helperScripts");
@@ -46,17 +50,67 @@ function completerFunc(linePartial, callback) {
     });
 };
 
-function welcomeMessage() {
+function welcomeMessage(logginedUser) {
     console.log(`     
-        ${consoleFormat('Your Personal Autonomous Agents:', 'green')}
+        ${consoleFormat('Your Personal Autonomous Agents:', 'cyan')}
         ${consoleFormat('- Bird: Seamlessly manages your Twitter, engaging in Tweets and Replies', 'blue')}
         ${consoleFormat('- Pixie: Generates sophisticated landing pages using ReactJS based on your prompts.', 'blue')}
         ${consoleFormat('- Chip: Capable of answering any code-related questions in your stack:', 'blue')}${consoleFormat('Coming soon..', 'yellow')}
         
         ${consoleFormat('Raw, unfinished, and alive with potential. Dive in, play, but remember, we\'re still in the lab!', 'red')}
-        
         ${consoleFormatPlain('To quit GPT Console, just type q or press Ctrl+C.', 'gray')}
         ${consoleFormatPlain("Not into agents? No worries, just type your prompt.", 'gray')}
+
+        ${!logginedUser ? consoleFormatPlain("Ready to explore? Enter 'login' to create or access your account.", 'cyan') : ''}
+    `);
+}
+
+function alreadyLoggedInMessage(user) {
+    console.log(`     
+        ${consoleFormat(`Already logged in as ${user}`, 'green')}
+    `);
+}
+
+function messageAndOpenLogin(callback) {
+    const port = 8085;
+
+    const server = http.createServer((req, res) => {
+      res.statusCode = 200;
+      res.statusCode = 200;
+      // Set the CORS headers
+      res.setHeader('Access-Control-Allow-Origin', '*'); // You may want to restrict this to specific origins
+      res.setHeader('Content-Type', 'text/plain');
+      // Parse parameters from the URL
+      const urlParams = new URL(req.url, `http://${req.headers.host}`).searchParams;  
+      const token = urlParams.get('token');
+      const user = urlParams.get('user');
+      localStorage.setItem('gptconsoletoken', token);
+      localStorage.setItem('gptconsoleuser', user);
+
+      console.log(`     
+        ${consoleFormat(`You loggged in as ${user}`, 'green')}
+     `);
+        callback(null);
+      // Use the parameter in the response
+      res.end();
+      server.close();
+    });
+
+    server.listen(port, () => {
+      //console.log(`Server running at http://localhost:${port}/`);
+    });
+    a = "https://agent.gptconsole.ai/auth/login-page?logintype=gptconsole" //"http://localhost:3000/auth/login-page?logintype=gptconsole"  //
+    console.log(`     
+        ${consoleFormat('If login  not opened automatically:', 'green')}
+        ${consoleFormat(`Copy pase this link the browser ${a}`, 'blue')} 
+    `);    
+    open(a)
+    // console.log("Login successful");
+}
+
+function loginMessage(user) {
+    console.log(`     
+        ${consoleFormat(`Please login to your account`, 'green')}
     `);
 }
 
@@ -87,6 +141,11 @@ function chipHelpMessage() {
     `);
 }
 
+function logoutMessage() {
+    console.log(`     
+        ${consoleFormat(`You have successfully logged out`, 'green')}
+    `);
+}
 module.exports = {
     runSpinnerAndSaveResponse,
     runSpinnerAndReturnResponse,
@@ -94,5 +153,9 @@ module.exports = {
     welcomeMessage,
     birdHelpMessage,
     pixieHelpMessage,
-    chipHelpMessage
+    chipHelpMessage,
+    alreadyLoggedInMessage,
+    loginMessage,
+    messageAndOpenLogin,
+    logoutMessage
 }

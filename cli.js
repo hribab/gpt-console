@@ -1,8 +1,23 @@
 #!/usr/bin/env node
+const semver = require('semver'); // Use the 'semver' package to handle version comparison
+const { LocalStorage } = require('node-localstorage');
+const localStorage = new LocalStorage('./scratch');
 
+const currentNodeVersion = process.versions.node;
+if (!semver.eq(currentNodeVersion, '19.2.0')) {
+    console.log('Error: The current Node.js version is less than 19.2. Please update to a newer version.\n' +
+    'Instructions:\n' +
+    '1. Install NVM:\n' +
+    '   - Using Brew: brew install nvm\n' +
+    '   - Or using Curl: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash\n' +
+    '2. Add NVM to bash profile: echo "export NVM_DIR=~/.nvm" >> ~/.bash_profile && echo "[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm" >> ~/.bash_profile\n' +
+    '3. Run: nvm install 19.2\n' +
+    '4. Run: nvm use 19.2\n');
+    return;
+}
 const repl = require("repl");
 const { exec } = require("child_process");
-const { generateResponse } = require("./utils/api/apiCall");
+const { birdLLM } = require("./utils/api/apiCall");
 const spinners = require("cli-spinners");
 const {
   completerFunc,
@@ -10,6 +25,10 @@ const {
   birdHelpMessage,
   chipHelpMessage,
   pixieHelpMessage,
+  alreadyLoggedInMessage,
+  loginMessage,
+  messageAndOpenLogin,
+  logoutMessage
 } = require("./utils/helper/cliHelpers");
 const { handleDefaultCase } = require("./commands/defaultCommand");
 const { startPixie } = require("./agent/pixie/lifecycle/startPixie");
@@ -18,7 +37,7 @@ const { stopPixie } = require("./agent/pixie/lifecycle/stopPixie");
 const { statusPixie } = require("./agent/pixie/lifecycle/statusPixie");
 const { startBird } = require('./agent/bird/lifecycle/startBird')
 const { stopBirdOperation } = require('./agent/bird/lifecycle/stopBird')
-
+require('events').EventEmitter.defaultMaxListeners = 100;
 const fetch = require("node-fetch");
 const stream = require("stream");
 const fs = require("fs");
@@ -36,8 +55,11 @@ const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const t = require("@babel/types");
 const generator = require("@babel/generator").default;
-
-welcomeMessage();
+// localStorage.removeItem('gptconsoletoken');
+// localStorage.removeItem('gptconsoleuser');
+const logginedUser = localStorage.getItem('gptconsoleuser');
+// console.log("---gptconsoletoken-", localStorage.getItem('gptconsoletoken'))
+welcomeMessage(logginedUser);
 // Create REPL instance
 const gptCli = repl.start({
   prompt: "gpt-console>",
@@ -56,7 +78,26 @@ gptCli.eval = async (input, context, filename, callback) => {
   const command = tokens[0];
 
   switch (command.trim()) {
+    case "login":
+      if(!localStorage.getItem('gptconsoleuser')){
+        messageAndOpenLogin(callback)
+      }else{
+        alreadyLoggedInMessage(localStorage.getItem('gptconsoleuser'))
+        callback(null);
+      }
+      break;
+    case "logout":
+      localStorage.removeItem('gptconsoletoken');
+      localStorage.removeItem('gptconsoleuser');
+      logoutMessage();
+      callback(null);
+      break;
     case "bird":
+      if(!localStorage.getItem('gptconsoleuser')){
+        messageAndOpenLogin(callback)
+        callback(null);
+        break;
+      }
       if (tokens[1] && tokens[1].trim() == "start") {
         let matches = input.match(/bird start ['"]?(.*)['"]?/);
         let extractedText = matches && matches[1] ? matches[1] : null;
@@ -79,6 +120,12 @@ gptCli.eval = async (input, context, filename, callback) => {
       callback(null);
       break;
     case "pixie":
+      if(!localStorage.getItem('gptconsoleuser')){
+        messageAndOpenLogin(callback)
+        callback(null);
+        break;
+      }
+ 
       if (tokens[1] && tokens[1].trim() == "start") {
         let matches = input.match(/pixie start ['"]?(.*)['"]?/);
         let extractedText = matches && matches[1] ? matches[1] : null;
@@ -125,6 +172,12 @@ gptCli.eval = async (input, context, filename, callback) => {
       process.exit();
       break;
     default:
+      if(!logginedUser){
+        loginMessage()
+        callback(null);
+        break;
+      }
+ 
       (async () => {
         await handleDefaultCase(input, callback);
         callback(null);
