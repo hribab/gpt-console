@@ -1,7 +1,7 @@
 const fs = require('fs');
 const stream = require('stream');
 const { promisify } = require('util');
-const { generateResponse } = require("../../../utils/api/apiCall");
+const { birdLLM, trackBird } = require("../../../utils/api/apiCall");
 const {
     getImageDetails,
     downloadImage,
@@ -11,7 +11,7 @@ const {
 const disclaimers = ["As an AI language model"]//, "Other disclaimer phrases"]; // Add other phrases as needed
 
 async function getValidResponse(prompt, retryCount = 0) {
-    let chatgptresponse = await generateResponse(prompt, false);
+    let chatgptresponse = await birdLLM(prompt);
     // console.log("----chatgpt results: ", chatgptresponse);
 
     for (let disclaimer of disclaimers) {
@@ -42,15 +42,18 @@ async function tweet(page, userRequirement, contentFromURLIfAny) {
     const prompt = `
     ${userRequirement ? "For givne user requirement: "+ userRequirement : ''}
 
+    Ignore total number of tweets user want to generate, generate only one tweet.
+
     ${contentFromURLIfAny && contentFromURLIfAny.plainText ? "And Text content from the URL: "+ contentFromURLIfAny.plainText : ''}
     
-    ${userRequirement ? "Compose a tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name, using marketing tone. Should be short and crisp" : "Please generate a tweet that provides deeper insight and make people LAUGH, then THINK"}
+    ${userRequirement ? "Compose a single tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name, using marketing tone. Should be short and crisp" : "Please generate a single tweet that provides deeper insight and make people LAUGH, then THINK"}
     
     Requirements are
     1. Maximum allowed characters are 280,
     2. The text must contain #
     3. Tweet should not be enclosed in doubles quotes
     4. It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
+    5. Must be a single tweet, no multiple tweets
 
     Its important you get above requirements right
     `
@@ -119,6 +122,7 @@ async function tweet(page, userRequirement, contentFromURLIfAny) {
             const button = document.querySelector('div[data-testid="tweetButtonInline"]');
             button.click();
         });
+        trackBird("tweet", chatgptresponse);
         return;
         // // console.log("the tweet button is clicked");
 
@@ -249,7 +253,7 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
                 
             // console.log("----prompt: ", prompt)
         
-            let chatgptresponse1 = await generateResponse(prompt, false);
+            let chatgptresponse1 = await birdLLM(prompt);
         
             // console.log("chatgptresponse1------- ", chatgptresponse1);
             let replyTweet;
@@ -258,7 +262,7 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
                 // console.log("replyTweet------- ", replyTweet);
 
             }catch(err){
-                chatgptresponse1 = await generateResponse(prompt, false);
+                chatgptresponse1 = await birdLLM(prompt);
         
                 // console.log("chatgptresponse2------- ", chatgptresponse1);
                 try{
@@ -387,6 +391,7 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
                 const button = document.querySelector('div[data-testid="tweetButtonInline"]');
                 button.click();
             });
+            trackBird("reply", chatgptresponse);
             return;
         // console.log("the tweet button is clicked");
     }catch(err){
@@ -404,21 +409,25 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
 
     const prompt = `
     ${userRequirement ? "For givne user requirement: "+ userRequirement : ''}
+   
+    Ignore total number of tweets user want to generate, generate only one tweet.
 
     ${contentFromURLIfAny && contentFromURLIfAny.plainText ? "And Text content from the URL: "+ contentFromURLIfAny.plainText : ''}
     
-    ${userRequirement ? "Compose a tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name, using marketing tone. Should be short and crisp" : "Please generate a tweet that provides deeper insight and make people LAUGH, then THINK"}
+    ${userRequirement ? "Compose a  single tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name, using marketing tone. Should be short and crisp" : "Please generate a single tweet that provides deeper insight and make people LAUGH, then THINK"}
     
     Requirements are
     1. Maximum allowed characters are 280,
     2. The text must contain #
     3. Tweet should not be enclosed in doubles quotes
     4. It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
+    5. Must be a single tweet, no multiple tweets
 
     Its important you get above requirements right
     `
     try{
         let chatgptresponse;
+        let imageURLForTweet;
         let attempts = 0;
       
         while (attempts < 3) {
@@ -487,7 +496,7 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
         function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
         `
 
-        const resp = await generateResponse(gptPrompt)
+        const resp = await birdLLM(gptPrompt)
         // // console.log("=====image generation========", resp)
         let imageGenerationPrompt;
         // console.log("----ijmage prompt----", resp)
@@ -496,7 +505,7 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
          imageGenerationPrompt = JSON.parse(resp)
         } catch(e) {
             // console.log("=====errr----", e)
-            const resp2 = await generateResponse(gptPrompt)
+            const resp2 = await birdLLM(gptPrompt)
     
             try {
                 imageGenerationPrompt = JSON.parse(resp2)
@@ -535,7 +544,7 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
 
         if(generationId){
             const imageUrl = await getImageDetails(generationId);
-
+            imageURLForTweet = imageUrl
             await downloadImage(imageUrl, 'output.jpg');
             const fileExists = fs.existsSync('output.jpg');
 
@@ -578,6 +587,7 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
             const button = document.querySelector('div[data-testid="tweetButtonInline"]');
             button.click();
         });
+        trackBird("tweet with image", chatgptresponse, imageURLForTweet);
         return;
         // console.log("the tweet button is clicked");
         } catch (err) {
@@ -707,7 +717,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
                 
             // console.log("----prompt: ", prompt);
         
-            let chatgptresponse1 = await generateResponse(prompt, false);
+            let chatgptresponse1 = await birdLLM(prompt);
         
             // console.log("chatgptresponse1------- ", chatgptresponse1);
             let replyTweet;
@@ -716,7 +726,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
                 // console.log("replyTweet------- ", replyTweet);
 
             }catch(err){
-                chatgptresponse1 = await generateResponse(prompt, false);
+                chatgptresponse1 = await birdLLM(prompt);
         
                 // console.log("chatgptresponse2------- ", chatgptresponse1);
                 try{
@@ -772,6 +782,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
             });
             
             let chatgptresponse = replyTweet.reply;
+            let imageURLForTweet;
             const firstTwoCharacters = chatgptresponse.substring(0, 2);
 
             // Extract the last two characters
@@ -822,7 +833,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
             function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
             `
     
-            const resp = await generateResponse(gptPrompt)
+            const resp = await birdLLM(gptPrompt)
             // // console.log("=====image generation========", resp)
             let imageGenerationPrompt;
             // console.log("----ijmage prompt----", resp)
@@ -831,7 +842,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
             imageGenerationPrompt = JSON.parse(resp)
             } catch(e) {
                 // console.log("=====errr----", e)
-                const resp2 = await generateResponse(gptPrompt)
+                const resp2 = await birdLLM(gptPrompt)
         
             try {
                 imageGenerationPrompt = JSON.parse(resp2)
@@ -870,7 +881,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
     
         if(generationId){
             const imageUrl = await getImageDetails(generationId);
-    
+            imageURLForTweet = imageUrl
             await downloadImage(imageUrl, 'output.jpg');
             const fileExists = fs.existsSync('output.jpg');
     
@@ -909,6 +920,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
                 const button = document.querySelector('div[data-testid="tweetButtonInline"]');
                 button.click();
             });
+            trackBird("reply with image", chatgptresponse, imageURLForTweet);
             return;
         // console.log("the tweet button is clicked");
 }

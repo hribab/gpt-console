@@ -2,7 +2,7 @@ const {
     extractTextAndMetaFromURLForEachSection,
     extractURLs
   } = require("./scrapeURL");
-  const { generateResponse } = require("../../../utils/api/apiCall");
+  const { birdLLM } = require("../../../utils/api/apiCall");
 
   const moment = require('moment');
 
@@ -97,14 +97,14 @@ async function getTheOperationFromPrompt(userRequirement, contentFromURLIfAny) {
 
     // console.log("----prompt : ", prompt);
 
-    const chatgptresponse = await generateResponse(prompt, false);
+    const chatgptresponse = await birdLLM(prompt);
     // console.log("----chatgptresponse : ", chatgptresponse);
     let operationObject;
     try {
         // Try to parse the input directly.
         operationObject = JSON.parse(chatgptresponse);
     } catch(e) {
-        const chatgptresponse2 = await generateResponse(prompt, false);
+        const chatgptresponse2 = await birdLLM(prompt);
         try {
             // Try to parse the input directly.
             operationObject = JSON.parse(chatgptresponse2);

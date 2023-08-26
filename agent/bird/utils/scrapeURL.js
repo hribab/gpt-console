@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const { generateResponse } = require("../../../utils/api/apiCall");
+const { birdLLM } = require("../../../utils/api/apiCall");
 
 
 function extractURLs(text) {
