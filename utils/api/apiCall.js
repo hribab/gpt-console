@@ -59,6 +59,64 @@ async function birdLLM(prompt) {
   const texteRsponse =  await response.text();
   return texteRsponse;
 }
+
+async function trackPixie(operation, operationdescription, imageURL = null) {
+  const email = localStorage.getItem('gptconsoleuser');
+  const apiKey = localStorage.getItem('gptconsoletoken')
+  var myHeaders = new Headers();
+  myHeaders.append("Authorization", apiKey);
+  myHeaders.append("Content-Type", "application/json");
+  const localtime = moment().format('HH:mm:ss');
+  const localdate = moment().format('YYYY-MM-DD');
+  
+  var raw = JSON.stringify({
+    "email": email,
+    "log": {
+      "localtime": localtime,
+      "localdate": localdate,
+      "operation": operation,
+      "operationdescription": operationdescription,
+      "imageURL": imageURL
+    }
+  });
+  
+  var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow'
+  };
+  
+  const response = await fetch("https://us-central1-gptconsole.cloudfunctions.net/trackPixie", requestOptions)
+  const texteRsponse =  await response.text();
+  return texteRsponse;
+}
+
+async function pixieLLM(prompt, codeRelated = false) {
+  const email = localStorage.getItem('gptconsoleuser');
+  const apiKey = localStorage.getItem('gptconsoletoken')
+  // console.log("pixieLLM---apiKey====", email, apiKey)
+
+  var myHeaders = new Headers();
+  myHeaders.append("Authorization", apiKey);
+  myHeaders.append("Content-Type", "application/json");
+  
+  var raw = JSON.stringify({
+    "email": email,
+    "prompt": prompt
+  });
+  
+  var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow'
+  };
+  // console.log("pixieLLM---requestOptions====", requestOptions)
+  const response = await fetch("https://us-central1-gptconsole.cloudfunctions.net/pixieCall", requestOptions)
+  const texteRsponse =  await response.text();
+  return texteRsponse;
+}
 async function generateResponse(prompt, codeRelated = false) {
     const configuration = new Configuration({
         apiKey: process.env.OPENAI_API_KEY 
@@ -138,5 +196,7 @@ module.exports = {
   generateResponse,
   generateResponseWithFunctions,
   birdLLM,
-  trackBird
+  trackBird,
+  pixieLLM,
+  trackPixie
 }

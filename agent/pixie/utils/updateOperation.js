@@ -7,7 +7,7 @@ const path = require("path");
 // const fs = require("fs").promises;
 
 const { exec } = require("child_process");
-const { generateResponse } = require("../../../utils/api/apiCall");
+const { pixieLLM } = require("../../../utils/api/apiCall");
 // TODO: move all prompts to prompts.js
 // const {  PROMPT_GENERATOR,
 //   SECTIONS_GENERATOR} = require("../../../config/prompts");
@@ -78,7 +78,7 @@ async function checkForAddOrRemoveOperation(userRequirement, originalPrompt) {
   //     }
 }
 async function checkForDesignChange(userRequirement, originalPrompt) {
-    const resp = await generateResponse(
+    const resp = await pixieLLM(
         `
         Context: A client for whom I've recently developed a landing page for requirement ${originalPrompt}, has requested some modifications.
 
@@ -154,7 +154,7 @@ async function determineDesignUpdateSections(userRequirement, originalPrompt) {
 
     // userRequirement, to which code file has text ?
     
-    const resp = await generateResponse(
+    const resp = await pixieLLM(
         `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
         
         Now, the client wants to make some design(I mean the way landing page looks) modifications to this page.
@@ -192,7 +192,7 @@ async function determineDesignUpdateSections(userRequirement, originalPrompt) {
         enabledSections = JSON.parse(resp);
       } catch(e) {
         // // // console.log("====catch====", e)
-        const resp = await generateResponse(
+        const resp = await pixieLLM(
           `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
         
           Now, the client wants to make some design(I mean the way landing page looks) modifications to this page.
@@ -250,7 +250,7 @@ async function determineBackgroundImageUpdateSections(userRequirement, originalP
 
     // userRequirement, to which code file has text ?
     
-    const resp = await generateResponse(
+    const resp = await pixieLLM(
         `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
         
         Now, the client wants to change background image to this page.
@@ -288,7 +288,7 @@ async function determineBackgroundImageUpdateSections(userRequirement, originalP
         enabledSections = JSON.parse(resp);
       } catch(e) {
         // // // console.log("====catch====", e)
-        const resp = await generateResponse(
+        const resp = await pixieLLM(
           `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
         
           Now, the client wants to change background image to this page.
@@ -444,7 +444,7 @@ async function determineBackgroundImageUpdateSections(userRequirement, originalP
 
 
 async function determineSectionsDesignChange(userRequirement, originalPrompt) {
-    const resp = await generateResponse(
+    const resp = await pixieLLM(
         `Context: I recently developed a landing page for a client based on their initial requirements: "${originalPrompt}"
 
         Now, the client has come back with some modification request: "${userRequirement}"
@@ -487,7 +487,7 @@ async function determineSectionsDesignChange(userRequirement, originalPrompt) {
         // // console.log("=======enabledSections1======", enabledSections)
 
       } catch(e) {
-        const resp = await generateResponse(
+        const resp = await pixieLLM(
           `Context: I recently developed a landing page for a client based on their initial requirements: "${originalPrompt}"
 
           Now, the client has come back with some modification request: "${userRequirement}"
@@ -598,7 +598,7 @@ async function updateSpecificSectionCodeFilesForEnabledSectionsForUpdateOperatio
 }
 
 async function determineUpdateType(userRequirement, originalPrompt) {
-    const resp = await generateResponse(
+    const resp = await pixieLLM(
         `Context: I recently crafted a landing page for a client, following their original requirements detailed as: "${originalPrompt}"
 
         Modification Request from the Client: "${userRequirement}"
@@ -635,7 +635,7 @@ async function determineUpdateType(userRequirement, originalPrompt) {
         // Try to parse the input directly.
         updateOperations = JSON.parse(resp);
       } catch(e) {
-        const resp = await generateResponse(
+        const resp = await pixieLLM(
           `Context: I recently crafted a landing page for a client, following their original requirements detailed as: "${originalPrompt}"
 
           Modification Request from the Client: "${userRequirement}"
@@ -698,7 +698,7 @@ async function executeMessagingUpdate(userRequirement, filePath, section, origin
         // console.error(err);
       }
   
-      const resp = await generateResponse(
+      const resp = await pixieLLM(
         `
         Given the User Orinal Requirement: “ ${originalPrompt} “, ${formMattedContextFromWebURL}
         Update request: ${userRequirement}
@@ -742,7 +742,7 @@ async function executeMessagingUpdate(userRequirement, filePath, section, origin
             try{
               updates = JSON.parse(match[1].trim())
             }catch(e) {
-              const resp = await generateResponse(
+              const resp = await pixieLLM(
                 `
                 Given the User Orinal Requirement: “ ${originalPrompt} “, ${formMattedContextFromWebURL}
                 Update request: ${userRequirement}
@@ -785,7 +785,7 @@ async function executeMessagingUpdate(userRequirement, filePath, section, origin
           }
         }
         if(!updates){
-          const resp = await generateResponse(
+          const resp = await pixieLLM(
             `
             Given the User Orinal Requirement: “ ${originalPrompt} “, ${formMattedContextFromWebURL}
             Update request: ${userRequirement}
@@ -904,7 +904,7 @@ async function executeMessagingUpdate(userRequirement, filePath, section, origin
             if(allSubstringsPresent){
                 // console.log("=====lines ===", output)
 
-                const resp = await generateResponse(
+                const resp = await pixieLLM(
                 `
                 Given the User Orinal Requirement: “ ${originalPrompt} “
                 New Update request: "${userRequirement}"
@@ -935,7 +935,7 @@ async function executeMessagingUpdate(userRequirement, filePath, section, origin
                 // Try to parse the input directly.
                 lines = JSON.parse(resp);
                 } catch(e) {
-                const resp = await generateResponse(
+                const resp = await pixieLLM(
                     `
                     Given the User Orinal Requirement: “ ${originalPrompt} “
                 New Update request: "${userRequirement}"
@@ -971,7 +971,7 @@ async function executeMessagingUpdate(userRequirement, filePath, section, origin
             
             }
             if(!lines){
-                const resp = await generateResponse(
+                const resp = await pixieLLM(
                 `
                 Given the User Orinal Requirement: “ ${originalPrompt} “
                 New Update request: "${userRequirement}"
@@ -1038,7 +1038,7 @@ async function determineMessagingUpdateSections(userRequirement, originalPrompt)
 
         // userRequirement, to which code file has text ?
         
-        const resp = await generateResponse(
+        const resp = await pixieLLM(
             `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
             
             Now, the client wants to make some modifications to this page.
@@ -1075,7 +1075,7 @@ async function determineMessagingUpdateSections(userRequirement, originalPrompt)
             enabledSections = JSON.parse(resp);
           } catch(e) {
             // // // console.log("====catch====", e)
-            const resp = await generateResponse(
+            const resp = await pixieLLM(
               `Context: I recently created a landing page for a client for original requirement:  ${originalPrompt}
             
               Now, the client wants to make some modifications to this page.
@@ -1184,7 +1184,7 @@ async function removeOperation(userRequirement, filePath) {
             console.error(err);
         }
         
-        const resp = await generateResponse(
+        const resp = await pixieLLM(
             `
             Given the User Requirement: “ ${userRequirement} “, 
             
@@ -1234,7 +1234,7 @@ async function removeOperation(userRequirement, filePath) {
 
                 } catch(e) {
 
-                    const resp = await generateResponse(
+                    const resp = await pixieLLM(
                         `
                         Given the User Requirement: “ ${userRequirement} “, 
                         
@@ -1267,7 +1267,7 @@ async function removeOperation(userRequirement, filePath) {
                 }
         }
         if(!updates){
-            const resp = await generateResponse(
+            const resp = await pixieLLM(
                 `
                 Given the User Requirement: “ ${userRequirement} “, 
                 
@@ -1371,7 +1371,7 @@ async function removeOperationByClassName(userRequirement, filePath) {
         console.error(err);
     }
     
-    const resp = await generateResponse(
+    const resp = await pixieLLM(
         `
         Given the User Requirement: “ ${userRequirement} “, 
         

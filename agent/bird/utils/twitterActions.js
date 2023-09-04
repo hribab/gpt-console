@@ -33,32 +33,36 @@ async function getValidResponse(prompt, retryCount = 0) {
     }
 }
 
-async function tweet(page, userRequirement, contentFromURLIfAny) {
-    // console.log("inside tweet ----", contentFromURLIfAny);
+async function tweet(page, userRequirement, contentFromURLIfAny, allTweets) {
     await page.waitForTimeout(3000);
     await page.click('svg.r-1nao33i');
     await page.waitForTimeout(3000);
     // console.log("Generating GPT response: ");
-    const prompt = `
-    ${userRequirement ? "For givne user requirement: "+ userRequirement : ''}
-
-    Ignore total number of tweets user want to generate, generate only one tweet.
-
-    ${contentFromURLIfAny && contentFromURLIfAny.plainText ? "And Text content from the URL: "+ contentFromURLIfAny.plainText : ''}
+    const prevTweetsStr = allTweets && allTweets.tweets && allTweets.tweets.length > 0 ? 
+    "It should NOT not be one of these previous tweets \n Previous Tweets: " + 
+    allTweets.tweets.map((tweet, index) => `Previoustweet${index + 1}: ${tweet}`).join('\n')
+    : '';
+  
+  const prompt = `
+    ${userRequirement ? "For given user requirement: " + userRequirement : ''}
     
-    ${userRequirement ? "Compose a single tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name, using marketing tone. Should be short and crisp" : "Please generate a single tweet that provides deeper insight and make people LAUGH, then THINK"}
+    Ignore total number of tweets user wants to generate, generate only ONE tweet.
     
-    Requirements are
+    ${contentFromURLIfAny && contentFromURLIfAny.plainText ? `And Text content from the URL: "${contentFromURLIfAny.plainText}"` : ''}
+    
+    ${userRequirement ? "Compose a single tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name, using a marketing tone. Should be short and crisp" : "Please generate a single tweet that provides deeper insight and makes people LAUGH, then THINK"}
+    
+    Requirements are:
     1. Maximum allowed characters are 280,
     2. The text must contain #
-    3. Tweet should not be enclosed in doubles quotes
-    4. It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
+    3. Tweet should not be enclosed in double quotes
+    4. It should be a ready-to-post tweet, no explanation is required, no other text should be there in the response, only the tweet should be there
     5. Must be a single tweet, no multiple tweets
-
-    Its important you get above requirements right
-    `
-
-    // console.log("----prompt : ", prompt);
+    
+    ${prevTweetsStr}
+  
+    It's important you get the above requirements right
+  `;
 
     try {
         let chatgptresponse;
@@ -79,8 +83,9 @@ async function tweet(page, userRequirement, contentFromURLIfAny) {
         }
 
         // console.log("----prompt results: ", chatgptresponse);
-        
         chatgptresponse = chatgptresponse.replace(/^"+|"+$/g, '');
+        allTweets["tweets"].push(chatgptresponse);
+
         const firstTwoCharacters = chatgptresponse.substring(0, 2);
 
         // Extract the last two characters
@@ -400,31 +405,43 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
     }
 }
 
-async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
-    // console.log("inside tweet image ");
+async function tweetWithImage(page, userRequirement, contentFromURLIfAny, allTweets) {
+    //  console.log("inside tweet image==== ", allTweets);
     await page.waitForTimeout(3000);
     await page.click('svg.r-1nao33i');
     await page.waitForTimeout(3000);
     // console.log("Generating GPT response: ");
 
-    const prompt = `
-    ${userRequirement ? "For givne user requirement: "+ userRequirement : ''}
-   
-    Ignore total number of tweets user want to generate, generate only one tweet.
-
-    ${contentFromURLIfAny && contentFromURLIfAny.plainText ? "And Text content from the URL: "+ contentFromURLIfAny.plainText : ''}
+    const prevTweetsStr = allTweets && allTweets.tweets && allTweets.tweets.length > 0 ? 
+    "It should NOT not be one of these previous tweets \n Previous Tweets: " + 
+    allTweets.tweets.map((tweet, index) => `Previoustweet${index + 1}: ${tweet}`).join('\n')
+    : '';
+  
+  const prompt = `
+    ${userRequirement ? "For given user requirement: " + userRequirement : ''}
     
-    ${userRequirement ? "Compose a  single tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name, using marketing tone. Should be short and crisp" : "Please generate a single tweet that provides deeper insight and make people LAUGH, then THINK"}
+    Ignore total number of tweets user wants to generate, generate only ONE tweet.
     
-    Requirements are
+    ${contentFromURLIfAny && contentFromURLIfAny.plainText ? `And Text content from the URL: "${contentFromURLIfAny.plainText}"` : ''}
+    
+    ${userRequirement ? "Compose a single tweet that shares insights, tips, or information for the audience's benefit, engages the audience by asking questions or seeking opinions, utilizes a conversational tone, and articulates the product's offerings clearly. Please avoid mentioning the website name, using a marketing tone. Should be short and crisp" : "Please generate a single tweet that provides deeper insight and makes people LAUGH, then THINK"}
+    
+    Requirements are:
     1. Maximum allowed characters are 280,
     2. The text must contain #
-    3. Tweet should not be enclosed in doubles quotes
-    4. It should be ready to post tweet, no explanation is required, no other text should be there in the response, only tweet should be there
+    3. Tweet should not be enclosed in double quotes
+    4. It should be a ready-to-post tweet, no explanation is required, no other text should be there in the response, only the tweet should be there
     5. Must be a single tweet, no multiple tweets
-
-    Its important you get above requirements right
-    `
+    
+    ${prevTweetsStr}
+  
+    It's important you get the above requirements right
+  `;
+  
+//   console.log("=====prompt====", prompt);
+  
+  
+    // console.log("=====prompt====", prompt)
     try{
         let chatgptresponse;
         let imageURLForTweet;
@@ -446,6 +463,7 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny) {
         // console.log("----prompt results: ", chatgptresponse);
         chatgptresponse = chatgptresponse.replace(/^"+|"+$/g, '');
         
+        allTweets["tweets"].push(chatgptresponse);
         const firstTwoCharacters = chatgptresponse.substring(0, 2);
 
         // Extract the last two characters

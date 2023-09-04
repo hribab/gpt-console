@@ -77,13 +77,13 @@ const launchBrowser = async (browserInstances) => {
     }
 }
 
-const performAction = async (page, action, userRequirement, contentFromURLIfAny) => {
+const performAction = async (page, action, userRequirement, contentFromURLIfAny, allTweets) => {
     switch (action) {
         case "tweet":
-            await tweet(page, userRequirement, contentFromURLIfAny);
+            await tweet(page, userRequirement, contentFromURLIfAny, allTweets);
             break;
         case "tweetWithImage":
-            await tweetWithImage(page, userRequirement,contentFromURLIfAny);
+            await tweetWithImage(page, userRequirement,contentFromURLIfAny, allTweets);
             break
         case "reply":
             await reply(page, userRequirement, contentFromURLIfAny);

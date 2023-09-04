@@ -78,7 +78,7 @@ const initPixie = async (userRequirement, callback) => {
         return;
       }
     }
-
+    // console.log("=====not documetiontation ====", listOfURLFromRequirement)
     const currentNodeVersion = process.versions.node;
 
     if (semver.lt(currentNodeVersion, '19.2.0')) {
@@ -99,6 +99,7 @@ const initPixie = async (userRequirement, callback) => {
     // console.log("longerPromptForConfigFile", longerPromptForConfigFile)
  
     const {designSystemZipURL, designSystemConfig, selectedDesignSystemName} = await pickRightDesignSystem(userRequirement, longerPromptForConfigFile);
+    // console.log("designSystemZipURL=======>", designSystemZipURL, designSystemConfig, selectedDesignSystemName)
     process.stdout.write(`\x1b[32m Grab your coffee and relax. I'm crafting your site, one pixel at a time.  \x1b[0m \n`);
     await downloadAndUnzip(designSystemZipURL);
     createPixieConfigFile({
@@ -147,10 +148,12 @@ const initPixie = async (userRequirement, callback) => {
     }
 
     // updatePixieConfigStatus(`completed`);
+    
     process.stdout.write(`\x1b[32m Finally! It's finished, and I'm running the app.  \x1b[0m \n`);
     // console.log("---runTheApp ====");
 
     const result = await runTheApp();
+    
     process.stdout.write(`\x1b[32m ${result}  \x1b[0m \n`);
 
     return result;

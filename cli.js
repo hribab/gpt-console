@@ -2,23 +2,7 @@
 const semver = require('semver'); // Use the 'semver' package to handle version comparison
 const { LocalStorage } = require('node-localstorage');
 const localStorage = new LocalStorage('./scratch');
-
-const currentNodeVersion = process.versions.node;
-if (!semver.eq(currentNodeVersion, '19.2.0')) {
-    console.log('Error: The current Node.js version is less than 19.2. Please update to a newer version.\n' +
-    'Instructions:\n' +
-    '1. Install NVM:\n' +
-    '   - Using Brew: brew install nvm\n' +
-    '   - Or using Curl: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash\n' +
-    '2. Add NVM to bash profile: echo "export NVM_DIR=~/.nvm" >> ~/.bash_profile && echo "[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm" >> ~/.bash_profile\n' +
-    '3. Run: nvm install 19.2\n' +
-    '4. Run: nvm use 19.2\n');
-    return;
-}
 const repl = require("repl");
-const { exec } = require("child_process");
-const { birdLLM } = require("./utils/api/apiCall");
-const spinners = require("cli-spinners");
 const {
   completerFunc,
   welcomeMessage,
@@ -28,8 +12,17 @@ const {
   alreadyLoggedInMessage,
   loginMessage,
   messageAndOpenLogin,
-  logoutMessage
+  logoutMessage,
+  nvmUpdateMessage
 } = require("./utils/helper/cliHelpers");
+const currentNodeVersion = process.versions.node;
+if (!semver.eq(currentNodeVersion, '19.2.0')) {
+    nvmUpdateMessage(currentNodeVersion)
+    return;
+}
+const { exec } = require("child_process");
+const { birdLLM } = require("./utils/api/apiCall");
+const spinners = require("cli-spinners");
 const { handleDefaultCase } = require("./commands/defaultCommand");
 const { startPixie } = require("./agent/pixie/lifecycle/startPixie");
 const { updatePixie } = require("./agent/pixie/lifecycle/updatePixie");

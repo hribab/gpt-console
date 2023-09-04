@@ -71,6 +71,20 @@ function alreadyLoggedInMessage(user) {
     `);
 }
 
+function nvmUpdateMessage(currentNodeVersion) {
+    console.log(`
+          ${consoleFormat(`Error: The current Node.js (${currentNodeVersion}) version is less than 19.2. Please update to a newer version.`, 'red')}
+          ${consoleFormat(`Instructions:`, 'yellow')}
+          ${consoleFormat(`1. Install NVM:`, 'white')}
+          ${consoleFormat(`   - Using Brew: brew install nvm`, 'white')}
+          ${consoleFormat(`   - Or using Curl: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash`, 'white')}
+          ${consoleFormat(`2. Add NVM to bash profile: echo "export NVM_DIR=~/.nvm" >> ~/.bash_profile && echo "[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm" >> ~/.bash_profile`, 'white')}
+          ${consoleFormat(`3. Run: nvm install 19.2`, 'white')}
+          ${consoleFormat(`4. Run: nvm use 19.2`, 'white')}
+      `);
+  }
+  
+
 function messageAndOpenLogin(callback) {
     const port = 8085;
 
@@ -157,5 +171,6 @@ module.exports = {
     alreadyLoggedInMessage,
     loginMessage,
     messageAndOpenLogin,
-    logoutMessage
+    logoutMessage,
+    nvmUpdateMessage
 }

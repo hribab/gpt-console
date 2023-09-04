@@ -4,7 +4,7 @@ const marked = require('marked');
 const path = require('path');
 const puppeteer = require('puppeteer');
 const urlModule = require('url');
-const { generateResponse } = require("../../../utils/api/apiCall");
+const { pixieLLM } = require("../../../utils/api/apiCall");
 const open = require('open');
 const fse = require("fs-extra");
 
@@ -186,7 +186,7 @@ async function extractTextAndMetaFromURLForEachSection(url) {
     }
 
     let sectionWiseMessaging;
-    const resp = await generateResponse(
+    const resp = await pixieLLM(
         `for given below "plainText" and "metaData"
         please extract text for landing page sections
         {header: {title: the tagline or headline, description: descripiton for tagline or headline},
@@ -221,7 +221,7 @@ async function extractTextAndMetaFromURLForEachSection(url) {
             try{
               sectionWiseMessaging = JSON.parse(match[1].trim())
             }catch(e) {
-              const resp = await generateResponse(
+              const resp = await pixieLLM(
                 `for given below "plainText" and "metaData"
                 please extract text for landing page sections
                 {header: {title: the tagline or headline, description: descripiton for tagline or headline},
@@ -256,7 +256,7 @@ async function extractTextAndMetaFromURLForEachSection(url) {
           }
         }
         if(!sectionWiseMessaging){
-          const resp = await generateResponse(
+          const resp = await pixieLLM(
             `for given below "plainText" and "metaData"
             please extract text for landing page sections
             {header: {title: the tagline or headline, description: descripiton for tagline or headline},
@@ -576,14 +576,14 @@ async function formatContextFromRawData(rawData) {
           
   Request: Response should be able to parse by javascriptfunction JSON.parse(YourResponse)
     `
-  const resp = await generateResponse(prompt,false);  
+  const resp = await pixieLLM(prompt,false);  
     // console.log("---1----", resp);
       try {
         // Try to parse the input directly.
         formatContextFromRawData = JSON.parse(resp);
       } catch(e) {
         // If that fails, find the first valid JSON string within the input.
-        const resp2 = await generateResponse(prompt,false);  
+        const resp2 = await pixieLLM(prompt,false);  
 
        //  console.log("---resp2----", resp2);
         try {
@@ -591,7 +591,7 @@ async function formatContextFromRawData(rawData) {
           formatContextFromRawData = JSON.parse(resp2);
         } catch(e) {
            // If that fails, find the first valid JSON string within the input.
-          const resp3 = await generateResponse(prompt,false);  
+          const resp3 = await pixieLLM(prompt,false);  
 
           //console.log("---resp3----", resp3);
           try {

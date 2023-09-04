@@ -1,4 +1,4 @@
-const { generateResponse } = require("../../../utils/api/apiCall");
+const { pixieLLM } = require("../../../utils/api/apiCall");
 const fetch = require("node-fetch");
 const stream = require("stream");
 const fs = require("fs");
@@ -94,7 +94,7 @@ async function downloadComponentImages(userRequirement, outputImagePath, formMat
   Request: Response should be able to parse by a below javascript function:
     function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
   `
-  const resp = await generateResponse(gptPrompt)
+  const resp = await pixieLLM(gptPrompt)
   // console.log("=====image generation========", resp)
   let imageGenerationPrompt;
   
@@ -118,7 +118,7 @@ async function downloadComponentImages(userRequirement, outputImagePath, formMat
       Request: Response should be able to parse by a below javascript function:
         function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
     `
-    const resp = await generateResponse(gptPrompt)
+    const resp = await pixieLLM(gptPrompt)
 
     try {
       imageGenerationPrompt = JSON.parse(resp)

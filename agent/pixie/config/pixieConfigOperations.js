@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 function renameProjectFolderIfExist() {
+    try{
     const dir = './yourproject';
     const date = new Date();
     const currentDate = date.toISOString().split('T')[0]; // format as "yyyy-mm-dd"
@@ -20,7 +21,12 @@ function renameProjectFolderIfExist() {
             }
         });
     } else {
-        // // console.log('Directory does not exist');
+        return;
+        //console.log('Directory does not exist');
+    }
+    }catch(e){
+        return;
+        //console.log("error", e)
     }
 }
 

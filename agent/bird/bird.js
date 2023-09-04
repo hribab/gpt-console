@@ -4,6 +4,7 @@ const spinners = require("cli-spinners");
 
 const { getTwitterAction, extractContentFromFirstURL, getTheOperationFromPrompt } = require("./utils/misc.js");
 let twitterActions;
+let allTweets = {"tweets": []};
 const MAX_ACTIONS = 5;
 const browserInstances = [];
 
@@ -54,7 +55,7 @@ const initBird = async (userRequirement, callback) => {
                     callback(null);
                     for (let index = 0; index < theTweetCount; index++) {
                         let actionType = Math.random() < 0.7 ? "tweetWithImage" : "tweet";
-                        await performAction(page, actionType, userRequirement, contentFromFirstURL);
+                        await performAction(page, actionType, userRequirement, contentFromFirstURL, allTweets);
                     }
                     for (const browser of browserInstances) {
                         await browser.close();
@@ -126,10 +127,10 @@ const initBird = async (userRequirement, callback) => {
             twitterActions = getTwitterAction();
             switch (twitterActions) {
                 case 'tweet':
-                await performAction(page, "tweet", userRequirement, contentFromFirstURL);
+                await performAction(page, "tweet", userRequirement, contentFromFirstURL, allTweets);
                 break;
                 case 'tweetWithImage':
-                await performAction(page, "tweetWithImage", userRequirement, contentFromFirstURL);
+                await performAction(page, "tweetWithImage", userRequirement, contentFromFirstURL, allTweets);
                 break;
                 case 'reply':
                 await performAction(page, "reply", userRequirement, contentFromFirstURL);

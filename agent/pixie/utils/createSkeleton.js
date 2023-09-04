@@ -10,7 +10,8 @@ const exec = util.promisify(require('child_process').exec);
 
 const {spawn } = require("child_process");
 
-const { generateResponse } = require("../../../utils/api/apiCall");
+const { pixieLLM } = require("../../../utils/api/apiCall");
+
 const {
   extractImagePaths,
   downloadComponentImages,
@@ -192,20 +193,33 @@ async function runTheApp() {
 async function executeCommand() {
   try {
     const yarnInstalled = await isYarnInstalled();
+    // console.log("-----yarnInstalled====", yarnInstalled);
+
     const installCommand = yarnInstalled ? 'yarn install' : 'npm install';
+    // console.log("-----installCommand====", installCommand);
+
     const result = await runCommand(installCommand, './yourproject');
-    // // console.log(result);
+    // console.log("-----yarn====", result);
   } catch (error) {
+    // console.error("-----------",error);
     // console.error(error);
   }
 }
 async function downloadAndUnzip(url) {
+  // console.log("=======url====", url)
   const response = await fetch(url);
 
-  if (!response.ok)
-    throw new Error(`unexpected response ${response.statusText}`);
+  // console.log("=======response====", response)
 
-  await pipeline(response.body, unzipper.Extract({ path: "." }));
+  if (!response.ok) {
+    console.log(response)
+    throw new Error(`unexpected response ${response.statusText}`);
+  }
+    
+
+  // await pipeline(response.body, unzipper.Extract({ path: "." }));
+  await pipeline(response.body, unzipper.Extract({ path: "yourproject" }));
+
 
   // Remove the __MACOSX directory
   // try {
@@ -356,7 +370,7 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
       // console.error(err);
     }
 
-    const resp = await generateResponse(
+    const resp = await pixieLLM(
       `
       Given the User Requirement: “ ${userRequirement} “, ${formMattedContextFromWebURL}
 
@@ -397,7 +411,7 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
           try{
             updates = JSON.parse(match[1].trim())
           }catch(e) {
-            const resp = await generateResponse(
+            const resp = await pixieLLM(
               `
               Given the User Requirement: “ ${userRequirement} “, ${formMattedContextFromWebURL}
 
@@ -429,7 +443,7 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
         }
       }
       if(!updates){
-        const resp = await generateResponse(
+        const resp = await pixieLLM(
           `
           Given the User Requirement: “ ${userRequirement} “, ${formMattedContextFromWebURL}
 
@@ -534,7 +548,7 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
       if(section.toLowerCase().includes("header")){
         let allSubstringsPresent = subStringArray.every(subString => output.includes(subString));
         if(allSubstringsPresent){
-          const resp = await generateResponse(
+          const resp = await pixieLLM(
             `
             Given the user requirement: "${userRequirement}", and web context from "${formMattedContextFromWebURL}", we're focusing on the "${section}" section of the landing page.
             With these considerations in mind, we need you to generate three succinct and compelling header lines, with a maximum of three words each, for a dynamic scrolling text display.
@@ -555,7 +569,7 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
             // Try to parse the input directly.
             lines = JSON.parse(resp);
           } catch(e) {
-            const resp = await generateResponse(
+            const resp = await pixieLLM(
               `
               Given the user requirement: "${userRequirement}", and web context from "${formMattedContextFromWebURL}", we're focusing on the "${section}" section of the landing page.
               With these considerations in mind, we need you to generate three succinct and compelling header lines, with a maximum of three words each, for a dynamic scrolling text display.
@@ -584,7 +598,7 @@ async function generateMessaging(userRequirement, filePath, section, formMattedC
         
         }
         if(!lines){
-          const resp = await generateResponse(
+          const resp = await pixieLLM(
             `
             Given the user requirement: "${userRequirement}", and web context from "${formMattedContextFromWebURL}", we're focusing on the "${section}" section of the landing page.
             With these considerations in mind, we need you to generate three succinct and compelling header lines, with a maximum of three words each, for a dynamic scrolling text display.
@@ -694,7 +708,8 @@ function findDesignInResponse(designs) {
 
 async function pickRightDesignSystem(userRequirement, contentFromFirstURL) {
 
-  const resp = await generateResponse(
+  try{
+  const resp = await pixieLLM(
     `Given the User Requirement: ${userRequirement}
     ${contentFromFirstURL ? `Web context: ${JSON.stringify(contentFromFirstURL)}` : ""}
 
@@ -711,6 +726,8 @@ async function pickRightDesignSystem(userRequirement, contentFromFirstURL) {
   let selectedDesignSystem;
   if(resp){
     const available = Object.keys(designSystems); 
+    // console.log("====available=====", available)
+
     let selected = 'material'; // default to 'material'//make it random out of 4
   
     for(let i = 0; i < available.length; i++) {
@@ -719,13 +736,21 @@ async function pickRightDesignSystem(userRequirement, contentFromFirstURL) {
             break;
         }
     }
+    // console.log("====selected=====", selected)
+
     selectedDesignSystem = selected
   }else{
     selectedDesignSystem = findDesignInResponse(designSystems);
   }
-  // console.log("====resp=====", selectedDesignSystem)
-
+  
+  // console.log("====skeletonAndConfigURL[selectedDesignSystem]====", skeletonAndConfigURL[selectedDesignSystem])
   return {designSystemZipURL: skeletonAndConfigURL[selectedDesignSystem].skeleton, designSystemConfig:skeletonAndConfigURL[selectedDesignSystem].config, selectedDesignSystemName: selectedDesignSystem}
+}catch(e){
+  // console.log("====e=====", e)
+ selectedDesignSystem = findDesignInResponse(designSystems);
+ return {designSystemZipURL: skeletonAndConfigURL[selectedDesignSystem].skeleton, designSystemConfig:skeletonAndConfigURL[selectedDesignSystem].config, selectedDesignSystemName: selectedDesignSystem}
+
+}
 }
 
 async function pickRightDesignSystemForUpdate(userRequirement, existingDesignSystem, existingPrompt) {
@@ -735,7 +760,7 @@ async function pickRightDesignSystemForUpdate(userRequirement, existingDesignSys
   // delete the 'blk' property from the new object
   delete newDesignSystems[existingDesignSystem];
 
-  const resp = await generateResponse(
+  const resp = await pixieLLM(
     `Given the user update requirement: ${userRequirement}
      for existing Prompt: ${existingPrompt}
 
@@ -770,19 +795,18 @@ async function pickRightDesignSystemForUpdate(userRequirement, existingDesignSys
 
 async function identifyEnabledSections(userRequirement) {
 
-  const resp = await generateResponse(
-    `Given the User Requirement: ${userRequirement}
+  const resp = await pixieLLM(
+    `Given the user Requirement: ${userRequirement}
 
     I want you to return list of  sections that I can include in landing page for the above user requirement
     
-    Rules are:
-    - If the requirement is not clear, return only headers section as true
-      
     Available sections are:
     headers, features, blogs, teams, projects, pricing, testmonials, contactus
 
     Sample output: {"headers": true, "features": true, "blogs": false, "teams": false, "projects": false, "pricing": false, "testmonials": false, "contactus": false}
 
+    If the requirement is not clear, return only headers section as true
+    
     Response Must be only JSON , no other text should be there.
     Never skip and return string like // Additional or // Similar entries for others, return full
     Never return output format as  this example: some explationation \`\`\` output, i want pure json 
@@ -790,7 +814,6 @@ async function identifyEnabledSections(userRequirement) {
     Request: Response should be able to parse by a below javascript function:
     
     function parseLLMResponse(YourResponse){ return JSON.parse(YourResponse) }
-
       `,
     false
   );
@@ -800,7 +823,7 @@ async function identifyEnabledSections(userRequirement) {
     // Try to parse the input directly.
     enabledSections = JSON.parse(resp);
   } catch(e) {
-    const resp = await generateResponse(
+    const resp = await pixieLLM(
       `Given the User Requirement: ${userRequirement}
   
       I want you to return list of  sections that I can include in landing page for the above user requirement
@@ -841,6 +864,18 @@ async function identifyEnabledSections(userRequirement) {
   }
 
   return enabledSections
+
+  // return {
+  //   headers: true,
+  //   features: true,
+  //   blogs: true,
+  //   teams: true,
+  //   projects: true,
+  //   pricing: true,
+  //   testmonials: true,
+  //   contactus: true,
+  //   footer: false,
+  // }
 
 }
 
@@ -921,7 +956,7 @@ async function identifySpecificSectionCodeFilesForEnabledSections(userRequiremen
     
     function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
       `
-    const resp = await generateResponse(
+    const resp = await pixieLLM(
       prompt,
       false
     );
@@ -955,7 +990,7 @@ async function identifySpecificSectionCodeFilesForEnabledSections(userRequiremen
       
       function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
         `
-      const resp = await generateResponse(
+      const resp = await pixieLLM(
         prompt,
         false
       );
@@ -990,7 +1025,7 @@ async function identifySpecificSectionCodeFilesForEnabledSections(userRequiremen
       
       function parseResponse(YourResponse){ return JSON.parse(YourResponse) }
         `
-      const resp = await generateResponse(
+      const resp = await pixieLLM(
         prompt,
         false
       );
@@ -1096,7 +1131,7 @@ async function isRequirementForOnlyDocumentation(userRequirement) {
   
   Response Must be only true or false. No other text should be there in response. No explanation is required. 
   `
-  const resp = await generateResponse(
+  const resp = await pixieLLM(
     prompt,
     false
   );

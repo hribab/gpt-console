@@ -51,7 +51,6 @@
     "minimatch": "^9.0.0",
     "moment": "^2.29.4",
     "natural": "^6.5.0",
-    "node-localstorage": "^3.0.5",
     "open": "8",
     "openai": "^3.2.1",
     "path": "^0.12.7",
