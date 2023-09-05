@@ -4,7 +4,7 @@ const { LocalStorage } = require('node-localstorage');
 const localStorage = new LocalStorage('./scratch');
 const moment = require('moment');
 
-async function trackBird(operation, operationdescription, imageURL = null) {
+async function trackBird(operation, userRequirement, operationdescription, imageURL = null) {
   const email = localStorage.getItem('gptconsoleuser');
   const apiKey = localStorage.getItem('gptconsoletoken')
   var myHeaders = new Headers();
@@ -20,7 +20,8 @@ async function trackBird(operation, operationdescription, imageURL = null) {
       "localdate": localdate,
       "operation": operation,
       "operationdescription": operationdescription,
-      "imageURL": imageURL
+      "imageURL": imageURL,
+      "prompt": userRequirement || `Auto ${operation}}`
     }
   });
   
@@ -192,11 +193,74 @@ try {
     return `error`;
   }
 }
+
+async function consoleLLM(prompt, codeRelated = false) {
+  const email = localStorage.getItem('gptconsoleuser');
+  const apiKey = localStorage.getItem('gptconsoletoken')
+  // console.log("pixieLLM---apiKey====", email, apiKey)
+
+  var myHeaders = new Headers();
+  myHeaders.append("Authorization", apiKey);
+  myHeaders.append("Content-Type", "application/json");
+  
+  var raw = JSON.stringify({
+    "email": email,
+    "prompt": prompt
+  });
+  
+  var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow'
+  };
+  // console.log("pixieLLM---requestOptions====", requestOptions)
+  const response = await fetch("https://us-central1-gptconsole.cloudfunctions.net/consoleCall", requestOptions)
+  const texteRsponse =  await response.text();
+  return texteRsponse;
+}
+
+async function trackConsole(prompt, resp, imageURL = null) {
+  const email = localStorage.getItem('gptconsoleuser');
+  const apiKey = localStorage.getItem('gptconsoletoken')
+  var myHeaders = new Headers();
+  myHeaders.append("Authorization", apiKey);
+  myHeaders.append("Content-Type", "application/json");
+  const localtime = moment().format('HH:mm:ss');
+  const localdate = moment().format('YYYY-MM-DD');
+  
+  var raw = JSON.stringify({
+    "email": email,
+    "log": {
+      "localtime": localtime,
+      "localdate": localdate,
+      "prompt": prompt,
+      "response": resp
+    }
+  });
+  
+  var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow'
+  };
+  
+  const response = await fetch("https://us-central1-gptconsole.cloudfunctions.net/trackConsole", requestOptions)
+  const texteRsponse =  await response.text();
+  return texteRsponse;
+}
+
+// Function URL (consoleAvailableCredits(us-central1)): https://us-central1-gptconsole.cloudfunctions.net/consoleAvailableCredits
+// Function URL (consoleCall(us-central1)): https://us-central1-gptconsole.cloudfunctions.net/consoleCall
+// Function URL (trackConsole(us-central1)): https://us-central1-gptconsole.cloudfunctions.net/trackConsole
 module.exports = {
   generateResponse,
   generateResponseWithFunctions,
   birdLLM,
   trackBird,
   pixieLLM,
-  trackPixie
+  trackPixie,
+  consoleLLM,
+  trackConsole
 }

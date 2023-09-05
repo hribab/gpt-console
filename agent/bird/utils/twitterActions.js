@@ -127,7 +127,7 @@ async function tweet(page, userRequirement, contentFromURLIfAny, allTweets) {
             const button = document.querySelector('div[data-testid="tweetButtonInline"]');
             button.click();
         });
-        trackBird("tweet", chatgptresponse);
+        trackBird("tweet", userRequirement, chatgptresponse);
         return;
         // // console.log("the tweet button is clicked");
 
@@ -396,7 +396,7 @@ async function reply(page, userRequirement, contentFromURLIfAny) {
                 const button = document.querySelector('div[data-testid="tweetButtonInline"]');
                 button.click();
             });
-            trackBird("reply", chatgptresponse);
+            trackBird("reply", userRequirement, chatgptresponse);
             return;
         // console.log("the tweet button is clicked");
     }catch(err){
@@ -605,7 +605,7 @@ async function tweetWithImage(page, userRequirement, contentFromURLIfAny, allTwe
             const button = document.querySelector('div[data-testid="tweetButtonInline"]');
             button.click();
         });
-        trackBird("tweet with image", chatgptresponse, imageURLForTweet);
+        trackBird("tweet with image", userRequirement, chatgptresponse, imageURLForTweet);
         return;
         // console.log("the tweet button is clicked");
         } catch (err) {
@@ -938,7 +938,7 @@ async function replyWithImage(page, userRequirement, contentFromURLIfAny) {
                 const button = document.querySelector('div[data-testid="tweetButtonInline"]');
                 button.click();
             });
-            trackBird("reply with image", chatgptresponse, imageURLForTweet);
+            trackBird("reply with image", userRequirement, chatgptresponse, imageURLForTweet);
             return;
         // console.log("the tweet button is clicked");
 }

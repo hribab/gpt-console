@@ -63,7 +63,7 @@ async function updatePixie(input, callback) {
         });
 
         const result = await updatePixieOperation(input, callback)
-        await trackPixie("Create", input);
+        await trackPixie("Update", input);
         clearInterval(interval);
         process.stdout.write('\r');
         process.stdout.write("\x1B[?25h");

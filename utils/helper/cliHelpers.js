@@ -5,8 +5,8 @@ const http = require('http');
 const { LocalStorage } = require('node-localstorage');
 const localStorage = new LocalStorage('./scratch');
 const open = require('open');
-
-const { generateResponse } = require("../api/apiCall");
+const clipboardy = require('clipboardy');
+const { generateResponse, trackConsole, consoleLLM } = require("../api/apiCall");
 const { saveResponseToNewFile } = require("../scripts/helperScripts");
 const { consoleFormat, consoleFormatPlain } = require('../scripts/consoleFormatting')
 
@@ -30,8 +30,9 @@ async function runSpinnerAndReturnResponse(finalPrompt, fileName, operation) {
         spinner.interval++;
     }, spinner.frameLength);
   
-    const response = await generateResponse(finalPrompt);
-    
+    const response = await consoleLLM(finalPrompt);
+    await trackConsole(finalPrompt, response)
+    clipboardy.writeSync(response.trim());
     clearInterval(interval);
     process.stdout.write('\r');
     return response;
