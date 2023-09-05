@@ -61,11 +61,27 @@ const gptCli = repl.start({
 });
 // Override default evaluator function
 
+gptCli.input.on('data', (chunk) => {
+  const key = chunk.toString();
+  if (key === '\u001b') {
+    gptCli.line = "";
+    gptCli.cursor = 0;
+    gptCli.displayPrompt(true);
+  }
+});
+
+
+
 gptCli.eval = async (input, context, filename, callback) => {
   if (!input.trim()) {
     callback(null);
     return;
   }
+
+  if(input.length > 30000){
+    process.stdout.write(`\x1b[32mPrompt overload! Trim it down for snappier code magic. 🚀\x1b[0m \n`);
+  }
+
   const tokens = input.trim().toLowerCase().split(" ");
 
   const command = tokens[0];
