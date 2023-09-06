@@ -53,6 +53,9 @@ const generator = require("@babel/generator").default;
 const logginedUser = localStorage.getItem('gptconsoleuser');
 // console.log("---gptconsoletoken-", localStorage.getItem('gptconsoletoken'))
 welcomeMessage(logginedUser);
+
+let escapeCount = 0;
+
 // Create REPL instance
 const gptCli = repl.start({
   prompt: "gpt-console>",
@@ -64,13 +67,18 @@ const gptCli = repl.start({
 gptCli.input.on('data', (chunk) => {
   const key = chunk.toString();
   if (key === '\u001b') {
+    escapeCount++;
+    if (escapeCount === 2) {
+      gptCli.close();
+      return;
+    }
     gptCli.line = "";
     gptCli.cursor = 0;
     gptCli.displayPrompt(true);
+  } else {
+    escapeCount = 0;
   }
 });
-
-
 
 gptCli.eval = async (input, context, filename, callback) => {
   if (!input.trim()) {
