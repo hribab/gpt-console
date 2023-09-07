@@ -1,76 +1,135 @@
-# ChatGPT CONSOLE
+# GPTConsole: Transforming Development with Intelligent CLI and Autonomous AI Agents
 
-This is a command line tool that utilizes OpenAI's GPT-4 model to provide text-based interactions.
+Break free from traditional coding constraints with GPTConsole. This advanced terminal collaborates with you in real-time. From debugging to application generation, execute complex tasks through natural language commands directly from your command line. To get started, install npm and visit [GPTConsole](https://www.gptconsole.ai/).
 
-## Installation
+## Quick Start: Developer's Guide
 
-```
+### Create your GPTConsole Account [Register here](https://agent.gptconsole.ai/)
+
+#### Installation
+```bash
 yarn global add gpt-console
+```
 or 
+```bash
 npm i gpt-console -g
-
 ```
 
-## Usage
+#### Usage
+Open any terminal and run the following command to use GPTConsole:
 
-To run the tool, execute the following command in the root directory or the working directory where you want to use the files
-
-```
+```bash
 gpt-console
 ```
+A console appears. Type your prompts and get answers. To begin, enter `login`.
 
-You will then be presented with a prompt, where you can type your queries and receive responses.
+#### Initial CLI Screen
+<pre style="background-color:black;color:white;">
+<pre style="background-color:black;">
+<span style="color:cyan;">Your Personal Autonomous Agents:</span>
+<span style="color:blue;">- Bird: Seamlessly manages your Twitter, engaging in Tweets and Replies</span>
+<span style="color:blue;">- Pixie: Generates sophisticated landing pages using ReactJS based on your prompts.</span>
+<span style="color:blue;">- Chip: Capable of answering any code-related questions in your stack:</span><span style="color:yellow;">Coming soon..</span>
 
-### Commands
+<span style="color:red;">Raw, unfinished, and alive with potential. Dive in, play, but remember, we're still in the lab!</span>
+<span style="color:gray;">To quit GPT Console, just type q or press Ctrl+C.</span>
+<span style="color:gray;">Not into agents? No worries, just type your prompt.</span>
+<span style="color:cyan;">Ready to explore? Enter 'login' to create or access your account.</span>
+</pre>
 
-The following commands are available:
+</pre>
 
-- `generate-testcases <filename.extension> functionname1 functionname2`: generates test cases for specified functions in the given file.
-- `generate-doc <filename.extension> functionname1 functionname2`: generates documentation for specified functions in the given file.
-- `codereview <filename.extension>`: provides code review suggestions for the given file.
+## CLI for Developers: Revolutionizing Intelligent Command-Line Tools
 
-### Multi-line Commands
+### Console
+- **Infinite Context**: Input data for future AI-driven prompts
+- **Auto Clipboard**: Responses auto-copied to clipboard
 
-To enter 'editor mode', type `.editor` and press enter. You can then enter multi-line code or text. When you're done, press `Ctrl + D` to exit editor mode, and the ChatGPT response will be printed in the console.
+#### Commands and Multi-Line Features
+- Single 'esc' to clear text
+- Double 'esc' to exit
+- `.editor` for multi-line text/code
 
-For all other commands or text, the ChatGPT response will be printed in the console.
+## Autonomous AI Agents: Next-Level AI Capabilities
 
-## Examples
+### Agents
+- **Pixie**: A game-changer in ReactJS landing page creation. [Watch Demo](https://www.youtube.com/watch?v=1hl9XgSpL4s)
+- **Bird**: Your Twitter manager, using GPT for natural language processing. [Watch Demo](https://www.youtube.com/watch?v=rMWKRot600A)
+- **Chip**: Your future intelligent code assistant. (Coming soon)
 
-### Generate Test Cases
 
+
+### <u>Pixie: The Auto Web Architect</u>
+- **Purpose**: Define the goals
+- **Design**: Specify layout and elements
+
+To interact with Pixie:
 ```
-generate-testcases index.js fibonacci factorial
+gpt-console>pixie
+
+        How to use Pixie?:
+        pixie start "your business description"
+        pixie update "page update"
 ```
 
-### Generate Documentation
+**Example 1**: Start building a landing page with a business description.
 
+    pixie start "Create a landing page for my AI startup AWESO.ME: Generates cool looking UI components with javascript"
+
+**Example 2**: Start building a documentation page with a prompt.
+
+    pixie start "Create a documentation page for my business yourwebsite.com"
+    
+**Example 3**: Update a pixie created landing page backgorund image.
+
+    pixie update "Change backgorund image of header section"
+
+**Example 4**: Update a pixie created landing page messaging.
+
+    pixie update "Change messaging of features section"
+
+**Example 5**: Create fresh from pixie created landing page.
+
+    pixie update "I really didn't like what you created; You suck"
+
+<small>Total you have 8 sections: header, features, blogs, teams, projects, pricing, testimonials, contact us.</small>
+
+
+### <u>Bird: The Twitter Maestro</u>
+- **Clarity**: Precise AI-driven prompts work best
+- **Context**: Utilize natural language processing to optimize engagement
+
+To interact with Bird:
 ```
-generate-doc index.js fibonacci factorial
+gpt-console>bird
+
+        How to use Bird?:
+        bird start
+        bird start "your requirement prompt"
+        bird stop
 ```
+**Example 1**:  Start tweeting with a custom prompt.
 
-### Code Review
+    bird start "tweet 5 times about my new AI tool, GPTConsole"
 
-```
-codereview index.js
-```
+**Example 2**:  Start tweeting with a custom prompt with URL.
 
-### Multi-line Command
+    bird start "tweet 5 times about the article at example.com/fewguys_did_somethig_cool"
 
-```
-.editor
-Here's some code I'm working on:
+**Example 3**:  Start replying with a custom prompt.
 
-function add(a, b) {
-  return a + b;
-}
+    bird start "perform 5 replies on my account, selecting the most suitable tweets"
 
-What do you think?
-^D
-```
+**Example 3**:  Stop the Bird agent.
 
-## Roadmap
+    bird stop
+  
+**Example 4**:  Start the Bird in autonomous mode for automated tweets and replies
 
-We are constantly working to improve ChatGPT Console and make it more useful for developers. Some of the upcoming features we're working on include:
+    bird start
 
-- Creating a long-running autonomous agent that can perform complex tasks
+## Ethical Considerations: Responsible AI Use
+Ensure AI agents align with ethical and legal standards.
+
+## Support
+Help shape the future of intelligent development tools by [Join us now](https://www.gptconsole.ai/).
